@@ -1,0 +1,73 @@
+{
+    "title": "Curso Express — Template",
+    "description": "Template de curso rápido com 1 capítulo, 3 lições e 1 quiz. Adapte para seu conteúdo.",
+    "instructor": "Administrator",
+    "chapters": [
+        {
+            "title": "Capítulo 1 — Fundamentos",
+            "lessons": [
+                {
+                    "title": "Lição 1 — Introdução ao Tema",
+                    "body": "### Introdução\n\nEste é o conteúdo da primeira lição.\n\n**Pontos-chave:**\n- Conceito A\n- Conceito B\n- Conceito C\n\n> 💡 Dica: personalize este conteúdo para o seu curso.",
+                    "editor_content": "{\"blocks\": []}"
+                },
+                {
+                    "title": "Lição 2 — Desenvolvimento Prático",
+                    "body": "### Aplicação Prática\n\nAqui você explica como aplicar os conceitos.\n\n1. Primeiro passo\n2. Segundo passo\n3. Terceiro passo",
+                    "youtube_video_id": ""
+                },
+                {
+                    "title": "Lição 3 — Síntese e Avaliação",
+                    "body": "### Resumo\n\nRevisão dos pontos mais importantes do capítulo.\n\n**O que aprendemos:**\n- Item 1\n- Item 2\n- Item 3",
+                    "quiz": {
+                        "title": "Quiz — Fundamentos",
+                        "max_attempts": 3,
+                        "passing_percentage": 70,
+                        "questions": [
+                            {
+                                "question": "Qual é o conceito principal abordado neste módulo?",
+                                "type": "Choices",
+                                "options": [
+                                    {
+                                        "text": "Opção A — incorreta",
+                                        "correct": false
+                                    },
+                                    {
+                                        "text": "Opção B — correta",
+                                        "correct": true
+                                    },
+                                    {
+                                        "text": "Opção C — incorreta",
+                                        "correct": false
+                                    },
+                                    {
+                                        "text": "Opção D — incorreta",
+                                        "correct": false
+                                    }
+                                ]
+                            },
+                            {
+                                "question": "Qual o primeiro passo na aplicação prática?",
+                                "type": "Choices",
+                                "options": [
+                                    {
+                                        "text": "Passo incorreto A",
+                                        "correct": false
+                                    },
+                                    {
+                                        "text": "Passo correto B",
+                                        "correct": true
+                                    },
+                                    {
+                                        "text": "Passo incorreto C",
+                                        "correct": false
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

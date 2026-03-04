@@ -1,0 +1,70 @@
+{
+    "title": "Quiz — Template",
+    "max_attempts": 3,
+    "passing_percentage": 70,
+    "show_submission_history": true,
+    "questions": [
+        {
+            "question": "Pergunta de múltipla escolha exemplo?",
+            "type": "Choices",
+            "options": [
+                {
+                    "text": "Alternativa A",
+                    "correct": false
+                },
+                {
+                    "text": "Alternativa B (correta)",
+                    "correct": true
+                },
+                {
+                    "text": "Alternativa C",
+                    "correct": false
+                },
+                {
+                    "text": "Alternativa D",
+                    "correct": false
+                }
+            ]
+        },
+        {
+            "question": "Segunda pergunta com várias opções?",
+            "type": "Choices",
+            "options": [
+                {
+                    "text": "Opção 1",
+                    "correct": false
+                },
+                {
+                    "text": "Opção 2 (correta)",
+                    "correct": true
+                },
+                {
+                    "text": "Opção 3",
+                    "correct": false
+                }
+            ]
+        },
+        {
+            "question": "Terceira pergunta para validação de conceitos?",
+            "type": "Choices",
+            "options": [
+                {
+                    "text": "Resposta A (correta)",
+                    "correct": true
+                },
+                {
+                    "text": "Resposta B",
+                    "correct": false
+                },
+                {
+                    "text": "Resposta C",
+                    "correct": false
+                },
+                {
+                    "text": "Resposta D",
+                    "correct": false
+                }
+            ]
+        }
+    ]
+}

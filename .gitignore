@@ -1,0 +1,79 @@
+# =============================================================================
+# kreativ-education — .gitignore
+# =============================================================================
+
+# --- Secrets & Environment ---
+.env
+.env.*
+!.env.example
+frappe_api_keys.txt
+*.secret
+*.key
+*.pem
+
+# --- NodeJS ---
+node_modules/
+dist/
+npm-debug.log*
+yarn-error.log
+.pnpm-store/
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+*.whl
+venv/
+.venv/
+env/
+
+# --- Docker ---
+docker-compose.override.yml
+
+# --- Editor / IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- AI Agents ---
+.claude/
+.gemini/
+.agent/
+.agents/
+brain/
+.cursor/
+.continue/
+
+# --- Logs & Debug ---
+*.log
+deploy_output*.txt
+debug_*.txt
+*_output*.txt
+
+# --- Temp scripts ---
+check_*.py
+trigger_*.py
+test_*.py
+!scripts/seed-courses.py
+
+# --- Build artifacts ---
+build/
+.next/
+.nuxt/
+
+# --- Backups ---
+backups/
+*.sql.gz
+*.sql.bak
+*.dump
