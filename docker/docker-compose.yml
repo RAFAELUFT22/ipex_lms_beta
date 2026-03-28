@@ -347,7 +347,7 @@ services:
       - dokploy-network
 
   webmail:
-    image: djfarrelly/snappymail:latest
+    image: snappymail/snappymail:latest
     container_name: kreativ-webmail
     restart: always
     networks:
