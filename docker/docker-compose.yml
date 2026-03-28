@@ -126,6 +126,14 @@ services:
     networks:
       - kreativ_net
       - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kreativ-lms.rule=Host(`lms.ipexdesenvolvimento.cloud`)"
+      - "traefik.http.routers.kreativ-lms.entrypoints=websecure"
+      - "traefik.http.routers.kreativ-lms.tls=true"
+      - "traefik.http.routers.kreativ-lms.tls.certresolver=letsencrypt"
+      - "traefik.http.services.kreativ-lms.loadbalancer.server.port=8080"
+      - "traefik.docker.network=dokploy-network"
     depends_on:
       - frappe_backend
 
