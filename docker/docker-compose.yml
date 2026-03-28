@@ -326,3 +326,4 @@ services:
       - ALLOWED_SENDER_DOMAINS=ipexdesenvolvimento.cloud
     networks:
       - kreativ_net
+# GitOps Trigger Test
