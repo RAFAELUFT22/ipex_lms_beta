@@ -23,7 +23,7 @@ COLORS = {
 }
 
 CUSTOM_CSS = f"""
-/* TDS BRANDING - REFINADO */
+/* TDS BRANDING - REFINADO E COMPLETO */
 :root {{
     --uft-blue: {COLORS['navy']};
     --uft-teal: {COLORS['teal']};
@@ -82,12 +82,37 @@ CUSTOM_CSS = f"""
     border-top-color: var(--uft-yellow) !important;
 }}
 
-/* Footer */
+/* Footer Refinado com Logos de Parceiros */
 footer, .footer {{
     background-color: var(--uft-blue) !important;
     color: white !important;
     border-top: 5px solid var(--uft-yellow) !important;
-    padding: 2rem 0 !important;
+    padding: 3rem 0 !important;
+}}
+
+.footer-logo-grid {{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}}
+
+.footer-logo-grid img {{
+    max-height: 50px;
+    filter: brightness(0) invert(1); /* Deixa as logos brancas para o fundo escuro */
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}}
+
+.footer-logo-grid img:hover {{
+    filter: none; /* Volta a cor original ao passar o mouse */
+    opacity: 1;
+    transform: scale(1.1);
 }}
 
 footer a {{
@@ -117,28 +142,62 @@ def upload_file(file_path):
     return None
 
 def apply_branding():
-    print("🚀 Aplicando Branding TDS Completo...")
+    print("🚀 Aplicando Branding TDS Completo com todos os parceiros...")
     
-    # Upload logos if needed
-    logo_tds = "/root/projeto-tds/arquivos_do_projeto/logos/logo_tds_oficial.png"
-    logo_uft = "/root/projeto-tds/arquivos_do_projeto/logos/uft logo.png"
+    logo_dir = "/root/projeto-tds/arquivos_do_projeto/logos"
+    logo_files = [
+        "logo_tds_oficial.png",
+        "uft logo.png",
+        "logo-ipex.jpg",
+        "logo mds.png",
+        "fapto logo.svg",
+        "cd centro logo.svg"
+    ]
     
-    # Check if they already exist or just upload again
-    url_tds = upload_file(logo_tds) or "/files/logo_tds_oficial.png"
-    url_uft = upload_file(logo_uft) or "/files/uft_logo.png"
+    uploaded_logos = {}
+    for filename in logo_files:
+        path = os.path.join(logo_dir, filename)
+        url = upload_file(path)
+        if url:
+            uploaded_logos[filename] = url
+        else:
+            # Fallback
+            uploaded_logos[filename] = f"/files/{filename.replace(' ', '%20')}"
 
+    # Header HTML (TDS + UFT)
     brand_html = f'<div style="display: flex; align-items: center; gap: 10px;">' \
-                 f'<img src="{url_tds}" style="max-height: 45px;">' \
+                 f'<img src="{uploaded_logos["logo_tds_oficial.png"]}" style="max-height: 45px;">' \
                  f'<div style="width: 2px; height: 30px; background: white; opacity: 0.5;"></div>' \
-                 f'<img src="{url_uft}" style="max-height: 40px;">' \
+                 f'<img src="{uploaded_logos["uft logo.png"]}" style="max-height: 40px;">' \
                  f'</div>'
+
+    # Footer Template com Grid de Parceiros
+    footer_template = f"""
+    <div class="container text-center">
+        <h5 style="color: {COLORS['yellow']}; font-weight: bold; margin-bottom: 20px;">Realização e Parceria</h5>
+        <div class="footer-logo-grid">
+            <img src="{uploaded_logos["logo_tds_oficial.png"]}" title="Projeto TDS">
+            <img src="{uploaded_logos["uft logo.png"]}" title="UFT">
+            <img src="{uploaded_logos["logo-ipex.jpg"]}" title="IPEX">
+            <img src="{uploaded_logos["logo mds.png"]}" title="MDS">
+            <img src="{uploaded_logos["fapto logo.svg"]}" title="FAPTO">
+            <img src="{uploaded_logos["cd centro logo.svg"]}" title="CD Centro">
+        </div>
+        <div style="margin-top: 30px; font-size: 14px; opacity: 0.8;">
+            © 2026 IPEX / UFT / MDS - Projeto Território de Desenvolvimento Social (TDS)
+            <br>
+            <a href="/privacy">Privacidade</a> | <a href="/terms">Termos de Uso</a>
+        </div>
+    </div>
+    """
 
     payload = {
         "app_name": "Kreativ Education (TDS)",
         "brand_html": brand_html,
         "custom_css": CUSTOM_CSS,
-        "banner_image": url_tds,
-        "favicon": url_tds,
+        "footer_template": footer_template,
+        "banner_image": uploaded_logos["logo_tds_oficial.png"],
+        "favicon": uploaded_logos["logo_tds_oficial.png"],
         "copyright": "© 2026 IPEX / UFT / MDS - Projeto TDS",
         "hide_footer_signup": 1
     }
