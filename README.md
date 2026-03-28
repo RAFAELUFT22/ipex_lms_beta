@@ -27,17 +27,22 @@ open https://lms.SEU-DOMINIO.com
 
 ---
 
-## 📐 Arquitetura
+## 📐 Arquitetura (5 Pilares TDS)
 
 ```
-WhatsApp → Evolution API → Typebot → N8N → Frappe LMS (REST API) → MariaDB
-                                      ↓
-                                 Chatwoot (transbordo humano)
+WhatsApp ←→ Evolution API (Gateway)
+                 ↕
+          n8n (Orquestrador) ←→ AnythingLLM (RAG / Tutor)
+                 ↕
+        Frappe LMS (Dados) ←→ Chatwoot (Inbox Humana)
 ```
 
-**Frappe LMS** é a fonte da verdade para: cursos, capítulos, lições, quizzes, matrículas e certificados.
-
-> 📖 Veja [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) para detalhes.
+**Stack de 5 Pilares:**
+1. **Evolution API**: Gerencia WhatsApp, Instâncias e Webhooks.
+2. **n8n**: Motor de fluxo, autenticação e decisão.
+3. **AnythingLLM**: Interface de RAG para consultas pedagógicas nos cursos.
+4. **Frappe LMS**: Fonte da verdade para alunos, matrículas e progresso.
+5. **Chatwoot**: Painel de atendimento humano para tutores.
 
 ---
 
@@ -45,26 +50,19 @@ WhatsApp → Evolution API → Typebot → N8N → Frappe LMS (REST API) → Mar
 
 ```
 kreativ-education/
-├── docker/              # Infraestrutura Docker
-│   ├── docker-compose.yml           # Frappe LMS (9 serviços)
-│   └── docker-compose.whatsapp.yml  # WhatsApp stack (10 serviços)
-├── scripts/             # setup.sh, health-check.sh, seed-courses.py
+├── docker/              # Infraestrutura Docker Consolidated
+│   └── docker-compose.yml           # Stack de 5 Pilares Completos
+├── n8n-workflows/       # Workflows N8N (RAG, Handoff, Resume)
+├── scripts/             # setup.sh, health-check.sh
 ├── docs/                # Documentação técnica completa
-│   ├── COURSE_CREATION_API.md   ← API REST para cursos
-│   ├── N8N_INTEGRATION.md       ← 14 ações N8N ↔ Frappe
-│   ├── WHATSAPP_INTEGRATION.md  ← Evolution + Typebot + Chatwoot
-│   ├── CONTAINER_APIS.md        ← Referência de todas as APIs dos containers
-│   ├── LOCAL_DEVELOPMENT.md     ← Como rodar no seu PC com Ngrok
 │   ├── ARCHITECTURE.md
-│   ├── DEPLOYMENT_GUIDE.md
-│   ├── CAPACITY_PLANNING.md
-│   └── TROUBLESHOOTING.md
+│   ├── WHATSAPP_INTEGRATION.md
+│   └── ...
 ├── guides/              # Guias para assistentes IA
 │   ├── AI_IMPLEMENTATION_GUIDE.md  ← Ponto de entrada para IAs
 │   ├── KREATIV_CONTEXT.md
 │   └── CODING_CONVENTIONS.md
 ├── courses/             # Templates JSON de cursos
-│   ├── templates/       # Modelos genéricos
 │   └── tds/             # Cursos reais TDS
 └── n8n-workflows/       # Workflows N8N
 ```
