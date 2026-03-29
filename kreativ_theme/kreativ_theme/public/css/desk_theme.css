@@ -1,0 +1,55 @@
+/* =========================================================
+   KREATIV THEME — DESK (app_include_css)
+   Alvo: Interface Administrativa Frappe (Workspace/Mesa)
+   Paleta TDS/UFT: Navy #003366 | Teal #008080 | Sol #F9C300
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #003366;
+    --primary: #008080;
+    --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Navbar do Desk */
+.navbar.container-fluid,
+.navbar {
+    background-color: #003366 !important;
+    border-bottom: 3px solid #F9C300 !important;
+}
+
+.navbar .navbar-brand,
+.navbar .nav-link,
+.navbar button {
+    color: #ffffff !important;
+}
+
+/* Sidebar esquerda */
+.sidebar-item.selected > .sidebar-item-label,
+.sidebar-item:hover > .sidebar-item-label {
+    color: #008080 !important;
+}
+
+/* Botões primários */
+.btn.btn-primary {
+    background-color: #008080 !important;
+    border-color: #008080 !important;
+    color: white !important;
+}
+
+.btn.btn-primary:hover {
+    background-color: #003366 !important;
+    border-color: #003366 !important;
+}
+
+/* Indicadores de status e badges */
+.indicator.blue {
+    background-color: #008080 !important;
+}
+
+/* Workspace heading */
+.workspace-section .workspace-heading {
+    color: #003366 !important;
+    font-weight: 700 !important;
+}

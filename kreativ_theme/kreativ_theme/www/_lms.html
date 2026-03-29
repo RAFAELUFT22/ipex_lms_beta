@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+        <head>
+                <meta charset="UTF-8" />
+                <link rel="icon" href="{{ favicon }}" />
+                <link rel="manifest" href="/api/method/lms.lms.api.get_pwa_manifest" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <title>{{ title }}</title>
+                
+                <!-- KREATIV CUSTOM FONTS -->
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+
+                <script type="module" crossorigin src="/assets/lms/frontend/assets/index-9PaojE28.js"></script>
+                <link rel="stylesheet" crossorigin href="/assets/lms/frontend/assets/index-2cPoMQqg.css">
+                
+                <style>
+                    /* KREATIV SIDEBAR INJECTION STYLE */
+                    #kreativ-sidebar {
+                        width: 80px;
+                        background: white;
+                        height: 100vh;
+                        position: fixed;
+                        left: 0;
+                        top: 0;
+                        border-right: 1px solid #eee;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        padding-top: 20px;
+                        z-index: 1000;
+                    }
+                    @media (max-width: 768px) {
+                        #kreativ-sidebar { display: none; }
+                        #app-container { margin-left: 0 !important; }
+                    }
+                    #app-container {
+                        margin-left: 80px;
+                        transition: margin 0.3s;
+                    }
+                </style>
+        </head>
+        <body class="sm:overscroll-y-none no-scrollbar">
+                <!-- CUSTOM SIDEBAR (IMAGE 2) -->
+                <div id="kreativ-sidebar">
+                    <img src="/files/logo_tds_oficial.png" style="width: 40px; margin-bottom: 40px;">
+                    <!-- Placeholder icons -->
+                    <div style="margin-bottom: 30px; color: #003366;"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
+                    <div style="margin-bottom: 30px; color: #666;"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg></div>
+                </div>
+
+                <div id="app-container">
+                    <div id="app"></div>
+                </div>
+
+                <script>
+                  {% for key in boot %}
+                  window["{{ key }}"] = {{ boot[key] | tojson }};
+                  {% endfor %}
+                </script>
+          </body>
+</html>

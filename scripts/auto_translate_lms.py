@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 load_dotenv()
 
-# Configuração AnythingLLM
-RAG_URL = "https://rag.ipexdesenvolvimento.cloud/api/v1"
-RAG_API_KEY = "W5M4VV3-DVQMN22-M2QF6JE-R5KFJP0"
+# Configuração AnythingLLM (Consumindo do ambiente ou fallback)
+RAG_URL = os.getenv("RAG_URL", "https://rag.ipexdesenvolvimento.cloud/api/v1")
+RAG_API_KEY = os.getenv("RAG_API_KEY", "W5M4VV3-DVQMN22-M2QF6JE-R5KFJP0")
 WORKSPACE = "tds"
 
 # Caminhos Absolutos
@@ -42,97 +42,89 @@ def save_cache(cache):
         print(f"Erro ao salvar cache: {e}", flush=True)
 
 def translate_batch(texts):
+    # Prompt otimizado para evitar falhas de formatação
     prompt = (
-        "Você é um tradutor especializado em sistemas educacionais. "
-        "Traduza as seguintes frases do Frappe LMS para Português do Brasil (pt-BR). "
-        "Mantenha placeholders como {0}, {1}, %s exatamente como estão. "
-        "Use termos acadêmicos brasileiros (Ex: Batch -> Turma, Quiz -> Questionário, Lesson -> Lição). "
-        "Retorne APENAS as traduções, uma por linha, na mesma ordem.\n\n" + "\n".join(texts)
+        "Você é um tradutor especializado em sistemas educacionais (Frappe LMS).\n"
+        "Converta a lista JSON de textos abaixo para Português do Brasil (pt-BR).\n"
+        "REGRAS CRÍTICAS:\n"
+        "1. Mantenha placeholders como {0}, {1}, %s intactos.\n"
+        "2. Retorne APENAS um objeto JSON onde as chaves são os originais e os valores são as traduções.\n"
+        "3. Se não souber traduzir, mantenha o original.\n\n"
+        f"TEXTOS: {json.dumps(texts)}"
     )
     
     url = f"{RAG_URL}/workspace/{WORKSPACE}/chat"
     payload = {"message": prompt, "mode": "chat"}
     
     try:
-        res = requests.post(url, headers=HEADERS, json=payload, verify=False, timeout=60)
+        res = requests.post(url, headers=HEADERS, json=payload, verify=False, timeout=90)
         if res.status_code == 200:
-            response_text = res.json().get("textResponse", "")
-            lines = [line.strip() for line in response_text.strip().split("\n") if line.strip()]
-            return lines
-        elif res.status_code == 500 and "429" in res.text:
-            print("🛑 Rate limit atingido. Aguardando 60 segundos...", flush=True)
-            time.sleep(60)
+            raw_text = res.json().get("textResponse", "")
+            # Tentar extrair JSON da resposta (caso venha com markdown ou explicações)
+            if "```json" in raw_text:
+                raw_text = raw_text.split("```json")[1].split("```")[0].strip()
+            elif "{" in raw_text:
+                raw_text = raw_text[raw_text.find("{"):raw_text.rfind("}")+1]
+            
+            return json.loads(raw_text)
+        elif res.status_code == 429 or (res.status_code == 500 and "429" in res.text):
+            print("🛑 Rate limit atingido. Dormindo 120s...", flush=True)
+            time.sleep(120)
             return None
         else:
             print(f"❌ Erro na API: {res.status_code} - {res.text}", flush=True)
             return None
     except Exception as e:
-        print(f"❌ Erro na tradução: {e}", flush=True)
+        print(f"❌ Erro no processamento: {e}", flush=True)
         return None
 
 def main():
-    print("🚀 Iniciando script de tradução...", flush=True)
+    print("🚀 Tradutor Kreativ TDS v2 (JSON-Safe Batching)", flush=True)
+    
     if not os.path.exists(INPUT_FILE):
-        print(f"❌ Arquivo {INPUT_FILE} não encontrado!", flush=True)
+        print(f"❌ {INPUT_FILE} não encontrado.", flush=True)
         return
 
     cache = load_cache()
-    print(f"✅ Cache carregado com {len(cache)} itens.", flush=True)
     
-    untranslated_lines = []
+    # Carregar todas as chaves
+    all_keys = []
     with open(INPUT_FILE, 'r', encoding='utf-8') as f:
         reader = csv.reader(f)
         for row in reader:
-            if row and row[0] not in cache:
-                untranslated_lines.append(row[0])
+            if row and row[0].strip():
+                all_keys.append(row[0].strip())
 
-    print(f"📦 Total de novas linhas para traduzir: {len(untranslated_lines)}", flush=True)
-    if not untranslated_lines:
-        print("✅ Tudo já está no cache.", flush=True)
+    untranslated = [k for k in all_keys if k not in cache]
+    print(f"📦 Pendentes: {len(untranslated)} / Total: {len(all_keys)}", flush=True)
+
+    if not untranslated:
+        print("✅ Nada para traduzir.", flush=True)
     else:
-        batch_size = 10
-        total_batches = (len(untranslated_lines) + batch_size - 1) // batch_size
-        for i in range(0, len(untranslated_lines), batch_size):
-            batch = untranslated_lines[i:i+batch_size]
-            print(f"🔄 Traduzindo lote {i//batch_size + 1} / {total_batches}...", flush=True)
+        # Lotes menores para maior precisão e evitar timeouts
+        batch_size = 5 
+        for i in range(0, len(untranslated), batch_size):
+            batch = untranslated[i:i+batch_size]
+            print(f"🔄 Traduzindo lote {i//batch_size + 1}...", flush=True)
             
-            translations = translate_batch(batch)
-            
-            if translations and len(translations) == len(batch):
-                for original, translated in zip(batch, translations):
-                    cache[original] = translated
+            result = translate_batch(batch)
+            if result and isinstance(result, dict):
+                for orig, trans in result.items():
+                    cache[orig] = trans
                 save_cache(cache)
-                print(f"✅ Lote {i//batch_size + 1} salvo.", flush=True)
+                print(f"  ✅ Sucesso ({len(result)} itens)", flush=True)
             else:
-                print(f"⚠️ Falha no lote {i//batch_size + 1}. Tentando modo individual...", flush=True)
-                for text in batch:
-                    if text in cache: continue
-                    res = translate_batch([text])
-                    if res:
-                        cache[text] = res[0]
-                        save_cache(cache)
-                        print(f"  - Traduzido: {text[:20]}...", flush=True)
-                        time.sleep(2)
-                    else:
-                        print(f"  - Falhou: {text[:20]}...", flush=True)
+                print(f"  ❌ Falha no lote. Pulando...", flush=True)
             
-            time.sleep(3)
+            time.sleep(5) # Delay entre lotes
 
-    # Gerar o CSV final
-    final_data = []
-    with open(INPUT_FILE, 'r', encoding='utf-8') as f:
-        reader = csv.reader(f)
-        for row in reader:
-            if row:
-                orig = row[0]
-                trans = cache.get(orig, orig)
-                final_data.append([orig, trans])
-
+    # Gerar CSV final preservando ordem
     with open(OUTPUT_FILE, 'w', encoding='utf-8', newline='') as f:
         writer = csv.writer(f)
-        writer.writerows(final_data)
+        for k in all_keys:
+            writer.writerow([k, cache.get(k, k)])
 
-    print(f"🚀 Concluído! Arquivo: {OUTPUT_FILE}", flush=True)
+    print(f"🏁 Concluído! Resultado em {OUTPUT_FILE}", flush=True)
 
 if __name__ == "__main__":
     main()
