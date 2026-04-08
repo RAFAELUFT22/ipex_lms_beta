@@ -7,11 +7,52 @@
 
 ## Contexto do Projeto
 
-O Projeto TDS (Território de Desenvolvimento Social e Inclusão Produtiva) é uma plataforma de inclusão social da NERUDS/UFT via FAPTO (Bolsa nº 212/2026), coordenada por Juliana Aguiar de Melo. Atende 2.160 beneficiários do CadÚnico em até 36 municípios do Tocantins, majoritariamente mulheres (71,9%), adultos jovens, comunidades periféricas e rurais, incluindo quilombolas, indígenas e agricultores familiares.
+O Projeto TDS (Território de Desenvolvimento Social e Inclusão Produtiva) é uma plataforma de inclusão social da NERUDS/UFT via FAPTO (Bolsa nº 212/2026), coordenada por Juliana Aguiar de Melo. Atende 2.160 beneficiários do CadÚnico em até 36 municípios do Tocantins, majoritariamente mulheres (71,9%), adultos jovens de comunidades periféricas e rurais do Bico do Papagaio (destaque: Itaguatins, Praia Norte, Araguatins) e Jalapão/Dianópolis, incluindo quilombolas, indígenas e agricultores familiares.
 
-O WhatsApp é o **canal primário** de entrega de conteúdo educacional — não apenas suporte. O portal Frappe LMS (`lms.ipexdesenvolvimento.cloud`) é o repositório completo, acessível para quem tem computador/tablet.
+### Papel do WhatsApp
 
-**Perfil do público:** baixa literacia digital, móvel-first, conexão 4G potencialmente instável. Mensagens devem ser curtas, linguagem informal (você), tom acolhedor com exemplos do cotidiano do Tocantins/Bico do Papagaio. Emojis funcionais e moderados são aceitáveis.
+O WhatsApp é o **canal primário de aprendizagem** — não apenas suporte. Ele entrega conteúdo, conduz avaliações, informa progresso e emite certificados. O Frappe LMS e PostgreSQL operam na retaguarda gerindo armazenamento assíncrono e histórico metodológico.
+
+### Perfil do público
+
+- Baixa literacia digital, móvel-first, conectividade instável (municípios pequenos)
+- Mensagens curtas, linguagem acessível mas com **postura acadêmica institucional** (bot representa UFT/FAPTO)
+- Tom: `você` (informal no registro, mas com autoridade institucional)
+- Geração X e Baby Boomers (~18%) necessitam de assistência humanizada → handoff prioritário
+- Pico de acesso: **noturno em dias úteis** e **tardes de finais de semana**
+
+### Jornada completa do aluno (5 ações de sistema)
+
+```
+1. check_student    → valida cadastro no CadÚnico / matrícula
+2. get_module       → entrega conteúdo do módulo atual
+3. submit_quiz      → IA gera 3 questões discursivas do módulo + avalia + feedback qualitativo
+4. get_progress     → informa progresso acumulado
+5. emit_certificate → verifica aprovação, gera PDF, persiste no PostgreSQL, devolve URL via WhatsApp
+```
+
+> ⚠️ As ações 1–5 dependem do **Frappe LMS** em produção. O container Frappe **não está rodando** em 08/04/2026. Sprint 1 entrega o canal de comunicação inteligente (RAG + handoff). Sprint 2 entrega as ações estruturadas.
+
+### Identidade dos bots
+
+| Instância | Nome | Função |
+|-----------|------|--------|
+| **Sprint 1** | Tutor IA | Atendimento direto ao aluno via WhatsApp |
+| **Sprint 2** | Chatwoot Captain | Copiloto de respostas para tutores humanos no Chatwoot |
+
+### Estrutura dos cursos
+
+5 trilhas × 2 cursos × 80h (40h presencial + 20h remoto gravado + 20h mentoria) = 160h/trilha
+
+| Trilha | Nome |
+|--------|------|
+| T1 | Empreendedorismo Popular e Gestão de Negócios |
+| T2 | Formação Cooperativista Popular |
+| T3 | Agricultura Familiar e Políticas Públicas Federais |
+| T4 | Sistemas Produtivos Sustentáveis e Tecnologias Sociais |
+| T5 | Inovação e Certificação Agroecológica |
+
+**Unidade de avaliação:** módulo (não apenas ao final da trilha). A IA gera 3 questões discursivas estritamente baseadas no conteúdo do módulo e fornece feedback qualitativo por conceito — sem nota binária.
 
 ---
 
@@ -19,19 +60,19 @@ O WhatsApp é o **canal primário** de entrega de conteúdo educacional — não
 
 ### Containers em execução (servidor: 46.202.150.132)
 
-| Container | Imagem | Status | IP interno |
-|-----------|--------|--------|------------|
-| `kreativ-rag` | mintplexlabs/anythingllm | ✅ healthy | dokploy-network |
-| `kreativ-n8n` | n8nio/n8n | ⚠️ unhealthy | dokploy-network |
-| `kreativ-chatwoot` | chatwoot/chatwoot:v4.11.0 | ⚠️ unhealthy | dokploy-network |
-| `kreativ-chatwoot-sidekiq` | chatwoot/chatwoot:v4.11.0 | ✅ up | dokploy-network |
-| `kreativ-postgres` | postgres:16-alpine | ✅ healthy | dokploy-network |
-| `kreativ-redis` | redis:7-alpine | ✅ healthy | dokploy-network |
-| `kreativ-mail` | analogic/poste.io | ✅ healthy | dokploy-network |
-| `kreativ-ollama` | ollama/ollama | ⚠️ unhealthy | dokploy-network |
-| `ollama` | ollama/ollama | ✅ up | dokploy-network |
+| Container | Imagem | Status |
+|-----------|--------|--------|
+| `kreativ-rag` | mintplexlabs/anythingllm | ✅ healthy |
+| `kreativ-n8n` | n8nio/n8n | ⚠️ unhealthy (falso positivo — responde via HTTPS) |
+| `kreativ-chatwoot` | chatwoot/chatwoot:v4.11.0 | ⚠️ unhealthy (falso positivo) |
+| `kreativ-chatwoot-sidekiq` | chatwoot/chatwoot:v4.11.0 | ✅ up |
+| `kreativ-postgres` | postgres:16-alpine | ✅ healthy |
+| `kreativ-redis` | redis:7-alpine | ✅ healthy |
+| `kreativ-mail` | analogic/poste.io | ✅ healthy |
+| `kreativ-ollama` | ollama/ollama | ⚠️ unhealthy |
+| `ollama` | ollama/ollama | ✅ up |
 
-> **Nota:** O status "unhealthy" do `kreativ-n8n` e `kreativ-chatwoot` provavelmente é falso positivo do health check — os serviços respondem normalmente via HTTPS. Verificar logs antes de tentar corrigir.
+**NÃO há container do Frappe LMS rodando.** Sprint 1 não depende dele.
 
 ### URLs de produção
 
@@ -50,7 +91,7 @@ O WhatsApp é o **canal primário** de entrega de conteúdo educacional — não
 | `CHATWOOT_ADMIN_PASSWORD` | 6QWuIKdZzYBmBdS3! |
 | `CHATWOOT_API_KEY` (user token) | tbTMVRp2RwZNyGKKhRHUpNky |
 | `CHATWOOT_ACCOUNT_ID` | 1 |
-| `CHATWOOT_INBOX_ID` | 5 (nome: "Whatsapp - TDS", tipo: Channel::Whatsapp, Cloud API) |
+| `CHATWOOT_INBOX_ID` | 5 ("Whatsapp - TDS", Channel::Whatsapp, Cloud API) |
 | `N8N_API_KEY` | eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMGQyZGM1Ni1mOTI3LTQ5YTMtOWEyOS0wYTI1OTE3N2E1ZWIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiOTI1ZjhjNjMtMTNiZi00MzdhLWE0NGMtZGZmNTVhNmY5NWU5IiwiaWF0IjoxNzc1NDg4OTE2fQ.2ZHJeczWjGW8gWq7104Ga7kS5WwBcP3wjgysStBVliI |
 | `ANYTHINGLLM_API_KEY` | W5M4VV3-DVQMN22-M2QF6JE-R5KFJP0 |
 | `GROQ_API_KEY` | gsk_REDACTED_GROQ_API_KEY |
@@ -80,65 +121,90 @@ O WhatsApp é o **canal primário** de entrega de conteúdo educacional — não
 
 ---
 
-## Fluxo de Dados Completo
+## Escopo do Sprint 1 (este spec)
+
+**Entrega:** Canal WhatsApp → Tutor IA funcional com memória por aluno, handoff para humano e tratamento de mídia.
+
+**Fora do escopo (Sprint 2+):**
+- Ações estruturadas: `check_student`, `get_module`, `submit_quiz`, `get_progress`, `emit_certificate`
+- Chatwoot Captain (copiloto para tutores)
+- STT (Speech-to-Text) para áudios — Sprint 1 pede para digitar
+- TTS (Text-to-Speech) para respostas em áudio
+- Processamento de documentos/imagens enviados pelos alunos
+- Typebot v6 para fluxos de quiz estruturado
+- Notificações proativas (nudges a cada 48h)
+
+---
+
+## Fluxo de Dados — Sprint 1
 
 ```
 Aluno (WhatsApp)
       ↓
-WhatsApp Cloud API
+WhatsApp Cloud API (Meta Cloud API)
       ↓
-Chatwoot inbox5 ("Whatsapp - TDS")
+Chatwoot inbox5 ("Whatsapp - TDS", id=5)
       ↓ Agent Bot webhook
       ↓ POST https://n8n.ipexdesenvolvimento.cloud/webhook/chatwoot-kreativ
-N8N: "Kreativ TDS — Chatwoot RAG Flow"
+N8N: "Kreativ TDS — Chatwoot RAG Flow" (id: XYcnRlPZSlfGXOWb)
       ↓
-[Nó: Filtrar eventos]
+[Filtrar eventos]
   - Ignorar se event ≠ message_created
-  - Ignorar se message_type ≠ incoming (ignorar mensagens do próprio bot)
-  - Se content_type = audio → responder "não processo áudios, por favor digite"
-  - Se content_type = image/file → responder "não processo arquivos, acesse o portal ou aguarde tutor"
+  - Ignorar mensagens do bot (outgoing / sender.type = agent_bot ou user)
+  - Detectar content_type: text | audio | image/file
       ↓
-[Nó: Extrair dados]
-  - conversationId = data.conversation.id
-  - accountId = data.conversation.account_id (ou "1")
-  - sessionId = data.meta.sender.identifier (telefone: "+5563...") — CHAVE para memória
-  - contactName = data.meta.sender.name
-  - messageText = data.content
-  - route = handoff SE texto contém palavras-chave, SENÃO rag
+[Extrair dados]
+  conversationId  = body.conversation.id
+  accountId       = body.conversation.account_id  (fallback: "1")
+  sessionId       = body.meta.sender.identifier   (telefone: "+5563...")  ← CHAVE DE MEMÓRIA
+  contactName     = body.meta.sender.name
+  messageText     = body.content
+  route           = handoff | rag | audio | media
       ↓
-[Bifurcação: handoff ou rag?]
+[Bifurcação por rota]
 
-ROTA RAG:
+ROTA audio:
+  → "Oi! Ainda não consigo ouvir áudios, mas você pode digitar sua dúvida que respondo na hora! 😊"
+
+ROTA media:
+  → "Não consigo processar arquivos por aqui. Para enviar documentos, acesse o portal
+     lms.ipexdesenvolvimento.cloud — ou aguarde um tutor humano te ajudar!"
+
+ROTA handoff:
+  → "Entendido! Vou conectar você com um tutor humano agora. 
+     Nosso atendimento humano funciona principalmente à noite nos dias úteis 
+     e nas tardes de fim de semana. Em breve alguém vai te responder! 👋"
+  → POST /assignments  { "assignee_id": null }   ← libera para fila humana
+
+ROTA rag:
   POST https://rag.ipexdesenvolvimento.cloud/api/v1/workspace/tds/chat
   Headers: { Authorization: "Bearer W5M4VV3-DVQMN22-M2QF6JE-R5KFJP0" }
   Body: {
-    "message": "<messageText>",
-    "mode": "chat",
-    "sessionId": "<sessionId>"
+    "message":   "<messageText>",
+    "mode":      "chat",
+    "sessionId": "<sessionId>"       ← memória por aluno
   }
-  → Extrair campo "textResponse" da resposta
-  → POST https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/conversations/<id>/messages
-    Headers: { api_access_token: "tbTMVRp2RwZNyGKKhRHUpNky" }
-    Body: { "content": "<textResponse>", "message_type": "outgoing" }
-
-ROTA HANDOFF:
-  → POST mensagem de handoff ao Chatwoot:
-    "Um momento! Vou te conectar com um tutor humano. 👋"
-  → POST https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/conversations/<id>/assignments
-    Body: { "assignee_id": null }  (remove bot, libera para equipe humana)
+  → Extrair campo "textResponse"
+  → POST /messages  { "content": "<textResponse>", "message_type": "outgoing" }
 ```
 
-**Reativação automática:** quando o tutor humano resolve/fecha a conversa no Chatwoot, a próxima mensagem do aluno abre nova conversa → Agent Bot assume automaticamente (comportamento nativo do Chatwoot Agent Bot).
+**Palavras-chave de handoff** (capturadas por regex no nó de extração):
+```
+tutor | prova | exame | certificado | humano | operador | atendente |
+bolsa | cadúnico | cad único | benefício | reclamação | ajuda humana |
+falar com alguém | não consigo | problema | gerações anteriores
+```
+
+**Reativação automática:** quando tutor fecha/resolve a conversa no Chatwoot, a próxima mensagem do aluno abre nova conversa → Agent Bot assume automaticamente (comportamento nativo do Chatwoot Agent Bot).
 
 ---
 
-## O Que Precisa Ser Feito
+## Passos de Implementação
 
 ### Passo 1 — Trocar LLM do AnythingLLM: Gemini → Groq
 
-**Modelo:** `llama-3.3-70b-versatile` (melhor equilíbrio qualidade/latência para português)
+**Modelo recomendado:** `llama-3.3-70b-versatile` (melhor compreensão de português + qualidade de raciocínio)
 
-Chamada de API:
 ```bash
 curl -X POST https://rag.ipexdesenvolvimento.cloud/api/v1/system/update-env \
   -H "Authorization: Bearer W5M4VV3-DVQMN22-M2QF6JE-R5KFJP0" \
@@ -150,36 +216,51 @@ curl -X POST https://rag.ipexdesenvolvimento.cloud/api/v1/system/update-env \
   }'
 ```
 
-Verificar após:
+Verificar:
 ```bash
 curl -s -H "Authorization: Bearer W5M4VV3-DVQMN22-M2QF6JE-R5KFJP0" \
   https://rag.ipexdesenvolvimento.cloud/api/v1/system \
   | python3 -m json.tool | grep -E '"LLMProvider"|"LLMModel"'
+# Esperado: "LLMProvider": "groq", "LLMModel": "llama-3.3-70b-versatile"
 ```
-Esperado: `"LLMProvider": "groq"` e `"LLMModel": "llama-3.3-70b-versatile"`
 
 ---
 
-### Passo 2 — Criar Agent Bot no Chatwoot
+### Passo 2 — Atualizar System Prompt do workspace "tds"
+
+O system prompt atual usa "linguagem informal". Deve refletir a **postura acadêmica institucional** do projeto, mantendo acessibilidade. Substituir via API:
+
+```bash
+curl -X POST https://rag.ipexdesenvolvimento.cloud/api/v1/workspace/tds/update \
+  -H "Authorization: Bearer W5M4VV3-DVQMN22-M2QF6JE-R5KFJP0" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "openAiPrompt": "Você é o Tutor IA do Projeto TDS — Território de Desenvolvimento Social e Inclusão Produtiva, iniciativa da Universidade Federal do Tocantins (UFT), FAPTO e IPEX, com apoio do Ministério do Desenvolvimento Social (MDS).\n\nSEU PAPEL: Tutora virtual oficial do projeto. Responda exclusivamente com base nos materiais dos cursos TDS (apostilas, ementas e plano de trabalho). Nunca invente informações.\n\nPÚBLICO: Beneficiários do CadÚnico em municípios do Tocantins (Bico do Papagaio, Jalapão/Dianópolis). Maioria mulheres, adultos jovens, com acesso móvel e conectividade limitada.\n\nCURSOS DISPONÍVEIS:\n1. Empreendedorismo Popular e Gestão de Negócios\n2. Formação Cooperativista Popular\n3. Agricultura Familiar e Políticas Públicas Federais\n4. Sistemas Produtivos Sustentáveis e Tecnologias Sociais\n5. Inovação e Certificação Agroecológica\n\nESTILO DE RESPOSTA:\n- Use \"você\" (nunca \"senhor/senhora\")\n- Linguagem direta e acessível, com autoridade de uma instituição de ensino\n- Respostas curtas (máximo 3 parágrafos)\n- Exemplos práticos do cotidiano do Tocantins e da realidade rural/periférica\n- Emojis funcionais e moderados são permitidos\n- Temas de empreendedorismo feminino e autonomia financeira têm prioridade temática\n\nQUANDO NÃO SOUBER: Diga exatamente: \"Não encontrei essa informação nos materiais do TDS. Você pode digitar tutor para falar com nossa equipe!\"\n\nJAMAIS responda sobre: benefícios do governo, questões pessoais de saúde, problemas com o Bolsa Família ou CadÚnico — esses casos devem ir para o tutor humano."
+  }'
+```
+
+---
+
+### Passo 3 — Criar Agent Bot no Chatwoot
 
 ```bash
 curl -X POST https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/agent_bots \
   -H "api_access_token: tbTMVRp2RwZNyGKKhRHUpNky" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "TutorIA TDS",
-    "description": "Tutor virtual do Projeto TDS — responde dúvidas sobre os cursos via RAG",
+    "name": "Tutor IA",
+    "description": "Tutor virtual oficial do Projeto TDS/UFT — atende dúvidas sobre os cursos via RAG",
     "outgoing_url": "https://n8n.ipexdesenvolvimento.cloud/webhook/chatwoot-kreativ"
   }'
 ```
 
-Salvar o `id` retornado (campo `"id"` no JSON de resposta). Usado no Passo 3.
+**Salvar o `id` retornado.** Exemplo de resposta: `{"id": 1, "name": "Tutor IA", ...}`
 
 ---
 
-### Passo 3 — Associar Agent Bot ao inbox5
+### Passo 4 — Associar Agent Bot ao inbox5
 
-Substituir `<AGENT_BOT_ID>` pelo id obtido no Passo 2:
+Substituir `<AGENT_BOT_ID>` pelo id do Passo 3:
 
 ```bash
 curl -X POST https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/inboxes/5/set_agent_bot \
@@ -193,14 +274,14 @@ Verificar:
 curl -s -H "api_access_token: tbTMVRp2RwZNyGKKhRHUpNky" \
   "https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/inboxes/5/agent_bot" \
   | python3 -m json.tool
+# Esperado: objeto com "name": "Tutor IA"
 ```
-Esperado: retornar objeto com `"id"` e `"name": "TutorIA TDS"`
 
 ---
 
-### Passo 4 — Atualizar o nó "Extrair Dados Chatwoot" no N8N
+### Passo 5 — Substituir código do nó "Extrair Dados Chatwoot" no N8N
 
-O nó atual **não extrai o sessionId (telefone)**. Substituir o código JavaScript do nó `Extrair Dados Chatwoot` (workflow `XYcnRlPZSlfGXOWb`) pelo seguinte:
+Workflow `XYcnRlPZSlfGXOWb` — nó `Extrair Dados Chatwoot` (tipo: Code). Substituir o JS inteiro por:
 
 ```javascript
 const input = $input.first().json;
@@ -211,184 +292,190 @@ if (body.event && body.event !== 'message_created') {
   return [];
 }
 
-// Ignorar mensagens enviadas pelo próprio bot (outgoing)
+// Ignorar mensagens do bot ou de agentes humanos (só processar mensagens de contatos)
 const msgType = String(body.message_type ?? body.message?.message_type ?? '');
-if (msgType === 'outgoing' || msgType === '1') {
-  return [];
-}
+if (msgType === 'outgoing' || msgType === '1') return [];
 
-// Ignorar mensagens de agentes humanos
 const senderType = String(body.sender?.type ?? '');
-if (senderType === 'agent_bot' || senderType === 'user') {
-  return [];
-}
+if (senderType === 'agent_bot' || senderType === 'user') return [];
 
-// Detectar tipo de conteúdo
-const contentType = String(body.content_type ?? body.message?.content_type ?? 'text');
-const messageText = String(body.content || body.message?.content || '').trim();
+// Extrair sessionId = número de telefone do contato (garante memória por aluno)
+const sessionId = String(
+  body.meta?.sender?.identifier ||
+  body.sender?.phone_number ||
+  body.conversation?.meta?.sender?.identifier ||
+  body.contact?.phone_number ||
+  ''
+);
 
-// Áudio: pedir para digitar
+const conversationId = String(body.conversation?.id || '');
+const accountId      = String(body.conversation?.account_id || '1');
+const contactName    = String(body.meta?.sender?.name || body.sender?.name || '');
+const contentType    = String(body.content_type ?? body.message?.content_type ?? 'text');
+const messageText    = String(body.content || body.message?.content || '').trim();
+
+// Áudio → rota especial (Sprint 2 terá STT; por ora pede para digitar)
 if (contentType === 'audio' || contentType === 'voice') {
-  return [{
-    json: {
-      conversationId: String(body.conversation?.id || ''),
-      accountId: String(body.conversation?.account_id || '1'),
-      sessionId: String(body.meta?.sender?.identifier || body.sender?.phone_number || body.conversation?.meta?.sender?.identifier || ''),
-      contactName: String(body.meta?.sender?.name || body.sender?.name || ''),
-      messageText: '',
-      route: 'audio'
-    }
-  }];
+  return [{ json: { conversationId, accountId, sessionId, contactName, messageText: '', route: 'audio' } }];
 }
 
-// Imagem ou arquivo: redirecionar para portal
+// Imagem / arquivo → redirecionar para portal ou tutor
 if (contentType === 'image' || contentType === 'file' || contentType === 'sticker') {
-  return [{
-    json: {
-      conversationId: String(body.conversation?.id || ''),
-      accountId: String(body.conversation?.account_id || '1'),
-      sessionId: String(body.meta?.sender?.identifier || body.sender?.phone_number || body.conversation?.meta?.sender?.identifier || ''),
-      contactName: String(body.meta?.sender?.name || body.sender?.name || ''),
-      messageText: '',
-      route: 'media'
-    }
-  }];
+  return [{ json: { conversationId, accountId, sessionId, contactName, messageText: '', route: 'media' } }];
 }
 
-// Palavras-chave de handoff
-const keywordPattern = /tutor|prova|exame|certificado|humano|operador|atendente|bolsa|cad[uú]nico|benefício|reclamação|ajuda humana|falar com alguém|não consigo|problema/i;
-const route = keywordPattern.test(messageText) ? 'handoff' : 'rag';
+// Palavras-chave de handoff (inclui contexto social sensível)
+const handoffPattern = /tutor|prova|exame|certificado|humano|operador|atendente|bolsa|cad[uú]nico|cad\s+[uú]nico|benef[ií]cio|reclama[cç][aã]o|ajuda humana|falar com algu[eé]m|n[aã]o consigo|problema/i;
+const route = handoffPattern.test(messageText) ? 'handoff' : 'rag';
 
-return [{
-  json: {
-    conversationId: String(body.conversation?.id || ''),
-    accountId: String(body.conversation?.account_id || '1'),
-    sessionId: String(body.meta?.sender?.identifier || body.sender?.phone_number || body.conversation?.meta?.sender?.identifier || ''),
-    contactName: String(body.meta?.sender?.name || body.sender?.name || ''),
-    messageText: messageText,
-    route: route
-  }
-}];
+return [{ json: { conversationId, accountId, sessionId, contactName, messageText, route } }];
 ```
 
 ---
 
-### Passo 5 — Adicionar ramos para áudio e mídia no workflow
+### Passo 6 — Adicionar ramos de IF para `audio` e `media` no workflow
 
-Após o nó "É Prova/Tutor?", adicionar dois novos ramos de IF para `route === 'audio'` e `route === 'media'`, cada um conectado a um nó HTTP que envia mensagem fixa ao Chatwoot:
+O workflow atual só tem bifurcação handoff/rag. Adicionar dois novos ramos após o nó de extração:
 
-**Resposta para áudio:**
-```
-Oi! Ainda não consigo ouvir áudios, mas pode me digitar sua dúvida que respondo rapidinho 😊
-```
-
-**Resposta para imagem/arquivo:**
-```
-Não consigo processar arquivos por aqui. Para enviar documentos, acesse o portal: lms.ipexdesenvolvimento.cloud — ou aguarde um tutor humano te ajudar!
+**Ramo audio** — IF `route === 'audio'` → nó HTTP POST com body:
+```json
+{
+  "content": "Oi! Ainda não consigo ouvir áudios, mas você pode digitar sua dúvida que respondo na hora! 😊",
+  "message_type": "outgoing"
+}
 ```
 
-Ambos os nós usam:
+**Ramo media** — IF `route === 'media'` → nó HTTP POST com body:
+```json
+{
+  "content": "Não consigo processar arquivos por aqui. Para enviar documentos, acesse o portal lms.ipexdesenvolvimento.cloud — ou aguarde um tutor humano te ajudar!",
+  "message_type": "outgoing"
+}
 ```
-POST https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/{{ $json.accountId }}/conversations/{{ $json.conversationId }}/messages
-Headers: { api_access_token: tbTMVRp2RwZNyGKKhRHUpNky, Content-Type: application/json }
-Body: { "content": "<mensagem fixa acima>", "message_type": "outgoing" }
+
+URL para ambos os nós:
 ```
+https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/{{ $json.accountId }}/conversations/{{ $json.conversationId }}/messages
+```
+Header: `api_access_token: tbTMVRp2RwZNyGKKhRHUpNky`
 
 ---
 
-### Passo 6 — Adicionar sessionId na chamada ao AnythingLLM
+### Passo 7 — Adicionar sessionId na chamada ao AnythingLLM (nó "Consultar RAG")
 
-No nó "Consultar RAG" (tipo httpRequest), o body atual provavelmente não inclui `sessionId`. Atualizar para:
+Atualizar o body do nó `Consultar RAG` (httpRequest):
 
 ```json
 {
-  "message": "={{ $('Extrair Dados Chatwoot').item.json.messageText }}",
-  "mode": "chat",
+  "message":   "={{ $('Extrair Dados Chatwoot').item.json.messageText }}",
+  "mode":      "chat",
   "sessionId": "={{ $('Extrair Dados Chatwoot').item.json.sessionId }}"
 }
 ```
 
-O `sessionId` vinculado ao número de telefone garante que o AnythingLLM mantenha histórico de conversa por aluno (memória stateful).
-
 ---
 
-### Passo 7 — Verificar rota de handoff (assign → null)
+### Passo 8 — Completar nó "Transbordo Humano" (adicionar desatribuição)
 
-O nó "Transbordo Humano" atual provavelmente só envia mensagem. Adicionar chamada de atribuição para liberar a conversa para a fila humana:
+O nó atual provavelmente só envia mensagem. Adicionar **segundo nó HTTP** após a mensagem de handoff:
 
+**Mensagem de handoff** (já deve existir, verificar texto e atualizar):
+```json
+{
+  "content": "Entendido! Vou conectar você com um tutor humano agora. Nosso atendimento humano funciona principalmente à noite nos dias úteis e nas tardes de fim de semana. Em breve alguém vai te responder! 👋",
+  "message_type": "outgoing"
+}
+```
+
+**Desatribuição** (novo nó após a mensagem):
 ```
 POST https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/{{ $json.accountId }}/conversations/{{ $json.conversationId }}/assignments
-Headers: { api_access_token: tbTMVRp2RwZNyGKKhRHUpNky, Content-Type: application/json }
 Body: { "assignee_id": null }
 ```
 
 ---
 
-## Verificação Final (Checklist)
+## Checklist de Verificação
 
 ```
-[ ] AnythingLLM responde via Groq:
-    curl -s -H "Authorization: Bearer W5M4VV3-DVQMN22-M2QF6JE-R5KFJP0" \
-      https://rag.ipexdesenvolvimento.cloud/api/v1/system \
-      | python3 -m json.tool | grep LLMProvider
-    Esperado: "LLMProvider": "groq"
+[ ] 1. AnythingLLM usando Groq:
+       curl -s -H "Authorization: Bearer W5M4VV3-DVQMN22-M2QF6JE-R5KFJP0" \
+         https://rag.ipexdesenvolvimento.cloud/api/v1/system \
+         | python3 -m json.tool | grep LLMProvider
+       → "LLMProvider": "groq"
 
-[ ] Agent Bot criado no Chatwoot:
-    curl -s -H "api_access_token: tbTMVRp2RwZNyGKKhRHUpNky" \
-      https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/agent_bots \
-      | python3 -m json.tool
-    Esperado: array com objeto "TutorIA TDS"
+[ ] 2. System prompt atualizado no workspace tds:
+       curl -s -H "Authorization: Bearer W5M4VV3-DVQMN22-M2QF6JE-R5KFJP0" \
+         https://rag.ipexdesenvolvimento.cloud/api/v1/workspaces \
+         | python3 -m json.tool | grep -A2 "openAiPrompt"
+       → prompt contém "Universidade Federal do Tocantins"
 
-[ ] Agent Bot associado ao inbox5:
-    curl -s -H "api_access_token: tbTMVRp2RwZNyGKKhRHUpNky" \
-      https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/inboxes/5/agent_bot \
-      | python3 -m json.tool
-    Esperado: objeto com name "TutorIA TDS"
+[ ] 3. Agent Bot "Tutor IA" criado:
+       curl -s -H "api_access_token: tbTMVRp2RwZNyGKKhRHUpNky" \
+         https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/agent_bots \
+         | python3 -m json.tool
+       → array com objeto name "Tutor IA"
 
-[ ] N8N workflow atualizado — teste de payload manual:
-    curl -X POST https://n8n.ipexdesenvolvimento.cloud/webhook/chatwoot-kreativ \
-      -H "Content-Type: application/json" \
-      -d '{
-        "event": "message_created",
-        "message_type": "incoming",
-        "content": "O que é cooperativismo?",
-        "content_type": "text",
-        "conversation": { "id": 999, "account_id": 1 },
-        "meta": { "sender": { "name": "Teste", "identifier": "+5563999999999" } },
-        "sender": { "type": "contact" }
-      }'
-    Esperado: N8N processa, AnythingLLM retorna resposta, Chatwoot recebe mensagem na conversa 999
+[ ] 4. Agent Bot associado ao inbox5:
+       curl -s -H "api_access_token: tbTMVRp2RwZNyGKKhRHUpNky" \
+         https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/inboxes/5/agent_bot \
+         | python3 -m json.tool
+       → objeto com "name": "Tutor IA"
 
-[ ] Teste de handoff:
-    Mesmo payload, trocar content para "quero falar com um tutor"
-    Esperado: mensagem de handoff enviada + conversa liberada para fila humana
+[ ] 5. Teste RAG com sessionId:
+       curl -X POST https://n8n.ipexdesenvolvimento.cloud/webhook/chatwoot-kreativ \
+         -H "Content-Type: application/json" \
+         -d '{
+           "event": "message_created",
+           "message_type": "incoming",
+           "content": "O que é cooperativismo?",
+           "content_type": "text",
+           "conversation": { "id": 999, "account_id": 1 },
+           "meta": { "sender": { "name": "Maria", "identifier": "+5563999999999" } },
+           "sender": { "type": "contact" }
+         }'
+       → N8N processa, Chatwoot recebe resposta sobre cooperativismo na conversa 999
 
-[ ] Teste de áudio:
-    Mesmo payload, trocar content_type para "audio"
-    Esperado: mensagem "Ainda não consigo ouvir áudios..."
+[ ] 6. Teste de handoff:
+       Mesmo payload, content: "quero falar com um tutor"
+       → Chatwoot recebe mensagem de handoff + conversa liberada para fila humana
+
+[ ] 7. Teste de áudio:
+       Mesmo payload, content_type: "audio"
+       → Chatwoot recebe "Ainda não consigo ouvir áudios..."
+
+[ ] 8. Teste de memória (sessionId):
+       Enviar 2 payloads sequenciais com mesmo identifier "+5563999999999"
+       Segunda mensagem: "pode repetir o que disse antes?"
+       → AnythingLLM deve responder usando contexto da primeira mensagem
 ```
 
 ---
 
-## Contexto Pedagógico para o System Prompt (já configurado, NÃO alterar)
+## Roadmap Sprint 2+ (não implementar agora)
 
-O workspace `tds` no AnythingLLM já possui system prompt em português com:
-- Apresentação do tutor como virtual do Projeto TDS/Tocantins
-- Perfil do público (71,9% mulheres, comunidades periféricas, Bico do Papagaio)
-- Lista dos 5 cursos disponíveis
-- Instruções de estilo (linguagem informal, respostas curtas, exemplos locais)
-- Resposta de recusa: "Não encontrei essa informação nos materiais do TDS. Posso te conectar com um tutor humano — só digitar 'tutor'!"
+### Sprint 2 — Ações estruturadas (requer Frappe LMS em produção)
 
-**NÃO modificar o system prompt existente.**
+Implementar intent detection no N8N para rotear para ações específicas:
 
----
+| Intent detectada | Ação N8N | Endpoint Frappe |
+|-----------------|----------|-----------------|
+| "quero começar o curso" / "próximo módulo" | `get_module` | `GET /api/resource/Course Lesson` |
+| "já estudei, quero fazer a prova" | `submit_quiz` | IA gera 3 questões discursivas via AnythingLLM + avalia respostas |
+| "qual meu progresso?" | `get_progress` | `GET /api/resource/LMS Enrollment` |
+| "quero meu certificado" | `emit_certificate` | `POST /api/method/lms.emit_certificate` → URL do PDF |
+| primeira mensagem de número novo | `check_student` | `GET /api/resource/LMS Enrollment?filters=[["student","=","..."]]` |
 
-## O Que Este Spec NÃO Cobre (fora do escopo)
+### Sprint 2 — Chatwoot Captain (copiloto para tutores)
 
-- Horário de atendimento dos tutores humanos (a definir pela coordenação UFT/FAPTO)
-- Nome final do bot (TutorIA TDS é placeholder; a equipe TDS pode renomear)
-- Critérios formais de aprovação nos cursos (a definir pela coordenação pedagógica)
-- Notificações proativas (nudges a cada 48h para alunos inativos) — sprint futuro
-- Quizzes inline via WhatsApp — sprint futuro
-- Integração com Frappe LMS para progresso/matrícula — sprint futuro
-- Certificados via WhatsApp — sprint futuro
+Segundo Agent Bot que observa conversas abertas com agentes humanos e sugere respostas baseadas no RAG, sem intervir diretamente. Usa a mesma infraestrutura AnythingLLM/Groq.
+
+### Sprint 3 — STT/TTS (acessibilidade)
+
+- **STT:** Groq Whisper API (`POST https://api.groq.com/openai/v1/audio/transcriptions`) para transcrever áudios recebidos antes de enviar ao RAG
+- **TTS:** Text-to-Speech para responder em áudio quando solicitado (biblioteca `pyttsx3` ou API externa)
+- Objetivo: eliminar barreira de literacia digital para público com dificuldades de digitação
+
+### Sprint 3 — Typebot v6
+
+Para fluxos de quiz estruturado (múltipla escolha inline, botões interativos), integrar Typebot v6 como camada de UX entre o WhatsApp e o N8N. Atualmente não há container Typebot no servidor.
