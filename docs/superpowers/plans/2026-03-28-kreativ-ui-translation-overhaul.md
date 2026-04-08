@@ -1,8 +1,8 @@
-# Kreativ Education (TDS) UI & Translation Implementation Plan
+# Territórios de Desenvolvimento Social e Inclusão Produtiva UI & Translation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Transform Frappe LMS into the "Kreativ Education" experience with a custom sidebar, premium gradients, and a complete pt-BR translation using local LLM inference.
+**Goal:** Transform Frappe LMS into the "Territórios de Desenvolvimento Social e Inclusão Produtiva" experience with a custom sidebar, premium gradients, and a complete pt-BR translation using local LLM inference.
 
 **Architecture:** We use `website_route_rules` to override the core LMS SPA shell with a custom Jinja template (`lms_custom.html`). Translations are handled by a local TeenyTinyLlama 460M model via the `transformers` library to avoid API rate limits.
 
