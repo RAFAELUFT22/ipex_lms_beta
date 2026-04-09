@@ -1,0 +1,30 @@
+{
+  "project": "Kreativ-Unified-System",
+  "stacks": [
+    {
+      "name": "Frontend-Stack",
+      "services": [
+        { "name": "lms-lite-portal", "image": "kreativ/lms-portal:latest", "port": 3000 },
+        { "name": "frappe-lms", "image": "kreativ/frappe-lms:v15", "port": 8000 }
+      ]
+    },
+    {
+      "name": "IA-Messaging-Stack",
+      "services": [
+        { "name": "anythingllm", "image": "mintplexlabs/anything-llm", "port": 3001 },
+        { "name": "evolution-api", "image": "atendai/evolution-api:latest", "port": 8080 },
+        { "name": "chatwoot", "image": "chatwoot/chatwoot:latest", "port": 3000 }
+      ]
+    },
+    {
+      "name": "Orchestration-Stack",
+      "services": [
+        { "name": "n8n", "image": "n8nio/n8n:latest", "port": 5678 },
+        { "name": "postgres-master", "image": "postgres:15-alpine", "port": 5432 }
+      ]
+    }
+  ],
+  "networks": [
+    { "name": "dokploy-network", "driver": "overlay" }
+  ]
+}

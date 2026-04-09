@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TDS LMS Lite - Protótipo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --tds-primary: #003366;
+            --tds-secondary: #008080;
+            --tds-accent: #FFCC00;
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #F8F9FA;
+        }
+        h1, h2, h3 {
+            font-family: 'Inter', sans-serif;
+        }
+        .bg-tds-gradient {
+            background: linear-gradient(135deg, var(--tds-primary) 0%, var(--tds-secondary) 100%);
+        }
+        .course-card:hover {
+            transform: translateY(-5px);
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-tds-primary rounded-lg flex items-center justify-center text-white font-bold text-xl">T</div>
+            <span class="font-bold text-lg text-[#003366] hidden md:block">Territórios de Desenvolvimento Social</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="text-right hidden sm:block">
+                <p class="text-xs text-gray-500">Bem-vindo(a)</p>
+                <p class="text-sm font-semibold">Visitante TDS</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-gray-200 border-2 border-[#008080] flex items-center justify-center overflow-hidden">
+                <span class="text-xs font-bold text-gray-500">User</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="bg-tds-gradient text-white py-12 px-6">
+        <div class="max-w-6xl mx-auto">
+            <p class="text-[#FFCC00] font-semibold mb-2 tracking-widest uppercase text-sm">Inclusão Produtiva no Tocantins</p>
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Seu caminho para o <br>desenvolvimento social.</h1>
+            <p class="text-blue-100 text-lg mb-8 max-w-2xl">Acesse conteúdos exclusivos, trilhas de aprendizagem e o apoio do nosso Tutor Cognitivo para transformar sua realidade.</p>
+            <div class="flex gap-4">
+                <button class="bg-[#FFCC00] text-[#003366] px-6 py-3 rounded-full font-bold shadow-lg hover:brightness-110 transition-all">
+                    Continuar Cursos
+                </button>
+                <button class="border border-white/30 bg-white/10 backdrop-blur-md px-6 py-3 rounded-full font-semibold hover:bg-white/20 transition-all">
+                    Ver Trilhas
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto py-12 px-6">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold text-[#003366]">Meus Cursos TDS</h2>
+            <span class="text-sm text-gray-500 font-semibold cursor-pointer hover:text-[#008080]">Ver todos →</span>
+        </div>
+
+        <!-- Course Grid (Dynamic) -->
+        <div id="course-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Shimmer/Loading items -->
+            <div class="animate-pulse bg-white rounded-2xl p-4 shadow-sm">
+                <div class="h-40 bg-gray-200 rounded-xl mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+            <div class="animate-pulse bg-white rounded-2xl p-4 shadow-sm">
+                <div class="h-40 bg-gray-200 rounded-xl mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+            <div class="animate-pulse bg-white rounded-2xl p-4 shadow-sm">
+                <div class="h-40 bg-gray-200 rounded-xl mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Tutor Cognitivo Context -->
+    <section class="bg-[#e0f2f1] py-12 px-6 mb-20 border-y border-[#b2dfdb]">
+        <div class="max-w-4xl mx-auto text-center">
+            <h3 class="text-xl font-bold text-[#004d40] mb-4">Precisa de ajuda hoje?</h3>
+            <p class="text-[#00695c] mb-6">Nosso Tutor Cognitivo está pronto para tirar dúvidas sobre ementas oficiais, projetos e o Território de Desenvolvimento Social usando inteligência artificial.</p>
+            <div class="inline-flex gap-2 text-xs font-bold text-white uppercase">
+                <span class="bg-[#008080] px-3 py-1 rounded-full">RAG Integrado</span>
+                <span class="bg-[#003366] px-3 py-1 rounded-full">Chatwoot</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 py-8 px-6 text-center border-t border-gray-200">
+        <p class="text-gray-500 text-sm">© 2026 IPEX / UFT / FAPTO / MDS - Projeto TDS</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Mock de carregamento se a API real falhar por CORS (comum em protótipos locais)
+        const mockCourses = [
+            { title: "Agricultura Sustentável", progress: 45, image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=400" },
+            { title: "Empreendedorismo e Finanças", progress: 12, image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=400" },
+            { title: "IA no Meu Bolso", progress: 90, image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=400" }
+        ];
+
+        async function loadCourses() {
+            const grid = document.getElementById('course-grid');
+            
+            try {
+                // Tentativa de buscar via API real do seu domínio
+                // Nota: Pode exigir CORS habilitado no Frappe
+                const response = await fetch('https://lms.ipexdesenvolvimento.cloud/api/resource/LMS Course?limit_page_length=6', {
+                    headers: { 'Authorization': 'token 056681de29fce7a:7c78dcba6e3c5d1' }
+                });
+                
+                if (!response.ok) throw new Error("CORS or Auth Error");
+                
+                const data = await response.json();
+                renderCourses(data.data.map(c => ({ title: c.name, progress: 0, image: "https://source.unsplash.com/featured/?nature,education" })));
+                
+            } catch (err) {
+                console.warn("Usando mock data devido a erro de API:", err);
+                renderCourses(mockCourses);
+            }
+        }
+
+        function renderCourses(courses) {
+            const grid = document.getElementById('course-grid');
+            grid.innerHTML = courses.map(course => `
+                <div class="course-card bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer">
+                    <div class="h-40 bg-gray-200 relative">
+                        <img src="${course.image}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/20"></div>
+                        <div class="absolute bottom-3 left-3 bg-[#FFCC00] text-[#003366] text-[10px] font-bold px-2 py-1 rounded">CURSO keeper</div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="font-bold text-[#003366] mb-3 text-lg">${course.title.replace(/-/g, ' ')}</h3>
+                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden mb-2">
+                            <div class="bg-[#008080] h-full" style="width: ${course.progress}%"></div>
+                        </div>
+                        <div class="flex justify-between items-center text-xs text-gray-500 font-semibold">
+                            <span>Progresso</span>
+                            <span>${course.progress}%</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.onload = loadCourses;
+
+        // Chatwoot Integration
+        (function(d,t){
+          var BASE_URL="https://chat.ipexdesenvolvimento.cloud";
+          var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+          g.src=BASE_URL+"/packs/js/sdk.js";
+          g.defer=true; g.async=true;
+          s.parentNode.insertBefore(g,s);
+          g.onload=function(){
+            window.chatwootSDK.run({
+              websiteToken: 'HwBawyqmiKTAbNzF8yAnzHCD',
+              baseUrl: BASE_URL
+            })
+          }
+        })(document,"script");
+    </script>
+</body>
+</html>
