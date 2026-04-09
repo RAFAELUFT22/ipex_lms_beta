@@ -255,6 +255,12 @@ services:
       - dokploy-network
     depends_on:
       - postgres
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:5678/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
 
   # ---------------------------------------------------------------------------
   # COGNITIVE TUTOR / RAG (AnythingLLM)
@@ -318,6 +324,12 @@ services:
       - dokploy-network
     depends_on:
       - postgres
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3005/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
 
   chatwoot_sidekiq:
     image: chatwoot/chatwoot:v4.11.0
