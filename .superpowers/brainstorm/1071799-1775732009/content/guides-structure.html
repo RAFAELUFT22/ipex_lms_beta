@@ -1,0 +1,80 @@
+<h2>Estrutura dos 3 Guias de Uso</h2>
+<p class="subtitle">Cada guia é uma web page pública no Frappe LMS, acessível sem login</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="aluno" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #e8f5e9; padding: 1rem; font-size: 0.78rem; line-height: 1.9; color: #1b5e20;">
+      <div style="font-weight: 800; font-size: 0.9rem; margin-bottom: 0.5rem;">📱 /guia-aluno</div>
+      <div>🎯 <strong>Para:</strong> Beneficiários CadÚnico</div>
+      <div>📖 <strong>Linguagem:</strong> Simples, sem jargão</div>
+      <div style="margin-top: 0.5rem; border-top: 1px dashed #a5d6a7; padding-top: 0.5rem;">
+        <div>1. O que é o TDS?</div>
+        <div>2. Quem pode participar?</div>
+        <div>3. Como me inscrevo pelo WhatsApp?</div>
+        <div>4. Como funciona o curso?</div>
+        <div>5. Vou receber certificado?</div>
+        <div>6. Preciso ter internet boa?</div>
+        <div>7. Perguntas frequentes</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Guia do Aluno</h3>
+      <p>FAQ visual em linguagem acessível. CTA principal: salvar número de WhatsApp da equipe TDS.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="tutor" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #e3f2fd; padding: 1rem; font-size: 0.78rem; line-height: 1.9; color: #0d47a1;">
+      <div style="font-weight: 800; font-size: 0.9rem; margin-bottom: 0.5rem;">🎓 /guia-tutor</div>
+      <div>🎯 <strong>Para:</strong> Instrutores dos 7 cursos</div>
+      <div>📖 <strong>Linguagem:</strong> Técnica, step-by-step</div>
+      <div style="margin-top: 0.5rem; border-top: 1px dashed #90caf9; padding-top: 0.5rem;">
+        <div>1. Acessando o LMS (login)</div>
+        <div>2. Seu curso — visão geral</div>
+        <div>3. Editando aulas e conteúdo</div>
+        <div>4. Gerenciando sua turma</div>
+        <div>5. Acompanhando progresso dos alunos</div>
+        <div>6. Avaliações e certificados</div>
+        <div>7. Suporte técnico</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Guia do Tutor</h3>
+      <p>Manual passo a passo do Frappe LMS para instrutores. Inclui prints e fluxos de trabalho.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="gestor" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #fce4ec; padding: 1rem; font-size: 0.78rem; line-height: 1.9; color: #880e4f;">
+      <div style="font-weight: 800; font-size: 0.9rem; margin-bottom: 0.5rem;">📊 /guia-gestor</div>
+      <div>🎯 <strong>Para:</strong> NERUDS/UFT/FAPTO/MDS</div>
+      <div>📖 <strong>Linguagem:</strong> Executiva, indicadores</div>
+      <div style="margin-top: 0.5rem; border-top: 1px dashed #f48fb1; padding-top: 0.5rem;">
+        <div>1. Visão geral do programa</div>
+        <div>2. Arquitetura tecnológica</div>
+        <div>3. Acessando relatórios e métricas</div>
+        <div>4. Fluxo do aluno (WhatsApp → certificado)</div>
+        <div>5. Equipe e responsabilidades</div>
+        <div>6. Política de privacidade dos dados</div>
+        <div>7. Contato técnico</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Guia do Gestor</h3>
+      <p>Painel institucional com arquitetura, fluxos e indicadores. Acesso direto ao LMS Admin.</p>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top: 2rem; background: #f5f5f5; border-radius: 8px; padding: 1.2rem; font-size: 0.82rem; color: #444;">
+  <strong>Também incluído no plano de execução:</strong>
+  <ul style="margin: 0.5rem 0 0 1.2rem; line-height: 2;">
+    <li>Remover cursos duplicados do catálogo (106 → ~12)</li>
+    <li>Vincular 6 turmas aos seus respectivos cursos</li>
+    <li>Despublicar curso demo "<em>A guide to Frappe Learning</em>"</li>
+    <li>Fix <code>&lt;think&gt;</code> tags no N8N (strips antes de enviar ao Chatwoot)</li>
+    <li>Healthchecks já corrigidos no docker-compose.yml</li>
+  </ul>
+</div>

@@ -1,4 +1,4 @@
-# Contexto de Negócio — Kreativ Education / TDS
+# Contexto de Negócio — Territórios de Desenvolvimento Social e Inclusão Produtiva / TDS
 
 ## O Projeto
 

@@ -226,7 +226,7 @@ def apply_premium_branding():
                  f'</div>'
 
     payload = {
-        "app_name": "Kreativ Education (TDS)",
+        "app_name": "Territórios de Desenvolvimento Social e Inclusão Produtiva",
         "brand_html": brand_html,
         "custom_css": PREMIUM_CSS,
         "banner_image": url_tds,

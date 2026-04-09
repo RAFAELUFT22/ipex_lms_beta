@@ -1,4 +1,4 @@
-# AI Implementation Guide — Kreativ Education
+# AI Implementation Guide — Territórios de Desenvolvimento Social e Inclusão Produtiva
 
 > **Para:** Gemini, Claude, Cursor, Copilot ou qualquer assistente IA que for trabalhar neste repositório.
 > Leia este documento inteiramente antes de fazer qualquer mudança.
@@ -7,7 +7,7 @@
 
 ## 🎯 Objetivo do Projeto
 
-**Kreativ Education** é uma plataforma de educação conversacional que entrega cursos de empreendedorismo via **WhatsApp** para comunidades periféricas no Brasil. O Frappe LMS é o backbone acadêmico (cursos, matrículas, quizzes, certificados).
+**Territórios de Desenvolvimento Social e Inclusão Produtiva** é uma plataforma de educação conversacional que entrega cursos de empreendedorismo via **WhatsApp** para comunidades periféricas no Brasil. O Frappe LMS é o backbone acadêmico (cursos, matrículas, quizzes, certificados).
 
 ### Stack Tecnológico
 

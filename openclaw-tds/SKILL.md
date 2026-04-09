@@ -1,6 +1,6 @@
 ---
 name: openclaw-tds
-description: Especialista Antigravity para operações no projeto Kreativ Education (TDS) via Dokploy. Use para consultar o OpenClaw (Qwen2.5-Coder:7b) sobre como atualizar o Frappe/LMS, configurar pt-BR ou aplicar branding sem operações hardcoded no root.
+description: Especialista Antigravity para operações no projeto Territórios de Desenvolvimento Social e Inclusão Produtiva via Dokploy. Use para consultar o OpenClaw (Qwen2.5-Coder:7b) sobre como atualizar o Frappe/LMS, configurar pt-BR ou aplicar branding sem operações hardcoded no root.
 ---
 
 # Openclaw TDS (Antigravity)
@@ -37,4 +37,4 @@ Script Bash para chamar a instância Ollama remota com o contexto TDS injetado.
 Ao personalizar o Frappe LMS, utilize os dados de `ctx.md` (IPEX/UFT/TDS) para configurar:
 - Logotipo: IPEX UFT
 - Cores: Azul/Branco UFT
-- Nome do Site: Kreativ Education (TDS)
+- Nome do Site: Territórios de Desenvolvimento Social e Inclusão Produtiva

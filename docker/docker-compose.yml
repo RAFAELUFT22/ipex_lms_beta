@@ -305,6 +305,14 @@ services:
       INSTALLATION_ENV: docker
       CW_AI_ENABLED: "true"
       INSTALLATION_NAME: KreativEdu
+      MAILER_SENDER_EMAIL: noreply@ipexdesenvolvimento.cloud
+      SMTP_ADDRESS: posteio
+      SMTP_PORT: "587"
+      SMTP_USERNAME: atendimento@ipexdesenvolvimento.cloud
+      SMTP_PASSWORD: Admin@TDS2024
+      SMTP_AUTHENTICATION: plain
+      SMTP_ENABLE_STARTTLS_AUTO: "true"
+      SMTP_OPENSSL_VERIFY_MODE: none
     networks:
       - kreativ_net
       - dokploy-network

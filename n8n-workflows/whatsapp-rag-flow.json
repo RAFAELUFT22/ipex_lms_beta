@@ -68,7 +68,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://kreativ-anythingllm:3001/api/v1/workspace/tds/chat",
+        "url": "http://anythingllm:3001/api/v1/workspace/tds/chat",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -96,7 +96,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://kreativ-evolution:8080/message/sendText/{{ $('Extrair Dados').item.json.instance }}",
+        "url": "=http://evolution-api:8080/message/sendText/{{ $('Extrair Dados').item.json.instance }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -121,7 +121,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://kreativ-evolution:8080/message/sendText/{{ $('Extrair Dados').item.json.instance }}",
+        "url": "=http://evolution-api:8080/message/sendText/{{ $('Extrair Dados').item.json.instance }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

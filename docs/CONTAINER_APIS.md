@@ -1,6 +1,6 @@
 # Dicionário de APIs dos Containers Docker
 
-> Mapeamento completo de como acessar e interagir com as APIs de cada serviço rodando na arquitetura do Kreativ Education (LMS + WhatsApp Stack).
+> Mapeamento completo de como acessar e interagir com as APIs de cada serviço rodando na arquitetura do Territórios de Desenvolvimento Social e Inclusão Produtiva (LMS + WhatsApp Stack).
 
 ---
 

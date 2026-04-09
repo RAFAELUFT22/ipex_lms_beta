@@ -1,6 +1,6 @@
 # Guia de Desenvolvimento e Teste Local
 
-> Como rodar a stack completa do Kreativ Education (LMS + WhatsApp) na sua própria máquina (Windows, Mac ou Linux) e expô-la para a internet para testar webhooks reais do WhatsApp.
+> Como rodar a stack completa do Territórios de Desenvolvimento Social e Inclusão Produtiva (LMS + WhatsApp) na sua própria máquina (Windows, Mac ou Linux) e expô-la para a internet para testar webhooks reais do WhatsApp.
 
 ---
 

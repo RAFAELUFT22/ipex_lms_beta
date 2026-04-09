@@ -1,0 +1,125 @@
+{
+  "name": "Kreativ TDS — Bot Resume (Chatwoot Webhook)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bot-resume",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-chatwoot-webhook",
+      "name": "Webhook: Chatwoot",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "status-resolvido",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "resolved",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "node-check-resolved",
+      "name": "Conversa Resolvida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://lms.ipexdesenvolvimento.cloud/api/resource/Student?filters=[[\"Student\", \"mobile_no\", \"like\", \"%{{ $json.contact.phone_number.split('+')[1] }}%\"]]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "token {{ $env.FRAPPE_API_KEY }}:{{ $env.FRAPPE_API_SECRET }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-find-student-id",
+      "name": "Frappe: Buscar Student ID",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [400, 200]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://lms.ipexdesenvolvimento.cloud/api/resource/Student/{{ $json.data[0].name }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "token {{ $env.FRAPPE_API_KEY }}:{{ $env.FRAPPE_API_SECRET }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "atendimento_status", "value": "Bot" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-frappe-update",
+      "name": "Frappe: Mudar Status -> Bot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [600, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evolution.ipexdesenvolvimento.cloud/message/sendText/kreativ",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "{{ $env.EVOLUTION_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ $('Webhook: Chatwoot').item.json.contact.phone_number.split('+')[1] }}" },
+            { "name": "text", "value": "Finalizamos o atendimento humano! Agora o bot assumiu o comando novamente. Como posso te ajudar hoje? 🤖" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-notify-resume",
+      "name": "Evolution: Notificar Retomada",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 200]
+    }
+  ],
+  "connections": {
+    "Webhook: Chatwoot": {
+      "main": [[{ "node": "Conversa Resolvida?", "type": "main", "index": 0 }]]
+    },
+    "Conversa Resolvida?": {
+      "main": [
+        [{ "node": "Frappe: Buscar Student ID", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Frappe: Buscar Student ID": {
+      "main": [[{ "node": "Frappe: Mudar Status -> Bot", "type": "main", "index": 0 }]]
+    },
+    "Frappe: Mudar Status -> Bot": {
+      "main": [[{ "node": "Evolution: Notificar Retomada", "type": "main", "index": 0 }]]
+    }
+  }
+}

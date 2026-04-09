@@ -1,4 +1,4 @@
-# Troubleshooting — Kreativ Education
+# Troubleshooting — Territórios de Desenvolvimento Social e Inclusão Produtiva
 
 ## 1. `bench build` falha com exit code 137 ou 134
 

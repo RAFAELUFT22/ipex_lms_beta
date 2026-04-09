@@ -36,7 +36,7 @@ fail() { echo -e "${RED}❌${NC} $1"; exit 1; }
 # ---------------------------------------------------------------------------
 echo ""
 echo "============================================="
-echo " Kreativ Education — Frappe LMS Setup"
+echo " Territórios de Desenvolvimento Social e Inclusão Produtiva — Frappe LMS Setup"
 echo "============================================="
 echo ""
 

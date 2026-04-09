@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+	CREATE DATABASE evolution_db;
+	CREATE DATABASE chatwoot_db;
+	GRANT ALL PRIVILEGES ON DATABASE evolution_db TO $POSTGRES_USER;
+	GRANT ALL PRIVILEGES ON DATABASE chatwoot_db TO $POSTGRES_USER;
+EOSQL

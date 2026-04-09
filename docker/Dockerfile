@@ -1,12 +1,13 @@
 # =============================================================================
-# Kreativ Education — Frappe LMS Docker Image (V3 - Build Fix)
+# Territórios de Desenvolvimento Social e Inclusão Produtiva — Frappe LMS Docker Image (V4 - Custom Theme)
+# Inclui o kreativ_theme (Custom App) para customização visual oficial
+# conforme arquitetura Frappe Framework (hooks.py + web_include_css)
 # =============================================================================
 
 FROM frappe/erpnext:version-15
 
 USER root
 
-# Instalar dependências e preparar o ambiente
 RUN chown -R frappe:frappe \
     /home/frappe/frappe-bench/env \
     /home/frappe/frappe-bench/apps \
@@ -26,7 +27,19 @@ RUN bench get-app payments --branch version-15 && \
 RUN cd /home/frappe/frappe-bench/apps/lms/frontend && \
     yarn install --frozen-lockfile 2>/dev/null || yarn install
 
-# Garantir que os apps estejam listados para instalação
+# ─── KREATIV THEME (Custom App — Estratégia Oficial Frappe) ───────────────────
+# Copia o app de tema customizado para dentro do bench
+COPY --chown=frappe:frappe kreativ_theme/ /home/frappe/frappe-bench/apps/kreativ_theme/
+
+# Instalar o custom app no ambiente Python do bench
+RUN /home/frappe/frappe-bench/env/bin/pip install -e apps/kreativ_theme
+
+# Registrar o app para que o bench o reconheça
+RUN echo "kreativ_theme" >> sites/apps.txt
+
+# ─── FIM DO KREATIV THEME ──────────────────────────────────────────────────────
+
+# Garantir que os apps principais estejam listados para instalação
 RUN echo "payments" >> sites/apps.txt && \
     echo "lms"      >> sites/apps.txt
 

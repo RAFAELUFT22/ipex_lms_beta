@@ -1,0 +1,106 @@
+{
+  "name": "Kreativ TDS — Human Handoff (Chatwoot Tagging)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "handoff-trigger",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Trigger: Handoff",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/conversations/{{ $json.conversationId }}/labels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "api_access_token", "value": "{{ $env.CHATWOOT_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "labels", "value": "[\"PENDENTE_HUMANO\"]" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-chatwoot-tag",
+      "name": "Chatwoot: Adicionar Tag",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://lms.ipexdesenvolvimento.cloud/api/resource/Student/{{ $json.studentId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "token {{ $env.FRAPPE_API_KEY }}:{{ $env.FRAPPE_API_SECRET }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "atendimento_status", "value": "Humano" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-frappe-status",
+      "name": "Frappe: Mudar Status -> Humano",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evolution.ipexdesenvolvimento.cloud/message/sendText/kreativ",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "{{ $env.EVOLUTION_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ $json.phoneNumber }}" },
+            { "name": "text", "value": "Entendido! Um tutor humano foi notificado e entrará em contato em breve. Temporariamente, minhas respostas automáticas estão desativadas para você. 👋" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-notify-student",
+      "name": "Evolution: Confirmar Handoff",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [600, 300]
+    }
+  ],
+  "connections": {
+    "Trigger: Handoff": {
+      "main": [[{ "node": "Chatwoot: Adicionar Tag", "type": "main", "index": 0 }]]
+    },
+    "Chatwoot: Adicionar Tag": {
+      "main": [[{ "node": "Frappe: Mudar Status -> Humano", "type": "main", "index": 0 }]]
+    },
+    "Frappe: Mudar Status -> Humano": {
+      "main": [[{ "node": "Evolution: Confirmar Handoff", "type": "main", "index": 0 }]]
+    }
+  }
+}

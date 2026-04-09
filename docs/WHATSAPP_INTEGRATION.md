@@ -1,6 +1,6 @@
 # Integração WhatsApp — Evolution API + Typebot
 
-> Como o canal WhatsApp funciona no Kreativ Education e como configurá-lo.
+> Como o canal WhatsApp funciona no Territórios de Desenvolvimento Social e Inclusão Produtiva e como configurá-lo.
 
 ---
 

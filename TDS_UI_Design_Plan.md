@@ -1,5 +1,6 @@
-# 🎨 Projeto de Design: Kreativ Education (TDS)
+# 🎨 Projeto de Design: Territórios de Desenvolvimento Social e Inclusão Produtiva
 **Conceito:** Moderno, Clean, Inclusivo e Regionalizado.
+
 
 ## 🌈 Sistema de Design (Baseado em UFT/IPEX)
 
@@ -19,7 +20,7 @@
 **Objetivo:** Facilitar o acesso imediato ao conteúdo e motivar o progresso.
 
 - **Topo (Navbar):**
-  - Logotipo **Kreativ Education** à esquerda.
+  - Logotipo **Territórios de Desenvolvimento Social e Inclusão Produtiva** à esquerda.
   - Avatar do aluno e sino de notificações à direita.
 - **Banner de Boas-vindas (Hero):**
   - Fundo em degradê Azul Marinho para Teal.

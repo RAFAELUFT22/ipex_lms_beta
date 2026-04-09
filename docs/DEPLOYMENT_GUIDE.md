@@ -1,4 +1,4 @@
-# Deployment Guide — Kreativ Education
+# Deployment Guide — Territórios de Desenvolvimento Social e Inclusão Produtiva
 
 > Passo a passo para deploy do Frappe LMS em uma VPS nova.
 

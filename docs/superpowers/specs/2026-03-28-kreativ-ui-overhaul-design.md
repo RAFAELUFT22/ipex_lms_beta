@@ -1,9 +1,9 @@
-# Design Spec: Kreativ Education (TDS) UI & Translation Overhaul
+# Design Spec: Territórios de Desenvolvimento Social e Inclusão Produtiva UI & Translation Overhaul
 **Data:** 2026-03-28
 **Autor:** Gemini CLI
 
 ## 1. Visão Geral
-Transformar a interface padrão do Frappe LMS em uma experiência premium, moderna e regionalizada (TDS), baseada no design "Kreativ Education" e concluir a tradução integral para pt-BR utilizando modelos locais (TeenyTinyLlama).
+Transformar a interface padrão do Frappe LMS em uma experiência premium, moderna e regionalizada (TDS), baseada no design "Territórios de Desenvolvimento Social e Inclusão Produtiva" e concluir a tradução integral para pt-BR utilizando modelos locais (TeenyTinyLlama).
 
 ## 2. Arquitetura de Interface (LMS SPA Overrides)
 

@@ -1,0 +1,56 @@
+<h2>Estrutura do site — qual abordagem?</h2>
+<p class="subtitle">Escolha como organizar as páginas institucionais e os guias</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Site institucional separado dos cursos</h3>
+      <p>Home pública robusta + páginas estáticas. Cursos ficam em /courses como já estão. Guias são páginas web independentes.</p>
+      <div style="margin-top: 0.8rem; font-size: 0.85rem; color: var(--text-muted, #666); font-family: monospace; line-height: 1.8;">
+        / → home institucional (vitrine TDS)<br>
+        /sobre → sobre o programa<br>
+        /municipios → 36 municípios<br>
+        /courses → catálogo de cursos (existente)<br>
+        /guia-aluno → guia beneficiário<br>
+        /guia-tutor → guia instrutor<br>
+        /guia-gestor → guia gestor
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Tudo integrado ao LMS</h3>
+      <p>Home aprimorada + guias como cursos/aulas dentro do próprio LMS. Gestor e tutor têm dashboards. Mantém tudo em um sistema.</p>
+      <div style="margin-top: 0.8rem; font-size: 0.85rem; color: var(--text-muted, #666); font-family: monospace; line-height: 1.8;">
+        /home-tds → home melhorada<br>
+        /courses → catálogo<br>
+        /batches → turmas<br>
+        [curso] "Guia do Aluno" → aulas de onboarding<br>
+        [curso] "Guia do Tutor" → aulas de capacitação<br>
+        /guia-gestor → web page com métricas
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Híbrido — landing page + guias como web pages simples</h3>
+      <p>Landing page pública institucional. Guias como páginas web dentro do Frappe (acessíveis sem login). Recomendado: máximo impacto, mínima complexidade.</p>
+      <div style="margin-top: 0.8rem; font-size: 0.85rem; color: var(--text-muted, #666); font-family: monospace; line-height: 1.8;">
+        / → landing page TDS (vitrine)<br>
+        /sobre → sobre o TDS<br>
+        /cursos → = /courses<br>
+        /municipios → cobertura territorial<br>
+        /guia-aluno → guia simples (sem login)<br>
+        /guia-tutor → guia completo (sem login)<br>
+        /guia-gestor → painel / indicadores
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top: 1.5rem; color: var(--text-muted, #666); font-size: 0.85rem;">💡 Dica: No Frappe LMS, Web Pages são criadas em <strong>Website → Web Page</strong> e ficam disponíveis como rotas públicas sem necessidade de login.</p>

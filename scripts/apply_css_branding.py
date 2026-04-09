@@ -55,7 +55,7 @@ def apply_branding():
     
     payload = {
         "custom_css": custom_css,
-        "app_name": "Kreativ Education (TDS)",
+        "app_name": "Territórios de Desenvolvimento Social e Inclusão Produtiva",
         "brand_html": '<img src="/files/logo_tds_oficial.png" style="max-height: 40px;">'
     }
     

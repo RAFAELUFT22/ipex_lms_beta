@@ -1,128 +1,25 @@
 /* =========================================================
-   KREATIV THEME — LMS PREMIUM (Kreativ Education Overhaul)
-   Paleta TDS/UFT: Navy #003366 | Teal #008080 | Sol #F9C300
+   ESTILO OFICIAL TDS (CORES RAG)
    ========================================================= */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700&display=swap');
-
 :root {
-    --tds-navy: #003366;
-    --tds-navy-dark: #002244;
-    --tds-teal: #008080;
-    --tds-teal-light: #f0f7f7;
-    --tds-yellow: #F9C300;
-    --tds-gray-bg: #f8fafc;
-    
-    /* Frappe UI overrides */
-    --primary-color: var(--tds-teal);
-    --primary: var(--tds-teal);
+    --tds-navy: #2E4053;   /* Azul RAG */
+    --tds-green: #8BC34A;  /* Verde RAG */
+    --tds-yellow: #F7DC6F; /* Amarelo RAG */
+    --tds-gray-bg: #f4f7f6;
 }
 
-body {
-    font-family: 'Inter', sans-serif !important;
-    background-color: var(--tds-gray-bg) !important;
-}
+/* Sidebar Branca */
+.bg-surface-menu-bar { background-color: #ffffff !important; border-right: 1px solid #edf2f7 !important; }
+.bg-surface-menu-bar span, .lucide, .bg-surface-menu-bar button { color: var(--tds-navy) !important; }
 
-/* ─── DASHBOARD HERO (IMAGE 1 & 2) ─── */
-.lms-hero, 
-[class*="Hero"],
-[class*="banner"] {
-    background: linear-gradient(135deg, var(--tds-navy) 0%, var(--tds-teal) 100%) !important;
-    border-radius: 24px !important;
-    padding: 40px !important;
+/* Hero Gradient TDS */
+.kreativ-hero-injected {
+    background: linear-gradient(135deg, var(--tds-navy) 0%, var(--tds-green) 100%) !important;
+    padding: 60px 40px !important;
     color: white !important;
-    position: relative;
-    overflow: hidden;
-    border-bottom: none !important;
-    box-shadow: 0 10px 30px rgba(0, 51, 102, 0.15) !important;
+    border-radius: 0 0 40px 40px !important;
+    margin-bottom: 30px !important;
 }
 
-/* Arredondamento extremo para mobile conforme Image 1 */
-@media (max-width: 768px) {
-    .lms-hero {
-        border-radius: 0 0 40px 40px !important;
-        padding: 60px 20px 40px !important;
-    }
-}
-
-/* ─── CARDS (SOFT UI) ─── */
-.course-card, 
-[class*="CourseCard"],
-.card {
-    border: 1px solid #edf2f7 !important;
-    border-radius: 18px !important;
-    background: #ffffff !important;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02), 0 10px 15px rgba(0, 0, 0, 0.03) !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.course-card:hover {
-    transform: translateY(-8px) !important;
-    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.05), 0 10px 10px rgba(0, 0, 0, 0.02) !important;
-    border-color: var(--tds-teal) !important;
-}
-
-/* ─── PROGRESS BARS ─── */
-[class*="progress-bar"], 
-.progress-inner,
-[role="progressbar"] > div {
-    background: var(--tds-teal) !important;
-    border-radius: 10px !important;
-}
-
-/* ─── BUTTONS ─── */
-.btn-primary,
-button[class*="primary"],
-[class*="Button"][class*="variant-primary"] {
-    background: var(--tds-yellow) !important;
-    color: var(--tds-navy) !important;
-    border: none !important;
-    border-radius: 12px !important;
-    font-weight: 700 !important;
-    padding: 10px 24px !important;
-    box-shadow: 0 4px 14px rgba(249, 195, 0, 0.3) !important;
-    transition: all 0.2s ease !important;
-}
-
-.btn-primary:hover {
-    transform: scale(1.05) !important;
-    background: #e6b400 !important;
-    box-shadow: 0 6px 20px rgba(249, 195, 0, 0.4) !important;
-}
-
-/* ─── NAV OVERRIDES (HIDE DEFAULT NAVBAR IF SIDEBAR ACTIVE) ─── */
-header.navbar, 
-.navbar-container {
-    background: transparent !important;
-    border-bottom: none !important;
-    box-shadow: none !important;
-}
-
-@media (min-width: 769px) {
-    /* Ajuste para o conteúdo não colidir com o topo se a navbar sumir */
-    #app {
-        padding-top: 20px !important;
-    }
-}
-
-/* ─── TYPOGRAPHY ─── */
-h1, h2, h3, .title {
-    font-family: 'Montserrat', sans-serif !important;
-    font-weight: 700 !important;
-    color: var(--tds-navy) !important;
-}
-
-/* ─── SEARCH BAR ─── */
-.search-input,
-[placeholder*="Search"] {
-    border-radius: 14px !important;
-    border: 1px solid #e2e8f0 !important;
-    padding: 12px 20px !important;
-    background: #f1f5f9 !important;
-}
-
-.search-input:focus {
-    background: #ffffff !important;
-    border-color: var(--tds-teal) !important;
-    box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.1) !important;
-}
+/* Cards Soft UI */
+.lms-layout .rounded-md.border { border: none !important; border-radius: 20px !important; box-shadow: 0 8px 25px rgba(0,0,0,0.05) !important; }

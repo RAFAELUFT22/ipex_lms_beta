@@ -1,4 +1,4 @@
-# N8N Workflows — Kreativ Education
+# N8N Workflows — Territórios de Desenvolvimento Social e Inclusão Produtiva
 
 Workflows N8N para integração Frappe LMS ↔ WhatsApp.
 

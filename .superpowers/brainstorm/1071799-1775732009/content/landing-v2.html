@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Landing TDS v2 — Corrigido</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #eee; color: #1a1a1a; }
+  .wrapper { max-width: 920px; margin: 1.5rem auto; padding: 0 1rem; }
+  .browser-bar { background: #333; color: #eee; font-size: 0.75rem; padding: 0.5rem 1rem; border-radius: 6px 6px 0 0; display: flex; align-items: center; gap: 0.4rem; }
+  .browser-bar .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .browser-bar .url { flex: 1; background: #555; border-radius: 4px; padding: 0.15rem 0.8rem; color: #ccc; margin-left: 0.4rem; }
+  .page { background: #fff; box-shadow: 0 2px 20px rgba(0,0,0,0.15); position: relative; overflow: hidden; }
+
+  nav { background: #1a237e; color: white; padding: 0.7rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+  nav .brand { font-weight: 800; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+  nav .badge { background: #ff6f00; font-size: 0.6rem; font-weight: 800; padding: 0.1rem 0.4rem; border-radius: 3px; }
+  nav .links { display: flex; gap: 1.5rem; font-size: 0.82rem; }
+  nav .links a { color: rgba(255,255,255,0.85); text-decoration: none; }
+  nav .btn-nav { background: #ff6f00; color: white; padding: 0.35rem 1rem; border-radius: 4px; font-size: 0.8rem; font-weight: 700; }
+
+  /* HERO */
+  .hero { background: linear-gradient(135deg, #1a237e, #283593 60%, #1565c0); color: white; padding: 3.5rem 2rem 3rem; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 2rem; align-items: center; }
+  .hero h1 { font-size: 1.8rem; font-weight: 800; line-height: 1.25; margin-bottom: 0.8rem; }
+  .hero h1 em { color: #ffd54f; font-style: normal; }
+  .hero p { font-size: 0.9rem; opacity: 0.9; line-height: 1.65; margin-bottom: 1.4rem; }
+  .ctas { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+  .btn-primary { background: #ff6f00; color: white; padding: 0.65rem 1.3rem; border-radius: 6px; font-weight: 700; font-size: 0.88rem; }
+  .btn-ghost { background: rgba(255,255,255,0.12); color: white; padding: 0.65rem 1.3rem; border-radius: 6px; font-weight: 600; font-size: 0.88rem; border: 1px solid rgba(255,255,255,0.3); }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .stat { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 0.9rem; text-align: center; }
+  .stat .n { font-size: 1.9rem; font-weight: 800; color: #ffd54f; line-height: 1; }
+  .stat .l { font-size: 0.68rem; opacity: 0.85; margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.3; }
+
+  /* MODALITIES */
+  .modalities { background: #f5f7ff; border-top: 3px solid #1a237e; padding: 1.8rem 2rem; }
+  .modalities h3 { text-align: center; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: #5c6bc0; margin-bottom: 1.2rem; font-weight: 700; }
+  .mod-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .mod-card { background: white; border-radius: 8px; padding: 1.1rem; text-align: center; border: 1px solid #e8eaf6; }
+  .mod-card .ico { font-size: 1.6rem; margin-bottom: 0.4rem; }
+  .mod-card h4 { font-size: 0.85rem; font-weight: 700; color: #1a237e; margin-bottom: 0.25rem; }
+  .mod-card p { font-size: 0.75rem; color: #555; line-height: 1.5; }
+
+  /* TEAM SECTION */
+  .team-strip { background: #1a237e; color: white; padding: 1.3rem 2rem; display: flex; align-items: center; gap: 1.5rem; }
+  .team-strip .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.65; white-space: nowrap; }
+  .team-tags { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .team-tag { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 600; }
+
+  .section { padding: 2.5rem 2rem; }
+  .section.bg { background: #fafafa; }
+  .section-title { text-align: center; margin-bottom: 2rem; }
+  .section-title h2 { font-size: 1.4rem; font-weight: 700; color: #1a237e; }
+  .section-title p { color: #555; font-size: 0.87rem; margin-top: 0.3rem; }
+
+  /* AXES */
+  .eixo { margin-bottom: 1.6rem; }
+  .eixo-header { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.7rem; padding-bottom: 0.4rem; border-bottom: 2px solid #e8eaf6; }
+  .eixo-num { background: #1a237e; color: white; width: 1.8rem; height: 1.8rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 800; flex-shrink: 0; }
+  .eixo-name { font-size: 0.88rem; font-weight: 700; color: #283593; }
+  .eixo-courses { display: flex; gap: 0.65rem; flex-wrap: wrap; }
+  .course-pill { background: white; border: 1px solid #c5cae9; border-radius: 6px; padding: 0.45rem 0.85rem; font-size: 0.78rem; display: flex; align-items: center; gap: 0.4rem; }
+  .course-pill .icon { font-size: 1rem; }
+  .course-pill .name { font-weight: 600; color: #1a237e; display: block; font-size: 0.77rem; }
+  .course-pill .inst { font-size: 0.67rem; color: #888; display: block; }
+  .course-pill .tag { display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 0.6rem; font-weight: 700; padding: 0.06rem 0.38rem; border-radius: 10px; margin-top: 0.1rem; }
+  .see-all { text-align: center; margin-top: 1.4rem; }
+  .btn-outline { border: 2px solid #1a237e; color: #1a237e; padding: 0.55rem 1.5rem; border-radius: 6px; font-weight: 700; font-size: 0.85rem; display: inline-block; }
+
+  /* HOW */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; text-align: center; }
+  .step .num { width: 2.4rem; height: 2.4rem; background: #1a237e; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; margin: 0 auto 0.7rem; }
+  .step h4 { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .step p { font-size: 0.78rem; color: #555; line-height: 1.5; }
+
+  /* ABOUT */
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; }
+  .about-badge { display: inline-block; background: #1a237e; color: white; font-size: 0.7rem; padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 600; margin-bottom: 0.7rem; }
+  .about h2 { font-size: 1.3rem; color: #1a237e; font-weight: 700; margin-bottom: 0.7rem; }
+  .about p { font-size: 0.84rem; color: #333; line-height: 1.7; margin-bottom: 0.5rem; }
+  .mapa { background: #c5cae9; border-radius: 8px; height: 170px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c6bc0; font-weight: 600; font-size: 0.85rem; gap: 0.3rem; }
+
+  .partners { padding: 1.8rem 2rem; border-top: 1px solid #eee; text-align: center; }
+  .partners h3 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin-bottom: 1rem; }
+  .logos { display: flex; justify-content: center; align-items: center; gap: 1.8rem; flex-wrap: wrap; }
+  .logo { background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 0.5rem 1.1rem; font-size: 0.8rem; font-weight: 700; color: #455; }
+
+  footer { background: #1a237e; color: white; padding: 1.5rem 2rem; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1.5rem; font-size: 0.8rem; }
+  footer h4 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.55; margin-bottom: 0.5rem; }
+  footer a { color: rgba(255,255,255,0.75); display: block; margin-bottom: 0.3rem; text-decoration: none; font-size: 0.78rem; }
+  footer .brand { font-size: 1rem; font-weight: 800; margin-bottom: 0.4rem; }
+  footer .brand em { color: #ffd54f; font-style: normal; }
+
+  /* CHAT */
+  .chat-bubble { position: absolute; bottom: 1.5rem; right: 1.5rem; z-index: 100; }
+  .chat-btn { width: 52px; height: 52px; background: #1a237e; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.4rem; box-shadow: 0 4px 12px rgba(0,0,0,0.25); cursor: pointer; position: relative; }
+  .beta-dot { position: absolute; top: -2px; right: -2px; background: #ff6f00; color: white; font-size: 0.48rem; font-weight: 800; padding: 0.1rem 0.3rem; border-radius: 3px; border: 1px solid white; }
+  .chat-window { position: absolute; bottom: 64px; right: 0; width: 300px; background: white; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.18); overflow: hidden; border: 1px solid #e0e0e0; }
+  .chat-header { background: #1a237e; color: white; padding: 0.9rem 1rem; }
+  .chat-header .title { font-weight: 700; font-size: 0.9rem; }
+  .chat-header .sub { font-size: 0.72rem; opacity: 0.8; margin-top: 0.1rem; }
+  .beta-banner { background: #fff8e1; border-bottom: 1px solid #ffe082; padding: 0.5rem 0.8rem; font-size: 0.7rem; color: #795548; display: flex; gap: 0.4rem; align-items: flex-start; line-height: 1.4; }
+  .chat-body { padding: 0.8rem; min-height: 90px; }
+  .chat-msg { background: #f5f5f5; border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.77rem; color: #333; line-height: 1.5; }
+  .chat-input { border-top: 1px solid #eee; padding: 0.5rem 0.8rem; display: flex; gap: 0.4rem; }
+  .chat-input input { flex: 1; border: 1px solid #ddd; border-radius: 4px; padding: 0.35rem 0.6rem; font-size: 0.77rem; }
+  .chat-input button { background: #1a237e; color: white; border: none; border-radius: 4px; padding: 0.35rem 0.75rem; font-size: 0.77rem; font-weight: 600; }
+
+  .annotation { margin-top: 0.8rem; background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 6px; padding: 0.65rem 0.9rem; font-size: 0.78rem; color: #1b5e20; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="browser-bar">
+    <span class="dot" style="background:#ff5f56"></span>
+    <span class="dot" style="background:#ffbd2e"></span>
+    <span class="dot" style="background:#27c93f"></span>
+    <span class="url">https://lms.ipexdesenvolvimento.cloud/</span>
+  </div>
+  <div class="page">
+
+    <nav>
+      <div class="brand">🌱 TDS <span class="badge">TOCANTINS</span></div>
+      <div class="links">
+        <a href="#">Sobre</a><a href="#">Cursos</a><a href="#">Municípios</a><a href="#">Guias</a>
+      </div>
+      <div class="btn-nav">Acessar Plataforma</div>
+    </nav>
+
+    <!-- HERO — corrigido -->
+    <div class="hero">
+      <div>
+        <h1>Capacitação profissional gratuita para <em>inclusão produtiva</em> no Tocantins</h1>
+        <p>O programa TDS oferece trilhas formativas presenciais, online e mistas para beneficiários do CadÚnico em 36 municípios — com instrutores qualificados, tecnologia como suporte e certificação reconhecida.</p>
+        <div class="ctas">
+          <span class="btn-primary">📋 Saiba como participar</span>
+          <span class="btn-ghost">Ver cursos →</span>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat"><div class="n">2.160</div><div class="l">Beneficiários CadÚnico</div></div>
+        <div class="stat"><div class="n">36</div><div class="l">Municípios do Tocantins</div></div>
+        <div class="stat"><div class="n">5</div><div class="l">Eixos formativos</div></div>
+        <div class="stat"><div class="n">3</div><div class="l">Modalidades de ensino</div></div>
+      </div>
+    </div>
+
+    <!-- MODALIDADES — nova seção -->
+    <div class="modalities">
+      <h3>Modalidades de capacitação</h3>
+      <div class="mod-grid">
+        <div class="mod-card">
+          <div class="ico">🏫</div>
+          <h4>Presencial</h4>
+          <p>Encontros nos municípios com instrutores e equipe de campo. Metodologias participativas e práticas.</p>
+        </div>
+        <div class="mod-card">
+          <div class="ico">💻</div>
+          <h4>Online</h4>
+          <p>Conteúdos e trilhas via plataforma LMS e WhatsApp como canal de suporte e acompanhamento.</p>
+        </div>
+        <div class="mod-card">
+          <div class="ico">🔄</div>
+          <h4>Mista</h4>
+          <p>Combinação de atividades presenciais e digitais, adaptada à realidade de cada território.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- EQUIPE — nova faixa -->
+    <div class="team-strip">
+      <div class="label">Corpo docente e de apoio</div>
+      <div class="team-tags">
+        <span class="team-tag">👨‍🏫 Professores UFT</span>
+        <span class="team-tag">🎓 Pós-graduandos</span>
+        <span class="team-tag">📚 Mestrandos</span>
+        <span class="team-tag">🧑‍🎓 Graduandos</span>
+        <span class="team-tag">🌱 Instrutores capacitados</span>
+        <span class="team-tag">🤝 Estagiários TDS</span>
+      </div>
+    </div>
+
+    <!-- CURSOS POR EIXO -->
+    <div class="section bg">
+      <div class="section-title">
+        <h2>Cursos por Eixo Temático</h2>
+        <p>5 eixos estruturantes do Projeto TDS — trilhas gratuitas com certificação</p>
+      </div>
+
+      <div class="eixo">
+        <div class="eixo-header"><div class="eixo-num">1</div><div class="eixo-name">Empreendedorismo Popular e Gestão de Negócios</div></div>
+        <div class="eixo-courses">
+          <div class="course-pill"><span class="icon">💰</span><div><span class="name">Finanças e Empreendedorismo</span><span class="inst">Gabriela</span><span class="tag">4 módulos</span></div></div>
+          <div class="course-pill"><span class="icon">👵</span><div><span class="name">Ed. Financeira Melhor Idade</span><span class="inst">Gabriela</span><span class="tag">3 módulos</span></div></div>
+          <div class="course-pill"><span class="icon">🤖</span><div><span class="name">IA no meu Bolso</span><span class="inst">Rafael</span><span class="tag">4 módulos</span></div></div>
+          <div class="course-pill"><span class="icon">🎬</span><div><span class="name">Audiovisual e Conteúdo Digital</span><span class="inst">Pedro H.</span><span class="tag">4 módulos</span></div></div>
+        </div>
+      </div>
+
+      <div class="eixo">
+        <div class="eixo-header"><div class="eixo-num">2</div><div class="eixo-name">Formação Cooperativista Popular</div></div>
+        <div class="eixo-courses">
+          <div class="course-pill"><span class="icon">🤝</span><div><span class="name">Associativismo e Cooperativismo</span><span class="inst">Sofia</span><span class="tag">3 módulos</span></div></div>
+        </div>
+      </div>
+
+      <div class="eixo">
+        <div class="eixo-header"><div class="eixo-num">3</div><div class="eixo-name">Agricultura Familiar e Políticas Públicas Federais</div></div>
+        <div class="eixo-courses">
+          <div class="course-pill"><span class="icon">🥩</span><div><span class="name">SIM — Serviço de Inspeção Municipal</span><span class="inst">Sahaa</span><span class="tag">4 módulos</span></div></div>
+        </div>
+      </div>
+
+      <div class="eixo">
+        <div class="eixo-header"><div class="eixo-num">4</div><div class="eixo-name">Sistemas Produtivos Sustentáveis e Tecnologias Sociais</div></div>
+        <div class="eixo-courses">
+          <div class="course-pill"><span class="icon">🌿</span><div><span class="name">Agricultura Sustentável — SAFs</span><span class="inst">Valentine</span><span class="tag">4 módulos</span></div></div>
+        </div>
+      </div>
+
+      <div class="eixo" style="opacity:0.55;">
+        <div class="eixo-header">
+          <div class="eixo-num" style="background:#9e9e9e;">5</div>
+          <div class="eixo-name" style="color:#888;">Inovação e Certificação Agroecológica <span style="font-weight:400;font-size:0.72rem;">(em desenvolvimento)</span></div>
+        </div>
+        <div class="eixo-courses">
+          <div class="course-pill" style="border-style:dashed;color:#999;"><span class="icon">🔬</span><div><span class="name" style="color:#999;">Novos cursos em breve</span></div></div>
+        </div>
+      </div>
+      <div class="see-all"><span class="btn-outline">Acessar plataforma completa →</span></div>
+    </div>
+
+    <!-- HOW -->
+    <div class="section">
+      <div class="section-title"><h2>Como funciona</h2></div>
+      <div class="steps">
+        <div class="step"><div class="num">1</div><h4>Identificação</h4><p>A equipe TDS identifica beneficiários do CadÚnico elegíveis nos 36 municípios atendidos.</p></div>
+        <div class="step"><div class="num">2</div><h4>Matrícula e trilha</h4><p>O beneficiário é matriculado na trilha mais adequada ao seu perfil, território e eixo temático.</p></div>
+        <div class="step"><div class="num">3</div><h4>Capacitação e certificado</h4><p>Participa das atividades presenciais, online ou mistas e recebe certificado digital ao concluir.</p></div>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="section bg">
+      <div class="about-grid">
+        <div class="about">
+          <span class="about-badge">Bolsa nº 212/2026 — FAPTO/UFT · Programa Acredita</span>
+          <h2>Sobre o Programa TDS</h2>
+          <p>O <strong>Território de Desenvolvimento Social e Inclusão Produtiva</strong> é coordenado pelo NERUDS/UFT com apoio da FAPTO e do Ministério do Desenvolvimento Social (MDS). Atende agricultores familiares, MEIs, trabalhadores informais, quilombolas e povos do campo nos territórios do Bico do Papagaio e municípios polo do Tocantins.</p>
+          <p>A plataforma digital (LMS + WhatsApp) é o suporte tecnológico do programa — a formação é conduzida por uma equipe qualificada de professores, pós-graduandos, mestrandos e instrutores capacitados da UFT.</p>
+          <a href="#" style="color:#1a237e;font-size:0.82rem;font-weight:700;text-decoration:none;">Saiba mais sobre o programa →</a>
+        </div>
+        <div class="mapa">🗺️<span>36 municípios do Tocantins</span><span style="font-size:0.7rem;font-weight:400;color:#7986cb;">Bico do Papagaio · Jalapão · Dianópolis</span></div>
+      </div>
+    </div>
+
+    <div class="partners">
+      <h3>Realização e apoio</h3>
+      <div class="logos">
+        <div class="logo">🎓 NERUDS / UFT</div>
+        <div class="logo">🏛️ FAPTO</div>
+        <div class="logo">💻 Ipex</div>
+        <div class="logo">🇧🇷 MDS · Programa Acredita</div>
+      </div>
+    </div>
+
+    <footer>
+      <div>
+        <div class="brand">🌱 TDS <em>Tocantins</em></div>
+        <div style="opacity:0.55;font-size:0.73rem;line-height:1.7;">Inclusão Produtiva — NERUDS/UFT<br>Fomento: FAPTO — Bolsa nº 212/2026<br>Coord.: Juliana Aguiar de Melo</div>
+      </div>
+      <div>
+        <h4>Acesso</h4>
+        <a href="#">Plataforma LMS</a>
+        <a href="#">Guia do Aluno</a>
+        <a href="#">Guia do Tutor</a>
+        <a href="#">Guia do Gestor</a>
+      </div>
+      <div>
+        <h4>Institucional</h4>
+        <a href="#">Sobre o TDS</a>
+        <a href="#">36 Municípios</a>
+        <a href="#">Contato</a>
+        <a href="#">Privacidade</a>
+      </div>
+    </footer>
+
+    <!-- CHAT -->
+    <div class="chat-bubble">
+      <div class="chat-window">
+        <div class="chat-header">
+          <div class="title">🌱 Tutor IA TDS</div>
+          <div class="sub">Dúvidas sobre cursos, inscrição e programa</div>
+        </div>
+        <div class="beta-banner">⚗️ <span><strong>Versão beta.</strong> O tutor virtual está em fase de testes. O desenvolvedor monitora as conversas para aprimorar a experiência. Evite compartilhar dados pessoais sensíveis.</span></div>
+        <div class="chat-body">
+          <div class="chat-msg">Olá! Sou o Tutor IA do TDS 🌱 Posso te ajudar com dúvidas sobre os cursos, modalidades, inscrição e o programa. No que posso ajudar?</div>
+        </div>
+        <div class="chat-input">
+          <input type="text" placeholder="Digite sua dúvida...">
+          <button>→</button>
+        </div>
+      </div>
+      <div class="chat-btn">💬<span class="beta-dot">BETA</span></div>
+    </div>
+
+  </div>
+  <div class="annotation">
+    ✅ <strong>Corrigido:</strong> Removido "100% via WhatsApp" → 3 modalidades (presencial, online, mista). WhatsApp posicionado como suporte tecnológico, não canal único. Adicionada faixa da equipe docente (professores UFT, pós-graduandos, mestrandos, graduandos). Estatísticas atualizadas.
+  </div>
+</div>
+</body>
+</html>

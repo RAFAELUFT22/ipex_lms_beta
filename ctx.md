@@ -1,4 +1,4 @@
-# 🎓 Contexto do Projeto: Kreativ Education TDS
+# 🎓 Contexto do Projeto: Territórios de Desenvolvimento Social e Inclusão Produtiva TDS
 
 Este documento serve como fonte única de verdade para a customização do LMS e materiais acadêmicos do projeto TDS.
 

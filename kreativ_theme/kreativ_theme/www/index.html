@@ -1,0 +1,96 @@
+{% extends "templates/web.html" %}
+
+{% block content %}
+<style>
+    .tds-hero {
+        background: linear-gradient(135deg, #003366 0%, #008080 100%);
+        padding: 120px 0;
+        color: white;
+        text-align: center;
+        border-bottom: 8px solid #F9C300;
+        margin-top: -20px; /* Adjust for navbar spacing */
+    }
+    .tds-hero h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+    }
+    .tds-hero p {
+        font-size: 1.5rem;
+        opacity: 0.9;
+        margin-bottom: 40px;
+    }
+    .tds-btn-primary {
+        background: #F9C300 !important;
+        color: #003366 !important;
+        border: none !important;
+        padding: 15px 40px !important;
+        font-weight: 700 !important;
+        font-size: 1.2rem !important;
+        border-radius: 50px !important;
+        text-transform: uppercase;
+        text-decoration: none;
+        box-shadow: 0 4px 15px rgba(249, 195, 0, 0.4);
+    }
+    .feature-card {
+        padding: 30px;
+        border-radius: 20px;
+        background: #f8f9fa;
+        margin-bottom: 30px;
+        border: 1px solid #e2e8f0;
+        transition: transform 0.3s;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        border-color: #008080;
+    }
+    .feature-card h3 {
+        color: #003366;
+        font-weight: 700;
+    }
+</style>
+
+<div class="tds-hero">
+    <div class="container">
+        <img src="/files/logos_act/tds_main.png" style="height: 100px; margin-bottom: 20px; background:white; padding:10px; border-radius:15px;">
+        <h1>Territórios de Desenvolvimento Social</h1>
+        <p>Inclusão Produtiva e Inovação Territorial para o Tocantins</p>
+        <div class="actions">
+            <a href="/login" class="tds-btn-primary">Acessar Plataforma</a>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5 py-5">
+    <div class="row text-center">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h3>📚 Educação</h3>
+                <p>Cursos de empreendedorismo e gestão para comunidades locais.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h3>🤖 Tecnologia</h3>
+                <p>Tutor Cognitivo com Inteligência Artificial para apoio pedagógico.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h3>🚀 Impacto</h3>
+                <p>Fomento à economia solidária e sustentabilidade regional.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5 text-center">
+    <hr>
+    <div class="d-flex justify-content-center align-items-center flex-wrap" style="gap: 30px; opacity: 0.7;">
+        <img src="/files/logos_act/ipex.png" style="height: 40px;">
+        <img src="/files/logos_act/uft.png" style="height: 40px;">
+        <img src="/files/logos_act/fapt.png" style="height: 40px;">
+        <img src="/files/logos_act/mds.png" style="height: 40px;">
+    </div>
+</div>
+{% endblock %}

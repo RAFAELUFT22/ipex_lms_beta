@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Landing Page TDS</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f5f5f5; color: #1a1a1a; }
+
+  .browser-chrome {
+    background: #e0e0e0;
+    border-radius: 8px 8px 0 0;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #555;
+    border-bottom: 1px solid #ccc;
+  }
+  .browser-chrome .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .browser-chrome .url { flex: 1; background: #fff; border-radius: 4px; padding: 0.2rem 0.6rem; color: #333; margin-left: 0.5rem; }
+
+  .page { background: #fff; max-width: 900px; margin: 0 auto; box-shadow: 0 2px 20px rgba(0,0,0,0.12); }
+
+  /* NAV */
+  nav { background: #1a237e; color: white; padding: 0.75rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+  nav .brand { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+  nav .brand span { background: #ff6f00; color: white; font-size: 0.65rem; font-weight: 800; padding: 0.1rem 0.4rem; border-radius: 3px; letter-spacing: 0.05em; }
+  nav .links { display: flex; gap: 1.5rem; font-size: 0.82rem; opacity: 0.9; }
+  nav .btn-nav { background: #ff6f00; color: white; padding: 0.35rem 0.9rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+
+  /* HERO */
+  .hero { background: linear-gradient(135deg, #1a237e 0%, #283593 60%, #1565c0 100%); color: white; padding: 3.5rem 2rem 3rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; }
+  .hero-text h1 { font-size: 1.9rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.8rem; }
+  .hero-text h1 em { color: #ffd54f; font-style: normal; }
+  .hero-text p { font-size: 0.95rem; opacity: 0.9; line-height: 1.6; margin-bottom: 1.5rem; }
+  .hero-ctas { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+  .btn-primary { background: #ff6f00; color: white; padding: 0.7rem 1.4rem; border-radius: 6px; font-weight: 700; font-size: 0.9rem; text-decoration: none; }
+  .btn-secondary { background: rgba(255,255,255,0.15); color: white; padding: 0.7rem 1.4rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.3); }
+
+  .hero-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  .stat-card { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 1rem; text-align: center; border: 1px solid rgba(255,255,255,0.15); }
+  .stat-card .num { font-size: 2rem; font-weight: 800; color: #ffd54f; line-height: 1; }
+  .stat-card .lbl { font-size: 0.72rem; opacity: 0.8; margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* CURSOS DESTAQUE */
+  .courses-section { padding: 2.5rem 2rem; background: #fafafa; }
+  .section-header { text-align: center; margin-bottom: 1.8rem; }
+  .section-header h2 { font-size: 1.5rem; color: #1a237e; font-weight: 700; }
+  .section-header p { color: #555; font-size: 0.9rem; margin-top: 0.3rem; }
+  .courses-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .course-card { background: white; border-radius: 8px; padding: 1.2rem; border: 1px solid #e0e0e0; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .course-card .icon { font-size: 1.6rem; margin-bottom: 0.5rem; }
+  .course-card h4 { font-size: 0.88rem; font-weight: 700; color: #1a237e; line-height: 1.3; margin-bottom: 0.3rem; }
+  .course-card .instructor { font-size: 0.75rem; color: #777; }
+  .course-card .tag { display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 20px; margin-top: 0.5rem; text-transform: uppercase; }
+  .see-all { text-align: center; margin-top: 1.5rem; }
+  .btn-outline { border: 2px solid #1a237e; color: #1a237e; padding: 0.6rem 1.6rem; border-radius: 6px; font-weight: 700; font-size: 0.88rem; display: inline-block; }
+
+  /* COMO FUNCIONA */
+  .how-section { padding: 2.5rem 2rem; }
+  .how-section h2 { text-align: center; font-size: 1.5rem; color: #1a237e; margin-bottom: 1.8rem; font-weight: 700; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+  .step { text-align: center; padding: 1.2rem; }
+  .step .step-num { width: 2.5rem; height: 2.5rem; background: #1a237e; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; margin: 0 auto 0.8rem; font-size: 1rem; }
+  .step h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .step p { font-size: 0.8rem; color: #555; line-height: 1.5; }
+  .step-arrow { display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 1.5rem; padding-top: 1.5rem; }
+
+  /* ABOUT */
+  .about-section { background: #e8eaf6; padding: 2.5rem 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: center; }
+  .about-section h2 { font-size: 1.4rem; color: #1a237e; font-weight: 700; margin-bottom: 0.8rem; }
+  .about-section p { font-size: 0.88rem; color: #333; line-height: 1.7; margin-bottom: 0.6rem; }
+  .about-badge { display: inline-block; background: #1a237e; color: white; font-size: 0.72rem; padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: 600; margin-bottom: 0.8rem; }
+  .mapa-placeholder { background: #c5cae9; border-radius: 8px; height: 160px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #5c6bc0; font-weight: 600; }
+
+  /* PARTNERS */
+  .partners-section { padding: 2rem 2rem; border-top: 1px solid #eee; text-align: center; }
+  .partners-section h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin-bottom: 1.2rem; }
+  .partners-logos { display: flex; justify-content: center; align-items: center; gap: 2.5rem; flex-wrap: wrap; }
+  .partner-logo { background: #f5f5f5; border-radius: 6px; padding: 0.6rem 1.2rem; font-size: 0.85rem; font-weight: 700; color: #455; border: 1px solid #ddd; }
+
+  /* FOOTER */
+  footer { background: #1a237e; color: white; padding: 1.5rem 2rem; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1.5rem; font-size: 0.8rem; }
+  footer h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; margin-bottom: 0.6rem; }
+  footer a { color: rgba(255,255,255,0.75); display: block; margin-bottom: 0.3rem; text-decoration: none; }
+  footer .brand-foot { font-size: 1rem; font-weight: 800; margin-bottom: 0.4rem; }
+  footer .brand-foot em { color: #ffd54f; font-style: normal; }
+  .label-annotation {
+    position: relative;
+    display: inline-block;
+    background: #fff9c4;
+    color: #5d4037;
+    font-size: 0.68rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    margin-left: 0.4rem;
+    font-weight: 600;
+    border: 1px solid #f9a825;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+<div style="max-width:900px;margin:1.5rem auto;padding:0 1rem;">
+
+  <div style="background:#333;color:#eee;font-size:0.75rem;padding:0.5rem 1rem;border-radius:6px 6px 0 0;display:flex;align-items:center;gap:0.5rem;">
+    <span style="background:#ff5f56;width:10px;height:10px;border-radius:50%;display:inline-block;"></span>
+    <span style="background:#ffbd2e;width:10px;height:10px;border-radius:50%;display:inline-block;"></span>
+    <span style="background:#27c93f;width:10px;height:10px;border-radius:50%;display:inline-block;"></span>
+    <span style="flex:1;background:#555;border-radius:4px;padding:0.15rem 0.8rem;color:#ccc;margin-left:0.3rem;">
+      https://lms.ipexdesenvolvimento.cloud/
+    </span>
+  </div>
+
+  <div class="page">
+    <nav>
+      <div class="brand">
+        🌱 TDS <span>TOCANTINS</span>
+      </div>
+      <div class="links">
+        <a href="#" style="color:rgba(255,255,255,0.8);text-decoration:none;">Sobre</a>
+        <a href="#" style="color:rgba(255,255,255,0.8);text-decoration:none;">Cursos</a>
+        <a href="#" style="color:rgba(255,255,255,0.8);text-decoration:none;">Municípios</a>
+        <a href="#" style="color:rgba(255,255,255,0.8);text-decoration:none;">Guias</a>
+      </div>
+      <div class="btn-nav">Acessar Plataforma</div>
+    </nav>
+
+    <div class="hero">
+      <div class="hero-text">
+        <h1>Educação gratuita <em>pelo WhatsApp</em> para quem mais precisa</h1>
+        <p>O programa TDS oferece trilhas de capacitação profissional para beneficiários do CadÚnico em 36 municípios do Tocantins — sem instalar nada.</p>
+        <div class="hero-ctas">
+          <a href="#" class="btn-primary">📱 Saiba como participar</a>
+          <a href="#" class="btn-secondary">Ver cursos →</a>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-card">
+          <div class="num">2.160</div>
+          <div class="lbl">Beneficiários</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">36</div>
+          <div class="lbl">Municípios TO</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">7</div>
+          <div class="lbl">Cursos gratuitos</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">100%</div>
+          <div class="lbl">Via WhatsApp</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="courses-section">
+      <div class="section-header">
+        <h2>Cursos disponíveis</h2>
+        <p>Trilhas de capacitação profissional, gratuitas e acessíveis pelo celular</p>
+      </div>
+      <div class="courses-grid">
+        <div class="course-card"><div class="icon">🌿</div><h4>Agricultura Sustentável — SAFs</h4><div class="instructor">Instrutor: Valentine</div><div class="tag">Gratuito</div></div>
+        <div class="course-card"><div class="icon">🎬</div><h4>Audiovisual e Conteúdo Digital</h4><div class="instructor">Instrutor: Pedro H.</div><div class="tag">Gratuito</div></div>
+        <div class="course-card"><div class="icon">💰</div><h4>Finanças e Empreendedorismo</h4><div class="instructor">Instrutor: Gabriela</div><div class="tag">Gratuito</div></div>
+        <div class="course-card"><div class="icon">👵</div><h4>Educação Financeira — Melhor Idade</h4><div class="instructor">Instrutor: Gabriela</div><div class="tag">Gratuito</div></div>
+        <div class="course-card"><div class="icon">🤝</div><h4>Associativismo e Cooperativismo</h4><div class="instructor">Instrutor: Sofia</div><div class="tag">Gratuito</div></div>
+        <div class="course-card"><div class="icon">🤖</div><h4>IA no meu Bolso</h4><div class="instructor">Instrutor: Rafael</div><div class="tag">Gratuito</div></div>
+        <div class="course-card" style="grid-column: span 1;"><div class="icon">🥩</div><h4>SIM — Serviço de Inspeção Municipal</h4><div class="instructor">Instrutor: Sahaa</div><div class="tag">Gratuito</div></div>
+        <div class="course-card" style="background:#f0f4ff;border-color:#c5cae9;display:flex;align-items:center;justify-content:center;text-align:center;"><div style="color:#5c6bc0;font-size:0.8rem;font-weight:600;">+ mais cursos <br>em breve</div></div>
+      </div>
+      <div class="see-all"><a href="#" class="btn-outline">Ver todos os cursos →</a></div>
+    </div>
+
+    <div class="how-section">
+      <h2>Como funciona</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h4>Receba o convite</h4>
+          <p>Um estagiário TDS entra em contato pelo WhatsApp e verifica seu cadastro no CadÚnico.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h4>Escolha seu curso</h4>
+          <p>Selecione a trilha de capacitação mais adequada ao seu perfil e município.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h4>Aprenda e certifique</h4>
+          <p>Receba os conteúdos direto no WhatsApp e obtenha seu certificado ao concluir.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="about-section">
+      <div>
+        <span class="about-badge">Bolsa nº 212/2026 — FAPTO</span>
+        <h2>Sobre o Programa TDS</h2>
+        <p>O <strong>Território de Desenvolvimento Social e Inclusão Produtiva (TDS)</strong> é um programa coordenado pelo NERUDS/UFT, com apoio da FAPTO, que visa promover a inclusão produtiva de beneficiários do CadÚnico no Tocantins.</p>
+        <p>Por meio de tecnologia acessível e educação contextualizada, o TDS conecta famílias vulneráveis a oportunidades de capacitação profissional sem barreiras de acesso digital.</p>
+        <a href="#" style="color:#1a237e;font-size:0.85rem;font-weight:700;text-decoration:none;">Saiba mais sobre o programa →</a>
+      </div>
+      <div>
+        <div class="mapa-placeholder">🗺️ Mapa do Tocantins<br><span style="font-size:0.7rem;font-weight:400;margin-top:0.3rem;display:block;">36 municípios atendidos</span></div>
+      </div>
+    </div>
+
+    <div class="partners-section">
+      <h3>Realização e Apoio</h3>
+      <div class="partners-logos">
+        <div class="partner-logo">🎓 NERUDS / UFT</div>
+        <div class="partner-logo">🏛️ FAPTO</div>
+        <div class="partner-logo">💻 Ipex</div>
+        <div class="partner-logo">🇧🇷 CadÚnico / MDS</div>
+      </div>
+    </div>
+
+    <footer>
+      <div>
+        <div class="brand-foot">🌱 TDS <em>Tocantins</em></div>
+        <div style="opacity:0.6;font-size:0.75rem;line-height:1.6;">Programa de Inclusão Produtiva<br>Coordenação: NERUDS/UFT<br>Fomento: FAPTO — Bolsa nº 212/2026</div>
+      </div>
+      <div>
+        <h4>Acesso</h4>
+        <a href="#">Plataforma LMS</a>
+        <a href="#">Guia do Aluno</a>
+        <a href="#">Guia do Tutor</a>
+        <a href="#">Guia do Gestor</a>
+      </div>
+      <div>
+        <h4>Institucional</h4>
+        <a href="#">Sobre o TDS</a>
+        <a href="#">Municípios</a>
+        <a href="#">Contato</a>
+        <a href="#">Política de privacidade</a>
+      </div>
+    </footer>
+  </div>
+
+  <div style="margin-top:1rem;background:#fff9c4;border:1px solid #f9a825;border-radius:6px;padding:0.75rem 1rem;font-size:0.8rem;color:#5d4037;">
+    <strong>📋 Este é um mockup de apresentação.</strong> As seções, textos e cores podem ser ajustados antes da implementação.
+  </div>
+</div>
+</body>
+</html>

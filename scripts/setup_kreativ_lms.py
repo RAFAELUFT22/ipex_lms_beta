@@ -34,7 +34,7 @@ def update_lms_settings(logo_url):
     print("Updating LMS Settings...")
     url = f"{BASE_URL}/api/resource/LMS Settings/LMS Settings"
     data = {
-        "portal_name": "Kreativ Education TDS",
+        "portal_name": "Territórios de Desenvolvimento Social e Inclusão Produtiva TDS",
         "portal_description": "Território de Desenvolvimento Social e Inclusão Produtiva",
         "brand_logo": logo_url
     }

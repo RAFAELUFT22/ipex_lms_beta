@@ -1,4 +1,4 @@
-# Coding Conventions — Kreativ Education
+# Coding Conventions — Territórios de Desenvolvimento Social e Inclusão Produtiva
 
 ## Python
 - Python 3.11+

@@ -1,0 +1,202 @@
+{
+  "name": "Kreativ TDS — WhatsApp Auth, RAG & Handoff (Chatwoot/Frappe)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-kreativ",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Webhook Evolution",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "phone",
+              "name": "phoneNumber",
+              "value": "={{ $json.data.key.remoteJid.split('@')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "text",
+              "name": "messageText",
+              "value": "={{ $json.data.message.conversation || $json.data.message.extendedTextMessage.text || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "conv_id",
+              "name": "conversationId",
+              "value": "={{ $json.data.key.remoteJid }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "node-set-data",
+      "name": "Configurador de Dados",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://lms.ipexdesenvolvimento.cloud/api/resource/Student?filters=[[\"Student\", \"mobile_no\", \"like\", \"%{{ $json.phoneNumber }}%\"]]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "token {{ $env.FRAPPE_API_KEY }}:{{ $env.FRAPPE_API_SECRET }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-frappe-auth",
+      "name": "Frappe: Buscar Aluno",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "aluno-existe",
+              "leftValue": "={{ $json.data.length }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "notEqual" }
+            }
+          ]
+        }
+      },
+      "id": "node-check-student",
+      "name": "Aluno Cadastrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://anythingllm:3001/api/v1/workspace/tds/chat",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer {{ $env.ANYTHINGLLM_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "message", "value": "={{ $('Configurador de Dados').item.json.messageText }}" },
+            { "name": "mode", "value": "chat" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-rag",
+      "name": "AnythingLLM (RAG)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evolution.ipexdesenvolvimento.cloud/message/sendText/kreativ",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "{{ $env.EVOLUTION_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ $('Configurador de Dados').item.json.phoneNumber }}" },
+            { "name": "text", "value": "={{ $json.textResponse }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-send-msg",
+      "name": "Evolution: Responder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1000, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evolution.ipexdesenvolvimento.cloud/message/sendText/kreativ",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "{{ $env.EVOLUTION_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ $('Configurador de Dados').item.json.phoneNumber }}" },
+            { "name": "text", "value": "Olá! Verifiquei que você ainda não é um aluno cadastrado no Projeto TDS. Para se inscrever, visite: https://lms.ipexdesenvolvimento.cloud/inscrever" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-send-unauth",
+      "name": "Evolution: Não Autorizado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "node-response-ok",
+      "name": "HTTP 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Evolution": {
+      "main": [[{ "node": "Configurador de Dados", "type": "main", "index": 0 }]]
+    },
+    "Configurador de Dados": {
+      "main": [[{ "node": "Frappe: Buscar Aluno", "type": "main", "index": 0 }]]
+    },
+    "Frappe: Buscar Aluno": {
+      "main": [[{ "node": "Aluno Cadastrado?", "type": "main", "index": 0 }]]
+    },
+    "Aluno Cadastrado?": {
+      "main": [
+        [{ "node": "AnythingLLM (RAG)", "type": "main", "index": 0 }],
+        [{ "node": "Evolution: Não Autorizado", "type": "main", "index": 0 }]
+      ]
+    },
+    "AnythingLLM (RAG)": {
+      "main": [[{ "node": "Evolution: Responder", "type": "main", "index": 0 }]]
+    },
+    "Evolution: Responder": {
+      "main": [[{ "node": "HTTP 200", "type": "main", "index": 0 }]]
+    },
+    "Evolution: Não Autorizado": {
+      "main": [[{ "node": "HTTP 200", "type": "main", "index": 0 }]]
+    }
+  }
+}

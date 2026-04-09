@@ -1,4 +1,4 @@
-# Arquitetura — Kreativ Education
+# Arquitetura — Territórios de Desenvolvimento Social e Inclusão Produtiva
 
 ## Diagrama de Componentes
 

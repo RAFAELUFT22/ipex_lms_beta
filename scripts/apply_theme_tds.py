@@ -322,7 +322,7 @@ def apply_website_theme():
         json={
             "website_theme": "Standard",
             "custom_css": TDS_THEME_CSS,
-            "app_name": "Kreativ Education (TDS)",
+            "app_name": "Territórios de Desenvolvimento Social e Inclusão Produtiva",
             "copyright": "© 2026 IPEX / UFT / MDS — Projeto TDS",
             "hide_footer_signup": 1,
         }

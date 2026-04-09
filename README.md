@@ -1,4 +1,4 @@
-# Kreativ Education 🎓
+# Territórios de Desenvolvimento Social e Inclusão Produtiva 🎓
 
 > **Plataforma de educação conversacional via WhatsApp**, construída sobre o [Frappe LMS](https://github.com/frappe/lms).
 

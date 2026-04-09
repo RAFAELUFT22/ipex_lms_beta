@@ -32,7 +32,7 @@ check() {
 
 echo ""
 echo "============================================="
-echo " Kreativ Education — Health Check"
+echo " Territórios de Desenvolvimento Social e Inclusão Produtiva — Health Check"
 echo " URL: $URL"
 echo "============================================="
 echo ""
