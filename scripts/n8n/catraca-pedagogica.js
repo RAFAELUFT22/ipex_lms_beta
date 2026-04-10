@@ -583,7 +583,7 @@ const setAdvanceMCQ = node({
     },
     position: [2320, 800]
   },
-  output: [{ new_estado: 'aguardando_mcq', aluno_name: 'TDS-ALU-00001', conversation_id: '123', modulo_atual: 1, secao_atual: 1, curso_obj: {} }]
+  output: [{ new_estado: 'aguardando_mcq', aluno_name: 'TDS-ALU-00001', conversation_id: '123', modulo_atual: 1, secao_atual: 1, curso_ativo: 'audiovisual', curso_obj: {} }]
 });
 
 const patchAlunoMCQ = node({
@@ -602,7 +602,7 @@ const patchAlunoMCQ = node({
       sendBody: true,
       contentType: 'json',
       specifyBody: 'json',
-      jsonBody: expr('{{ JSON.stringify({ "estado_catraca": "aguardando_mcq", "data_ultimo_acesso_whatsapp": $now.toFormat("yyyy-MM-dd HH:mm:ss") }) }}')
+      jsonBody: expr('{{ JSON.stringify({ "estado_catraca": "aguardando_mcq", "curso_ativo": $json.curso_ativo, "data_ultimo_acesso_whatsapp": $now.toFormat("yyyy-MM-dd HH:mm:ss") }) }}')
     },
     credentials: { httpHeaderAuth: { id: 'frappe-header-auth', name: 'Frappe Header Auth' } },
     position: [2580, 800]
@@ -713,6 +713,16 @@ const items = $input.all();
 const item = items[0];
 const j = item.json;
 
+const COURSE_SLUGS = {
+  audiovisual: 'audiovisual-e-produ-o-de-conte-do-digital',
+  agricultura: 'agricultura-sustent-vel-sistemas-agroflorestais',
+  financas: 'finan-as-e-empreendedorismo',
+  educacao: 'educa-o-financeira-para-a-melhor-idade',
+  associa: 'associativismo-e-cooperativismo-3',
+  ia: 'ia-no-meu-bolso-intelig-ncia-artificial-para-o-dia-a-dia',
+  sim: 'sim-servi-o-de-inspe-o-municipal-para-pequenos-produtores'
+};
+
 const modulos = j.curso_obj?.modulos || [];
 const modulo = j.modulo_atual || 1;
 const secao = j.secao_atual || 1;
@@ -757,6 +767,8 @@ if (mod && nextSecao > mod.secoes.length) {
     : '❌ A resposta correta era *' + correta + '*. Vamos à próxima seção. 📖';
 }
 
+const certificateCourseSlug = COURSE_SLUGS[j.curso_ativo] || COURSE_SLUGS[j.keyword] || '';
+
 return [{
   json: {
     ...j,
@@ -766,6 +778,7 @@ return [{
     new_respostas: JSON.stringify(respostas),
     new_modulos_concluidos: JSON.stringify(modulosConcluidos),
     doCertificate: doCertificate,
+    certificate_course_slug: certificateCourseSlug,
     reply_text: replyText,
     acertou: acertou
   }
@@ -798,7 +811,7 @@ const patchAlunoAnswer = node({
       sendBody: true,
       contentType: 'json',
       specifyBody: 'json',
-      jsonBody: expr('{{ JSON.stringify({ "estado_catraca": $json.new_estado, "modulo_atual": $json.new_modulo, "secao_atual": $json.new_secao, "respostas_mcq": $json.new_respostas, "modulos_concluidos": $json.new_modulos_concluidos, "data_ultimo_acesso_whatsapp": $now.toFormat("yyyy-MM-dd HH:mm:ss") }) }}')
+      jsonBody: expr('{{ JSON.stringify({ "estado_catraca": $json.new_estado, "modulo_atual": $json.new_modulo, "secao_atual": $json.new_secao, "curso_ativo": $json.curso_ativo, "respostas_mcq": $json.new_respostas, "modulos_concluidos": $json.new_modulos_concluidos, "data_ultimo_acesso_whatsapp": $now.toFormat("yyyy-MM-dd HH:mm:ss") }) }}')
     },
     credentials: { httpHeaderAuth: { id: 'frappe-header-auth', name: 'Frappe Header Auth' } },
     position: [2580, 1100]
@@ -839,7 +852,7 @@ const postCertificate = node({
       sendBody: true,
       contentType: 'json',
       specifyBody: 'json',
-      jsonBody: expr('{{ JSON.stringify({ "member": $("Calcula Proximo Estado").item.json.aluno_email || ($("Calcula Proximo Estado").item.json.phone + "@tds.local"), "course": "audiovisual-e-produ-o-de-conte-do-digital", "issue_date": $now.toFormat("yyyy-MM-dd") }) }}'),
+      jsonBody: expr('{{ JSON.stringify({ "member": $("Calcula Proximo Estado").item.json.aluno_email || ($("Calcula Proximo Estado").item.json.phone + "@tds.local"), "course": $("Calcula Proximo Estado").item.json.certificate_course_slug, "issue_date": $now.toFormat("yyyy-MM-dd") }) }}'),
       options: {
         response: { response: { neverError: true } }
       }
