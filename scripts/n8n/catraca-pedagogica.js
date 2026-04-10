@@ -7,7 +7,7 @@
  * Workflow ID: eCB2vMHb69W3Qgpp
  * Created: 2026-04-10
  *
- * States: inativo > aguardando_leitura > aguardando_mcq > certificado_emitido
+ * States: inativo > aguardando_leitura > aguardando_mcq > certificado_emitido | aguardando_confirmacao_troca
  * Input: { phone, keyword, message, conversation_id }
  *
  * IMPORTANT: After updating this workflow in N8N, always deactivate + reactivate
@@ -50,7 +50,7 @@ const extractInputs = node({
           { id: 'a2', name: 'keyword', value: expr('{{ $json.keyword.replace("/", "") }}'), type: 'string' },
           { id: 'a3', name: 'message', value: expr('{{ $json.message.trim().toLowerCase() }}'), type: 'string' },
           { id: 'a4', name: 'conversation_id', value: expr('{{ $json.conversation_id }}'), type: 'string' },
-          { id: 'a5', name: 'cursos', value: expr('{{ JSON.parse(\'{"audiovisual":{"nome":"Audiovisual e Produção de Conteúdo Digital","workspace_slug":"tds-audiovisual-e-conteudo","modulos":[]},"agricultura":{"nome":"Agricultura Sustentável — SAFs","workspace_slug":"tds-agricultura-sustentavel","modulos":[]},"financas":{"nome":"Finanças e Empreendedorismo","workspace_slug":"tds-financas-e-empreendedorismo","modulos":[]},"educacao":{"nome":"Educação Financeira Melhor Idade","workspace_slug":"tds-educacao-financeira-terceira-idade","modulos":[]},"associa":{"nome":"Associativismo e Cooperativismo","workspace_slug":"tds-associativismo-e-cooperativismo","modulos":[]},"ia":{"nome":"IA no meu Bolso","workspace_slug":"tds-ia-no-meu-bolso","modulos":[]},"sim":{"nome":"SIM — Serviço de Inspeção Municipal","workspace_slug":"tds-sim","modulos":[]}}\') }}'), type: 'object' }
+          { id: 'a5', name: 'cursos', value: expr('{{ JSON.parse(\'{"audiovisual":{"nome":"Audiovisual e Produção de Conteúdo Digital","workspace_slug":"tds-audiovisual-e-conteudo","certificate_slug":"audiovisual-e-produ-o-de-conte-do-digital","modulos":[]},"agricultura":{"nome":"Agricultura Sustentável — SAFs","workspace_slug":"tds-agricultura-sustentavel","certificate_slug":"agricultura-sustent-vel-sistemas-agroflorestais","modulos":[]},"financas":{"nome":"Finanças e Empreendedorismo","workspace_slug":"tds-financas-e-empreendedorismo","certificate_slug":"finan-as-e-empreendedorismo","modulos":[]},"educacao":{"nome":"Educação Financeira Melhor Idade","workspace_slug":"tds-educacao-financeira-terceira-idade","certificate_slug":"educa-o-financeira-para-a-melhor-idade","modulos":[]},"associa":{"nome":"Associativismo e Cooperativismo","workspace_slug":"tds-associativismo-e-cooperativismo","certificate_slug":"associativismo-e-cooperativismo-3","modulos":[]},"ia":{"nome":"IA no meu Bolso","workspace_slug":"tds-ia-no-meu-bolso","certificate_slug":"ia-no-meu-bolso-intelig-ncia-artificial-para-o-dia-a-dia","modulos":[]},"sim":{"nome":"SIM — Serviço de Inspeção Municipal","workspace_slug":"tds-sim","certificate_slug":"sim-servi-o-de-inspe-o-municipal-para-pequenos-produtores","modulos":[]}}\') }}'), type: 'object' }
         ]
       }
     },
@@ -76,7 +76,7 @@ const lookupAluno = node({
     name: 'Frappe GET TDS Aluno',
     parameters: {
       method: 'GET',
-      url: expr('"https://lms.ipexdesenvolvimento.cloud/api/resource/TDS%20Aluno?filters=[[%22whatsapp%22,%22=%22,%22" + {{ $json.phone }} + "%22]]&fields=[%22name%22,%22full_name%22,%22whatsapp%22,%22email%22,%22estado_catraca%22,%22modulo_atual%22,%22secao_atual%22,%22respostas_mcq%22,%22modulos_concluidos%22,%22curso_ativo%22]"'),
+      url: expr('"https://lms.ipexdesenvolvimento.cloud/api/resource/TDS%20Aluno?filters=[[%22whatsapp%22,%22=%22,%22" + {{ $json.phone }} + "%22]]&fields=[%22name%22,%22full_name%22,%22whatsapp%22,%22email%22,%22estado_catraca%22,%22modulo_atual%22,%22secao_atual%22,%22respostas_mcq%22,%22modulos_concluidos%22,%22curso_ativo%22,%22keyword_pendente%22]"'),
       authentication: 'genericCredentialType',
       genericAuthType: 'httpHeaderAuth',
       sendHeaders: false,
@@ -86,7 +86,7 @@ const lookupAluno = node({
     credentials: { httpHeaderAuth: { id: 'frappe-header-auth', name: 'Frappe Header Auth' } },
     position: [760, 600]
   },
-  output: [{ data: [{ name: 'TDS-ALU-00001', full_name: 'Maria Silva', whatsapp: '5563999999999', email: 'maria@test.com', estado_catraca: 'inativo', modulo_atual: 0, secao_atual: 0, respostas_mcq: '[]', modulos_concluidos: '[]', curso_ativo: '' }] }]
+  output: [{ data: [{ name: 'TDS-ALU-00001', full_name: 'Maria Silva', whatsapp: '5563999999999', email: 'maria@test.com', estado_catraca: 'inativo', modulo_atual: 0, secao_atual: 0, respostas_mcq: '[]', modulos_concluidos: '[]', curso_ativo: '', keyword_pendente: '' }] }]
 });
 
 // ==================== IF: ALUNO FOUND? ====================
@@ -180,7 +180,8 @@ const extractAluno = node({
           { id: 'c12', name: 'conversation_id', value: expr('{{ $("Extract Inputs + Cursos").item.json.conversation_id }}'), type: 'string' },
           { id: 'c13', name: 'phone', value: expr('{{ $("Extract Inputs + Cursos").item.json.phone }}'), type: 'string' },
           { id: 'c14', name: 'cursos', value: expr('{{ $("Extract Inputs + Cursos").item.json.cursos }}'), type: 'object' },
-          { id: 'c15', name: 'curso_obj', value: expr('{{ $("Extract Inputs + Cursos").item.json.cursos[$("Extract Inputs + Cursos").item.json.keyword] || {} }}'), type: 'object' }
+          { id: 'c15', name: 'curso_obj', value: expr('{{ $("Extract Inputs + Cursos").item.json.cursos[$("Extract Inputs + Cursos").item.json.keyword] || {} }}'), type: 'object' },
+          { id: 'c16', name: 'keyword_pendente', value: expr('{{ $json.data[0].keyword_pendente || "" }}'), type: 'string' }
         ]
       }
     },
@@ -190,7 +191,8 @@ const extractAluno = node({
     aluno_name: 'TDS-ALU-00001', aluno_full_name: 'Maria Silva', aluno_email: 'maria@test.com',
     estado_catraca: 'inativo', modulo_atual: 0, secao_atual: 0, respostas_mcq: '[]', modulos_concluidos: '[]',
     curso_ativo: '', keyword: 'audiovisual', message: 'li', conversation_id: '123', phone: '5563999999999',
-    cursos: {}, curso_obj: { nome: 'Audiovisual e Produção de Conteúdo Digital', workspace_slug: 'tds-audiovisual-e-conteudo', modulos: [] }
+    cursos: {}, curso_obj: { nome: 'Audiovisual e Produção de Conteúdo Digital', workspace_slug: 'tds-audiovisual-e-conteudo', modulos: [] },
+    keyword_pendente: ''
   }]
 });
 
@@ -213,23 +215,7 @@ const ifCursoDiferente = ifElse({
   }
 });
 
-// ==================== COURSE SWITCH: IS MESSAGE CONFIRMATION FOR SWITCHING? ====================
-const ifConfirmSwitch = ifElse({
-  version: 2.3,
-  config: {
-    name: 'Confirma troca de curso?',
-    parameters: {
-      conditions: {
-        conditions: [
-          { leftValue: expr('{{ ["sim","s","1","ok","quero","trocar"].includes($json.message) }}'), operator: { type: 'boolean', operation: 'true' }, rightValue: '' }
-        ]
-      }
-    },
-    position: [1800, 300]
-  }
-});
-
-// --- NOT CONFIRMING: send switch course message ---
+// ==================== COURSE SWITCH: send "Deseja trocar?" and set pending state ====================
 const msgTrocaCurso = node({
   type: 'n8n-nodes-base.set',
   version: 3.4,
@@ -240,13 +226,37 @@ const msgTrocaCurso = node({
       includeOtherFields: true,
       assignments: {
         assignments: [
-          { id: 'd1', name: 'reply_text', value: expr('"⚠️ Você já está cursando *" + {{ $json.cursos[$json.curso_ativo] ? $json.cursos[$json.curso_ativo].nome : $json.curso_ativo }} + "*.\\n\\nDeseja trocar para *" + {{ $json.curso_obj.nome || $json.keyword }} + "*? Isso vai zerar seu progresso no curso atual.\\n\\nResponda *sim* para confirmar ou continue enviando mensagens para o curso atual."'), type: 'string' }
+          { id: 'd1', name: 'reply_text', value: expr('"⚠️ Você já está cursando *" + {{ $json.cursos[$json.curso_ativo] ? $json.cursos[$json.curso_ativo].nome : $json.curso_ativo }} + "*.\\n\\nDeseja trocar para *" + {{ $json.curso_obj.nome || $json.keyword }} + "*? Isso vai zerar seu progresso no curso atual.\\n\\nResponda *sim* para confirmar ou *não* para cancelar."'), type: 'string' }
         ]
       }
     },
-    position: [2060, 400]
+    position: [1800, 300]
   },
   output: [{ reply_text: 'Voce ja esta cursando...', conversation_id: '123' }]
+});
+
+const patchAlunoPendingSwitch = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'PATCH Aluno Aguardando Troca',
+    parameters: {
+      method: 'PUT',
+      url: expr('"https://lms.ipexdesenvolvimento.cloud/api/resource/TDS%20Aluno/" + {{ $json.aluno_name }}'),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendHeaders: true,
+      specifyHeaders: 'keypair',
+      headerParameters: { parameters: [{ name: 'Content-Type', value: 'application/json' }] },
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('{{ JSON.stringify({ "estado_catraca": "aguardando_confirmacao_troca", "keyword_pendente": $json.keyword, "data_ultimo_acesso_whatsapp": $now.toFormat("yyyy-MM-dd HH:mm:ss") }) }}')
+    },
+    credentials: { httpHeaderAuth: { id: 'frappe-header-auth', name: 'Frappe Header Auth' } },
+    position: [2060, 300]
+  },
+  output: [{ data: { name: 'TDS-ALU-00001' } }]
 });
 
 const chatwootSendTroca = node({
@@ -256,7 +266,7 @@ const chatwootSendTroca = node({
     name: 'Chatwoot Troca Curso',
     parameters: {
       method: 'POST',
-      url: expr('"https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/conversations/" + {{ $json.conversation_id }} + "/messages"'),
+      url: expr('"https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/conversations/" + {{ $("Extract Aluno Fields").item.json.conversation_id }} + "/messages"'),
       authentication: 'genericCredentialType',
       genericAuthType: 'httpHeaderAuth',
       sendHeaders: true,
@@ -265,15 +275,31 @@ const chatwootSendTroca = node({
       sendBody: true,
       contentType: 'json',
       specifyBody: 'json',
-      jsonBody: expr('{{ JSON.stringify({ "content": $json.reply_text, "message_type": "outgoing" }) }}')
+      jsonBody: expr('{{ JSON.stringify({ "content": $("Msg Troca Curso").item.json.reply_text, "message_type": "outgoing" }) }}')
     },
     credentials: { httpHeaderAuth: { id: 'chatwoot-header-auth', name: 'Chatwoot Header Auth' } },
-    position: [2320, 400]
+    position: [2320, 300]
   },
   output: [{ id: 2 }]
 });
 
-// --- CONFIRMING SWITCH: initialize new course ---
+// ==================== AGUARDANDO CONFIRMACAO TROCA BRANCH ====================
+const ifConfirmTroca = ifElse({
+  version: 2.3,
+  config: {
+    name: 'Confirma troca?',
+    parameters: {
+      conditions: {
+        conditions: [
+          { leftValue: expr('{{ ["sim","s","1","ok","quero","trocar"].includes($json.message) }}'), operator: { type: 'boolean', operation: 'true' }, rightValue: '' }
+        ]
+      }
+    },
+    position: [2060, 1800]
+  }
+});
+
+// --- CONFIRMED SWITCH: initialize new course using keyword_pendente ---
 const setInitNewCourse = node({
   type: 'n8n-nodes-base.set',
   version: 3.4,
@@ -287,15 +313,16 @@ const setInitNewCourse = node({
           { id: 'e1', name: 'new_estado', value: 'aguardando_leitura', type: 'string' },
           { id: 'e2', name: 'new_modulo', value: 1, type: 'number' },
           { id: 'e3', name: 'new_secao', value: 1, type: 'number' },
-          { id: 'e4', name: 'new_curso_ativo', value: expr('{{ $json.keyword }}'), type: 'string' },
+          { id: 'e4', name: 'new_curso_ativo', value: expr('{{ $json.keyword_pendente || $json.keyword }}'), type: 'string' },
           { id: 'e5', name: 'new_respostas', value: '[]', type: 'string' },
-          { id: 'e6', name: 'new_modulos_concluidos', value: '[]', type: 'string' }
+          { id: 'e6', name: 'new_modulos_concluidos', value: '[]', type: 'string' },
+          { id: 'e7', name: 'new_curso_obj', value: expr('{{ $json.cursos[$json.keyword_pendente || $json.keyword] || {} }}'), type: 'object' }
         ]
       }
     },
-    position: [2060, 200]
+    position: [2320, 1700]
   },
-  output: [{ new_estado: 'aguardando_leitura', new_modulo: 1, new_secao: 1, new_curso_ativo: 'audiovisual', new_respostas: '[]', new_modulos_concluidos: '[]', aluno_name: 'TDS-ALU-00001', conversation_id: '123', curso_obj: {} }]
+  output: [{ new_estado: 'aguardando_leitura', new_modulo: 1, new_secao: 1, new_curso_ativo: 'audiovisual', new_respostas: '[]', new_modulos_concluidos: '[]', aluno_name: 'TDS-ALU-00001', conversation_id: '123', new_curso_obj: {} }]
 });
 
 const patchAlunoNewCourse = node({
@@ -314,12 +341,28 @@ const patchAlunoNewCourse = node({
       sendBody: true,
       contentType: 'json',
       specifyBody: 'json',
-      jsonBody: expr('{{ JSON.stringify({ "estado_catraca": $json.new_estado, "modulo_atual": $json.new_modulo, "secao_atual": $json.new_secao, "curso_ativo": $json.new_curso_ativo, "respostas_mcq": $json.new_respostas, "modulos_concluidos": $json.new_modulos_concluidos, "data_ultimo_acesso_whatsapp": $now.toFormat("yyyy-MM-dd HH:mm:ss") }) }}')
+      jsonBody: expr('{{ JSON.stringify({ "estado_catraca": $json.new_estado, "modulo_atual": $json.new_modulo, "secao_atual": $json.new_secao, "curso_ativo": $json.new_curso_ativo, "respostas_mcq": $json.new_respostas, "modulos_concluidos": $json.new_modulos_concluidos, "keyword_pendente": "", "data_ultimo_acesso_whatsapp": $now.toFormat("yyyy-MM-dd HH:mm:ss") }) }}')
     },
     credentials: { httpHeaderAuth: { id: 'frappe-header-auth', name: 'Frappe Header Auth' } },
-    position: [2320, 200]
+    position: [2580, 1700]
   },
   output: [{ data: { name: 'TDS-ALU-00001' } }]
+});
+
+// Issue 6: After course switch, check if modules exist and send first section content
+const ifModulosExistNewCourse = ifElse({
+  version: 2.3,
+  config: {
+    name: 'Modulos disponiveis novo curso?',
+    parameters: {
+      conditions: {
+        conditions: [
+          { leftValue: expr('{{ (($("Inicializa Novo Curso").item.json.new_curso_obj || {}).modulos || []).length }}'), operator: { type: 'number', operation: 'gt' }, rightValue: 0 }
+        ]
+      }
+    },
+    position: [2840, 1700]
+  }
 });
 
 const chatwootNewCourseSection = node({
@@ -338,12 +381,85 @@ const chatwootNewCourseSection = node({
       sendBody: true,
       contentType: 'json',
       specifyBody: 'json',
-      jsonBody: expr('"{ \\"content\\": \\"🔄 Curso trocado! Agora você está em *" + {{ $("Extract Aluno Fields").item.json.curso_obj.nome || "novo curso" }} + "*.\\\\n\\\\nO conteúdo será enviado em breve. Aguarde as próximas atualizações!\\", \\"message_type\\": \\"outgoing\\" }"')
+      jsonBody: expr('"{ \\"content\\": \\"🔄 Curso trocado! Agora você está em *" + {{ $("Inicializa Novo Curso").item.json.new_curso_obj.nome || "novo curso" }} + "*.\\\\n\\\\nO conteúdo será enviado em partes. Após cada leitura, responda *LI* para avançar.\\\\n\\\\nVamos começar!\\", \\"message_type\\": \\"outgoing\\" }"')
     },
     credentials: { httpHeaderAuth: { id: 'chatwoot-header-auth', name: 'Chatwoot Header Auth' } },
-    position: [2580, 200]
+    position: [3100, 1600]
   },
   output: [{ id: 3 }]
+});
+
+const chatwootNewCourseEmBreve = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Chatwoot Novo Curso Em Breve',
+    parameters: {
+      method: 'POST',
+      url: expr('"https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/conversations/" + {{ $("Extract Aluno Fields").item.json.conversation_id }} + "/messages"'),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendHeaders: true,
+      specifyHeaders: 'keypair',
+      headerParameters: { parameters: [{ name: 'Content-Type', value: 'application/json' }] },
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('"{ \\"content\\": \\"🔄 Curso trocado! Agora você está em *" + {{ $("Inicializa Novo Curso").item.json.new_curso_obj.nome || "novo curso" }} + "*.\\\\n\\\\nO conteúdo será disponibilizado em breve. Fique atento(a)! 📚\\", \\"message_type\\": \\"outgoing\\" }"')
+    },
+    credentials: { httpHeaderAuth: { id: 'chatwoot-header-auth', name: 'Chatwoot Header Auth' } },
+    position: [3100, 1800]
+  },
+  output: [{ id: 15 }]
+});
+
+// --- NOT CONFIRMED (nao/cancel): revert to previous state ---
+const patchAlunoCancelSwitch = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'PATCH Aluno Cancela Troca',
+    parameters: {
+      method: 'PUT',
+      url: expr('"https://lms.ipexdesenvolvimento.cloud/api/resource/TDS%20Aluno/" + {{ $json.aluno_name }}'),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendHeaders: true,
+      specifyHeaders: 'keypair',
+      headerParameters: { parameters: [{ name: 'Content-Type', value: 'application/json' }] },
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('{{ JSON.stringify({ "estado_catraca": "aguardando_leitura", "keyword_pendente": "", "data_ultimo_acesso_whatsapp": $now.toFormat("yyyy-MM-dd HH:mm:ss") }) }}')
+    },
+    credentials: { httpHeaderAuth: { id: 'frappe-header-auth', name: 'Frappe Header Auth' } },
+    position: [2320, 1950]
+  },
+  output: [{ data: { name: 'TDS-ALU-00001' } }]
+});
+
+const chatwootCancelSwitch = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Chatwoot Cancela Troca',
+    parameters: {
+      method: 'POST',
+      url: expr('"https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/conversations/" + {{ $("Extract Aluno Fields").item.json.conversation_id }} + "/messages"'),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendHeaders: true,
+      specifyHeaders: 'keypair',
+      headerParameters: { parameters: [{ name: 'Content-Type', value: 'application/json' }] },
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('{{ JSON.stringify({ "content": "👍 Tudo bem! Você continua no curso atual. Pode seguir de onde parou.", "message_type": "outgoing" }) }}')
+    },
+    credentials: { httpHeaderAuth: { id: 'chatwoot-header-auth', name: 'Chatwoot Header Auth' } },
+    position: [2580, 1950]
+  },
+  output: [{ id: 16 }]
 });
 
 // ==================== SAME COURSE / INACTIVE: STATE MACHINE ====================
@@ -382,6 +498,13 @@ const switchEstado = switchCase({
             },
             renameOutput: true,
             outputKey: 'certificado_emitido'
+          },
+          {
+            conditions: {
+              conditions: [{ leftValue: expr('{{ $json.estado_catraca }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'aguardando_confirmacao_troca' }]
+            },
+            renameOutput: true,
+            outputKey: 'aguardando_confirmacao_troca'
           }
         ]
       },
@@ -602,7 +725,7 @@ const patchAlunoMCQ = node({
       sendBody: true,
       contentType: 'json',
       specifyBody: 'json',
-      jsonBody: expr('{{ JSON.stringify({ "estado_catraca": "aguardando_mcq", "curso_ativo": $json.curso_ativo, "data_ultimo_acesso_whatsapp": $now.toFormat("yyyy-MM-dd HH:mm:ss") }) }}')
+      jsonBody: expr('{{ JSON.stringify({ "estado_catraca": "aguardando_mcq", "modulo_atual": $json.modulo_atual, "secao_atual": $json.secao_atual, "curso_ativo": $json.curso_ativo, "data_ultimo_acesso_whatsapp": $now.toFormat("yyyy-MM-dd HH:mm:ss") }) }}')
     },
     credentials: { httpHeaderAuth: { id: 'frappe-header-auth', name: 'Frappe Header Auth' } },
     position: [2580, 800]
@@ -733,7 +856,10 @@ const correta = sec?.correta || 'X';
 const acertou = (resposta === correta);
 
 let respostas = [];
-try { respostas = JSON.parse(j.respostas_mcq || '[]'); } catch(e) { respostas = []; }
+try {
+  const parsed = JSON.parse(j.respostas_mcq || '[]');
+  respostas = Array.isArray(parsed) ? parsed : [];
+} catch(e) { respostas = []; }
 respostas.push({ modulo: modulo, secao: secao, resposta: resposta, correta: correta, acertou: acertou });
 
 let modulosConcluidos = [];
@@ -767,7 +893,7 @@ if (mod && nextSecao > mod.secoes.length) {
     : '❌ A resposta correta era *' + correta + '*. Vamos à próxima seção. 📖';
 }
 
-const certificateCourseSlug = COURSE_SLUGS[j.curso_ativo] || COURSE_SLUGS[j.keyword] || '';
+const certificateCourseSlug = j.curso_obj?.certificate_slug || COURSE_SLUGS[j.curso_ativo] || COURSE_SLUGS[j.keyword] || '';
 
 return [{
   json: {
@@ -879,7 +1005,7 @@ const chatwootCertificado = node({
       sendBody: true,
       contentType: 'json',
       specifyBody: 'json',
-      jsonBody: expr('{{ JSON.stringify({ "content": $("Calcula Proximo Estado").item.json.reply_text + "\\n\\n🎓 Certificado emitido! Acesse: https://lms.ipexdesenvolvimento.cloud/certificates", "message_type": "outgoing" }) }}')
+      jsonBody: expr('{{ JSON.stringify({ "content": $("Calcula Proximo Estado").item.json.reply_text + "\\n\\n🎓 Certificado emitido! Acesse: https://lms.ipexdesenvolvimento.cloud/lms/certification/" + $("POST LMS Certificate").item.json.data.name, "message_type": "outgoing" }) }}')
     },
     credentials: { httpHeaderAuth: { id: 'chatwoot-header-auth', name: 'Chatwoot Header Auth' } },
     position: [3360, 1000]
@@ -913,6 +1039,21 @@ const chatwootNextSection = node({
 });
 
 // ==================== CERTIFICADO EMITIDO BRANCH ====================
+const ifNovoCursoPosCert = ifElse({
+  version: 2.3,
+  config: {
+    name: 'Novo curso pos certificado?',
+    parameters: {
+      conditions: {
+        conditions: [
+          { leftValue: expr('{{ $json.keyword }}'), operator: { type: 'string', operation: 'notEquals' }, rightValue: expr('{{ $json.curso_ativo }}') }
+        ]
+      }
+    },
+    position: [2060, 1500]
+  }
+});
+
 const chatwootJaConcluiu = node({
   type: 'n8n-nodes-base.httpRequest',
   version: 4.4,
@@ -932,9 +1073,138 @@ const chatwootJaConcluiu = node({
       jsonBody: expr('{{ JSON.stringify({ "content": "🎓 Você já concluiu este curso e seu certificado foi emitido!\\n\\nAcesse seus certificados em: https://lms.ipexdesenvolvimento.cloud/certificates\\n\\nQue tal experimentar outro curso? Envie o comando correspondente (ex: /agricultura, /financas, /ia).", "message_type": "outgoing" }) }}')
     },
     credentials: { httpHeaderAuth: { id: 'chatwoot-header-auth', name: 'Chatwoot Header Auth' } },
-    position: [2060, 1500]
+    position: [2320, 1600]
   },
   output: [{ id: 11 }]
+});
+
+// Certificado emitido + different keyword -> initialize new course directly
+const ifModulosExistPosCert = ifElse({
+  version: 2.3,
+  config: {
+    name: 'Modulos disponiveis pos cert?',
+    parameters: {
+      conditions: {
+        conditions: [
+          { leftValue: expr('{{ ($json.curso_obj.modulos || []).length }}'), operator: { type: 'number', operation: 'gt' }, rightValue: 0 }
+        ]
+      }
+    },
+    position: [2320, 1400]
+  }
+});
+
+const setInitPosCert = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Inicializa Pos Certificado',
+    parameters: {
+      mode: 'manual',
+      includeOtherFields: true,
+      assignments: {
+        assignments: [
+          { id: 'pc1', name: 'new_estado', value: 'aguardando_leitura', type: 'string' },
+          { id: 'pc2', name: 'new_modulo', value: 1, type: 'number' },
+          { id: 'pc3', name: 'new_secao', value: 1, type: 'number' },
+          { id: 'pc4', name: 'new_curso_ativo', value: expr('{{ $json.keyword }}'), type: 'string' }
+        ]
+      }
+    },
+    position: [2580, 1300]
+  },
+  output: [{ new_estado: 'aguardando_leitura', new_modulo: 1, new_secao: 1, new_curso_ativo: 'audiovisual', aluno_name: 'TDS-ALU-00001', conversation_id: '123', curso_obj: {} }]
+});
+
+const patchAlunoPosCert = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'PATCH Aluno Pos Certificado',
+    parameters: {
+      method: 'PUT',
+      url: expr('"https://lms.ipexdesenvolvimento.cloud/api/resource/TDS%20Aluno/" + {{ $json.aluno_name }}'),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendHeaders: true,
+      specifyHeaders: 'keypair',
+      headerParameters: { parameters: [{ name: 'Content-Type', value: 'application/json' }] },
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('{{ JSON.stringify({ "estado_catraca": $json.new_estado, "modulo_atual": $json.new_modulo, "secao_atual": $json.new_secao, "curso_ativo": $json.new_curso_ativo, "respostas_mcq": "[]", "modulos_concluidos": $json.modulos_concluidos || "[]", "data_ultimo_acesso_whatsapp": $now.toFormat("yyyy-MM-dd HH:mm:ss") }) }}')
+    },
+    credentials: { httpHeaderAuth: { id: 'frappe-header-auth', name: 'Frappe Header Auth' } },
+    position: [2840, 1300]
+  },
+  output: [{ data: { name: 'TDS-ALU-00001' } }]
+});
+
+const chatwootSecao1PosCert = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Chatwoot Secao 1 Pos Cert',
+    parameters: {
+      method: 'POST',
+      url: expr('"https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/conversations/" + {{ $("Extract Aluno Fields").item.json.conversation_id }} + "/messages"'),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendHeaders: true,
+      specifyHeaders: 'keypair',
+      headerParameters: { parameters: [{ name: 'Content-Type', value: 'application/json' }] },
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('"{ \\"content\\": \\"🎓 Parabéns por concluir o curso anterior! Agora você está em *" + {{ $("Extract Aluno Fields").item.json.curso_obj.nome || "novo curso" }} + "*.\\\\n\\\\nO conteúdo será enviado em partes. Após cada leitura, responda *LI* para avançar.\\\\n\\\\nVamos começar!\\", \\"message_type\\": \\"outgoing\\" }"')
+    },
+    credentials: { httpHeaderAuth: { id: 'chatwoot-header-auth', name: 'Chatwoot Header Auth' } },
+    position: [3100, 1300]
+  },
+  output: [{ id: 13 }]
+});
+
+const msgEmBrevePosCert = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Msg Em Breve Pos Cert',
+    parameters: {
+      mode: 'manual',
+      includeOtherFields: true,
+      assignments: {
+        assignments: [
+          { id: 'pb1', name: 'reply_text', value: expr('"🎓 Parabéns por concluir o curso anterior!\\n\\nO curso *" + {{ $json.curso_obj.nome || $json.keyword }} + "* está sendo preparado e o conteúdo será disponibilizado em breve.\\n\\nFique atento(a)! 📚"'), type: 'string' }
+        ]
+      }
+    },
+    position: [2580, 1500]
+  },
+  output: [{ reply_text: 'Parabens! O curso...', conversation_id: '123' }]
+});
+
+const chatwootEmBrevePosCert = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Chatwoot Em Breve Pos Cert',
+    parameters: {
+      method: 'POST',
+      url: expr('"https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/1/conversations/" + {{ $json.conversation_id }} + "/messages"'),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendHeaders: true,
+      specifyHeaders: 'keypair',
+      headerParameters: { parameters: [{ name: 'Content-Type', value: 'application/json' }] },
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('{{ JSON.stringify({ "content": $json.reply_text, "message_type": "outgoing" }) }}')
+    },
+    credentials: { httpHeaderAuth: { id: 'chatwoot-header-auth', name: 'Chatwoot Header Auth' } },
+    position: [2840, 1500]
+  },
+  output: [{ id: 14 }]
 });
 
 // ==================== FALLBACK (unknown state) ====================
@@ -964,7 +1234,7 @@ const chatwootFallback = node({
 
 // ==================== STICKY NOTES ====================
 const stickyOverview = sticky(
-  '## TDS Catraca Pedagogica\n\nSub-workflow que entrega conteudo estruturado (leitura + MCQ) via WhatsApp.\n\nEstados: inativo > aguardando_leitura > aguardando_mcq > certificado_emitido\n\nRecebe: { phone, keyword, message, conversation_id }',
+  '## TDS Catraca Pedagogica\n\nSub-workflow que entrega conteudo estruturado (leitura + MCQ) via WhatsApp.\n\nEstados: inativo > aguardando_leitura > aguardando_mcq > certificado_emitido | aguardando_confirmacao_troca\n\nRecebe: { phone, keyword, message, conversation_id }',
   [subWorkflowTrigger],
   { color: 4 }
 );
@@ -978,10 +1248,7 @@ export default workflow('catraca-pedagogica', 'TDS — Catraca Pedagogica')
     .onFalse(msgOrientacao.to(chatwootSendOrientacao))
     .onTrue(extractAluno
       .to(ifCursoDiferente
-        .onTrue(ifConfirmSwitch
-          .onTrue(setInitNewCourse.to(patchAlunoNewCourse.to(chatwootNewCourseSection)))
-          .onFalse(msgTrocaCurso.to(chatwootSendTroca))
-        )
+        .onTrue(msgTrocaCurso.to(patchAlunoPendingSwitch.to(chatwootSendTroca)))
         .onFalse(switchEstado
           .onCase(0, ifModulosExist
             .onFalse(msgEmBreve.to(chatwootEmBreve))
@@ -998,8 +1265,21 @@ export default workflow('catraca-pedagogica', 'TDS — Catraca Pedagogica')
               .onFalse(chatwootNextSection)
             )))
           )
-          .onCase(3, chatwootJaConcluiu)
-          .onCase(4, chatwootFallback)
+          .onCase(3, ifNovoCursoPosCert
+            .onTrue(ifModulosExistPosCert
+              .onFalse(msgEmBrevePosCert.to(chatwootEmBrevePosCert))
+              .onTrue(setInitPosCert.to(patchAlunoPosCert.to(chatwootSecao1PosCert)))
+            )
+            .onFalse(chatwootJaConcluiu)
+          )
+          .onCase(4, ifConfirmTroca
+            .onTrue(setInitNewCourse.to(patchAlunoNewCourse.to(ifModulosExistNewCourse
+              .onTrue(chatwootNewCourseSection)
+              .onFalse(chatwootNewCourseEmBreve)
+            )))
+            .onFalse(patchAlunoCancelSwitch.to(chatwootCancelSwitch))
+          )
+          .onCase(5, chatwootFallback)
         )
       )
     )
