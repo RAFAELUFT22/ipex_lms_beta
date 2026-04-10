@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TDS — Território de Desenvolvimento Social | LMS Lite</title>
+  <meta name="description" content="Portal de cursos gratuitos do Programa TDS. Educação que transforma vidas."/>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  
+  <!-- Estilos e Bibliotecas -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --primary: #1B6B45;
+      --primary-light: #2E9E68;
+      --accent: #3DD68C;
+      --gold: #F5A623;
+      --gold-light: #FFBA49;
+      --dark: #0A1612;
+      --darker: #050B09;
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --border: rgba(61, 214, 140, 0.15);
+      --text: #E8F5EE;
+      --text-muted: #9DBFAB;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: var(--dark); 
+      color: var(--text); 
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, h4, .font-heading { font-family: 'Outfit', sans-serif; font-weight: 700; }
+
+    /* Glass Panels */
+    .glass {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    /* Navegação */
+    nav {
+      position: fixed; top: 0; width: 100%; height: 72px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5%; z-index: 1000;
+      background: rgba(10, 22, 18, 0.85);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+    }
+    .logo-box { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .logo-box img { height: 40px; }
+    .nav-links { display: flex; gap: 2.5rem; }
+    .nav-links a { 
+      text-decoration: none; color: var(--text-muted); 
+      font-weight: 500; font-size: 0.95rem; transition: 0.3s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--accent); }
+
+    /* Layout Principal */
+    main { padding-top: 72px; min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+    /* Hero */
+    .hero {
+      padding: 6rem 0; text-align: center;
+      background: radial-gradient(circle at top right, rgba(27, 107, 69, 0.2), transparent),
+                  radial-gradient(circle at bottom left, rgba(245, 166, 35, 0.1), transparent);
+    }
+    .hero h1 { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 1.5rem; line-height: 1.1; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { font-size: 1.25rem; color: var(--text-muted); max-width: 700px; margin: 0 auto 2.5rem; }
+
+    /* Grid de Cursos */
+    .course-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 2rem; margin-top: 3rem;
+    }
+    .course-card {
+      padding: 2rem; transition: transform 0.3s, border-color 0.3s;
+      cursor: pointer; display: flex; flex-direction: column; height: 100%;
+    }
+    .course-card:hover { 
+      transform: translateY(-8px); border-color: var(--accent);
+      background: rgba(61, 214, 140, 0.08);
+    }
+    .course-card h3 { font-size: 1.4rem; margin-bottom: 1rem; color: var(--accent); }
+    .course-card p { font-size: 0.95rem; color: var(--text-muted); flex-grow: 1; margin-bottom: 1.5rem; }
+    .btn-start {
+      padding: 0.8rem 1.5rem; background: var(--primary);
+      color: white; border: none; border-radius: 8px;
+      font-weight: 600; cursor: pointer; transition: 0.3s;
+      display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+    }
+    .btn-start:hover { background: var(--primary-light); }
+
+    /* LMS Viewer */
+    .lms-container { display: none; grid-template-columns: 320px 1fr; gap: 0; min-height: calc(100vh - 72px); }
+    .lms-sidebar {
+      background: var(--darker); border-right: 1px solid var(--border);
+      padding: 2rem 1rem; overflow-y: auto; height: calc(100vh - 72px);
+      position: sticky; top: 72px;
+    }
+    .lms-content { padding: 3rem 5%; overflow-y: auto; }
+    .chapter-title { 
+      font-size: 0.75rem; text-transform: uppercase; color: var(--gold); 
+      margin: 1.5rem 0 0.75rem; padding-left: 0.5rem; letter-spacing: 0.05em;
+    }
+    .lesson-item {
+      padding: 0.75rem 1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.9rem; color: var(--text-muted); transition: 0.2s;
+      margin-bottom: 4px; display: flex; align-items: center; gap: 10px;
+    }
+    .lesson-item:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+    .lesson-item.active { background: rgba(61, 214, 140, 0.15); color: var(--accent); font-weight: 600; }
+    
+    .lesson-body { max-width: 800px; margin: 0 auto; }
+    .lesson-body h1, .lesson-body h2 { margin: 2rem 0 1rem; }
+    .lesson-body p { margin-bottom: 1.25rem; font-size: 1.1rem; color: #d1e1d9; }
+    .lesson-body img { max-width: 100%; border-radius: 12px; margin: 2rem 0; }
+    
+    /* Animacão de Conclusão */
+    .btn-complete {
+      margin-top: 3rem; padding: 1rem 2rem; 
+      background: var(--accent); color: var(--dark);
+      border: none; border-radius: 50px; font-weight: 700;
+      cursor: pointer; transition: 0.3s;
+    }
+    .btn-complete:hover { transform: scale(1.05); }
+
+    /* Validador de Certificado */
+    .verify-section { display: none; padding: 5rem 2rem; max-width: 800px; margin: 0 auto; text-align: center; }
+    .search-box {
+      display: flex; gap: 1rem; margin: 3rem 0;
+      background: var(--card-bg); padding: 0.5rem; border-radius: 12px; border: 1px solid var(--border);
+    }
+    .search-box input {
+      flex-grow: 1; background: transparent; border: none; outline: none;
+      color: white; padding: 1rem; font-size: 1.1rem;
+    }
+    .search-box button {
+      padding: 0 2rem; background: var(--gold); border: none; border-radius: 8px;
+      color: var(--dark); font-weight: 700; cursor: pointer; transition: 0.3s;
+    }
+    .search-box button:hover { background: var(--gold-light); }
+
+    .cert-result {
+      display: none; margin-top: 2rem; padding: 3rem; border: 2px solid var(--gold);
+      position: relative; overflow: hidden;
+    }
+    .cert-result::before {
+      content: 'AUTÊNTICO'; position: absolute; top: 1rem; right: -2rem;
+      background: var(--gold); color: var(--dark); padding: 0.5rem 4rem;
+      transform: rotate(45deg); font-weight: 800; font-size: 0.8rem;
+    }
+
+    /* Footer */
+    footer { padding: 4rem 5%; background: var(--darker); border-top: 1px solid var(--border); margin-top: 5rem; }
+    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; }
+    
+    /* Helpers */
+    .btn-back { margin-bottom: 2rem; background: transparent; color: var(--accent); border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+
+    /* AI Toolkit Styles */
+    #ai-float-helper {
+      position: absolute; display: none; z-index: 2000;
+      background: var(--accent); color: var(--dark);
+      padding: 8px 16px; border-radius: 20px; font-weight: 700;
+      font-size: 0.8rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      border: 2px solid white; animation: fadeIn 0.2s;
+    }
+    #ai-float-helper:hover { transform: scale(1.05); background: #fff; }
+    
+    #ai-explanation-pop {
+      position: fixed; bottom: 20px; right: 20px; width: 350px;
+      display: none; z-index: 2001; padding: 1.5rem;
+      border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      animation: slideUp 0.3s;
+    }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo-box" onclick="navigateTo('home')">
+    <img src="/tds_navbar.png" alt="TDS Logo">
+    <div>
+      <div style="font-weight: 800; font-size: 1.2rem; line-height: 1;">TDS</div>
+      <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Portal do Aluno</div>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a href="#" onclick="navigateTo('home')" class="active">Página Inicial</a>
+    <a href="#" onclick="navigateTo('courses')">Meus Cursos</a>
+    <a href="#" onclick="navigateTo('verify')">Validar Certificado</a>
+  </div>
+  <div class="support-link">
+    <a href="https://wa.me/556392619831" target="_blank" class="btn-start" style="background: #25D366; font-size: 0.8rem;">
+      Falar no WhatsApp
+    </a>
+  </div>
+</nav>
+
+<main>
+  <!-- HOME -->
+  <section id="view-home" class="container">
+    <div class="hero">
+      <h1>Educação <span>Gratuita</span><br>de Alta Performance</h1>
+      <p>Acesse cursos profissionalizantes certificados pelo Programa TDS e transforme sua carreira com auxílio de Inteligência Artificial.</p>
+      <button class="btn-start" onclick="navigateTo('courses')" style="padding: 1.2rem 3rem; font-size: 1.1rem; border-radius: 50px;">
+        Começar Agora
+      </button>
+    </div>
+
+    <div class="section-divider" style="margin: 4rem 0;"></div>
+
+    <h2 style="text-align: center; margin-bottom: 3rem;">Por que o TDS?</h2>
+    <div class="course-grid">
+      <div class="glass" style="padding: 2.5rem; text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🤖</div>
+        <h3>Tutor IA 24h</h3>
+        <p>Um assistente inteligente em cada aula para tirar suas dúvidas instantaneamente.</p>
+      </div>
+      <div class="glass" style="padding: 2.5rem; text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📜</div>
+        <h3>Certificado Digital</h3>
+        <p>Validação imediata reconhecida pelo IPEX e parceiros do programa.</p>
+      </div>
+      <div class="glass" style="padding: 2.5rem; text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
+        <h3>Mobile First</h3>
+        <p>Interface otimizada para aprender de qualquer lugar usando apenas o celular.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- LISTA DE CURSOS -->
+  <section id="view-courses" class="container" style="display:none">
+    <h2 style="font-size: 2rem; margin-bottom: 1rem;">Seus Cursos Disponíveis</h2>
+    <p style="color: var(--text-muted); margin-bottom: 3rem;">Escolha uma jornada e comece a estudar.</p>
+    <div class="course-grid" id="courseListContainer">
+      <!-- Populado via JS -->
+    </div>
+  </section>
+
+  <!-- VISUALIZADOR DE AULA (LMS) -->
+  <section id="view-lms" class="lms-container">
+    <aside class="lms-sidebar" id="lmsSidebar">
+      <!-- Navegação do Curso -->
+    </aside>
+    <div class="lms-content">
+      <button class="btn-back" onclick="navigateTo('courses')">← Voltar para Cursos</button>
+      <div class="lesson-body" id="lessonContent">
+        <!-- Conteúdo da Aula -->
+      </div>
+      <div style="text-align: center;">
+        <button class="btn-complete" id="btnNextLesson">Concluir e Próxima Aula ›</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI TOOLKIT COMPONENTS -->
+  <div id="ai-float-helper" onclick="askAI()">🤖 Explicar este termo</div>
+  <div id="ai-explanation-pop" class="glass">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h4 style="color: var(--gold);">EXPLICADOR IA</h4>
+      <button onclick="closeAI()" style="background:transparent; border:none; color:white; cursor:pointer;">✕</button>
+    </div>
+    <div id="ai-loading" style="display:none; text-align:center; padding: 1rem;">
+      <div style="border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--accent); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display:inline-block;"></div>
+      <p style="font-size: 0.8rem; margin-top: 5px;">Consultando Tutor...</p>
+    </div>
+    <div id="ai-response-text" style="font-size: 0.95rem; line-height: 1.5;"></div>
+    <div style="margin-top: 1rem; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 5px;">
+      Baseado na base de conhecimento oficial do TDS.
+    </div>
+  </div>
+
+  <style>
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+
+  <!-- VALIDADOR DE CERTIFICADO -->
+  <section id="view-verify" class="verify-section">
+    <h1>Validar Certificado</h1>
+    <p>Insira o código de autenticação impresso no seu certificado para verificar sua validade.</p>
+    
+    <div class="search-box">
+      <input type="text" id="certIdInput" placeholder="Ex: CERT-2026-XXXX">
+      <button onclick="verifyCertificate()">VERIFICAR</button>
+    </div>
+
+    <div id="certStatus" style="margin-top: 1rem; color: var(--gold);"></div>
+
+    <div class="glass cert-result" id="certResult">
+      <h2 style="color: var(--gold); margin-bottom: 1.5rem;">CERTIFICADO AUTÊNTICO</h2>
+      <div id="certDetails" style="text-align: left; display: grid; gap: 1rem;">
+        <!-- Dados do Certificado -->
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <h3 style="color: var(--accent); margin-bottom: 1rem;">Programa TDS</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Território de Desenvolvimento Social. Uma iniciativa focada no desenvolvimento humano e profissional no Tocantins.</p>
+    </div>
+    <div>
+      <h4>Links</h4>
+      <div style="display: grid; gap: 0.5rem; margin-top: 1rem;">
+        <a href="#" onclick="navigateTo('home')">Início</a>
+        <a href="#" onclick="navigateTo('courses')">Cursos</a>
+        <a href="#" onclick="navigateTo('verify')">Validar</a>
+      </div>
+    </div>
+    <div>
+      <h4>Realização</h4>
+      <div style="display: flex; gap: 1rem; margin-top: 1rem; align-items: center;">
+        <img src="/ipex.png" style="height: 30px; opacity: 0.6;">
+        <span style="font-weight: bold; color: var(--text-muted);">IPEX + FAPTO + MDS</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- SCRIPT ENGINE -->
+<script>
+  // BANCO DE DADOS EMBUTIDO (JSON)
+  const COURSES_DATA = [
+    {
+        "id": "financas",
+        "title": "Gestão Financeira para Empreendimentos",
+        "description": "Aprenda a controlar caixa, custos, receitas e margens para tomar decisões assertivas no seu negócio.",
+        "icon": "💰",
+        "chapters": [
+            {
+                "title": "Fundamentos Financeiros",
+                "lessons": [
+                    {
+                        "title": "O que é gestão financeira?",
+                        "body": "### Introdução à Gestão Financeira\n\nGestão financeira é o conjunto de processos, métodos e ferramentas que permitem a uma empresa controlar suas finanças. Para o empreendedor, isso significa saber exatamente quanto dinheiro entra, quanto sai e, o mais importante, quanto sobra.\n\n**Por que é importante?**\n- Evita a quebra por falta de caixa.\n- Permite planejar investimentos.\n- Ajuda a separar o dinheiro pessoal do dinheiro da empresa."
+                    },
+                    {
+                        "title": "Receita, custo e lucro",
+                        "body": "### Entendendo os Termos\n\n1. **Receita**: Tudo o que entra no caixa através das vendas.\n2. **Custo**: Gastos ligados diretamente à produção.\n3. **Lucro**: O que sobra da receita após pagar todos os custos e despesas."
+                    }
+                ]
+            },
+            {
+                "title": "Fluxo de Caixa",
+                "lessons": [
+                    {
+                        "title": "Controle de caixa básico",
+                        "body": "### O Fluxo de Caixa\n\nO fluxo de caixa é o registro de todas as entradas e saídas de dinheiro em um período.\n\n**Dica de Ouro**: Nunca deixe de registrar nem um centavo. O descontrole começa nos pequenos gastos."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "alimentos",
+        "title": "Boas Práticas: Manipulação de Alimentos",
+        "description": "Guia essencial sobre segurança, higiene e procedimentos para manipulação correta de alimentos.",
+        "icon": "🍱",
+        "chapters": [
+            {
+                "title": "Segurança Alimentar",
+                "lessons": [
+                    {
+                        "title": "Por que boas práticas?",
+                        "body": "### Segurança em Primeiro Lugar\n\nAs Boas Práticas de Fabricação (BPF) são obrigatórias por lei e essenciais para garantir que o alimento não cause doenças ao consumidor."
+                    },
+                    {
+                        "title": "Tipos de contaminação",
+                        "body": "### Os 3 Perigos\n\n1. **Física**: Cabelos, pedras.\n2. **Química**: Resíduos de limpeza.\n3. **Biológica**: Fungos e bactérias."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "producao",
+        "title": "Organização da Produção para Mercado",
+        "description": "Estruture seus processos produtivos para atender a demanda de forma eficiente e organizada.",
+        "icon": "🏭",
+        "chapters": [
+            {
+                "title": "Entendendo o Mercado",
+                "lessons": [
+                    {
+                        "title": "Identificar demanda",
+                        "body": "### Para quem você produz?\n\nEntender o seu nicho é o primeiro passo para organizar a produção. Você produz em massa ou sob encomenda?"
+                    }
+                ]
+            }
+        ]
+    }
+  ];
+
+  let activeCourseId = null;
+  let activeLessonIndex = { chapter: 0, lesson: 0 };
+
+  // SISTEMA DE PROGRESSO
+  const PROGRESS_KEY = 'tds_lms_progress_v1';
+  
+  function getProgress() {
+    const data = localStorage.getItem(PROGRESS_KEY);
+    return data ? JSON.parse(data) : {};
+  }
+
+  function markAsComplete(courseId, chIdx, lIdx) {
+    const progress = getProgress();
+    if (!progress[courseId]) progress[courseId] = [];
+    const lessonKey = `${chIdx}-${lIdx}`;
+    if (!progress[courseId].includes(lessonKey)) {
+      progress[courseId].push(lessonKey);
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+    }
+    renderSidebar();
+  }
+
+  function isLessonComplete(courseId, chIdx, lIdx) {
+    const progress = getProgress();
+    return progress[courseId] && progress[courseId].includes(`${chIdx}-${lIdx}`);
+  }
+
+  // NAVEGAÇÃO SPA (Ajustada para resetar scroll)
+  function navigateTo(view) {
+    document.querySelectorAll('main > section').forEach(s => s.style.display = 'none');
+    const target = document.getElementById('view-' + view);
+    if(target) target.style.display = view === 'lms' ? 'grid' : 'block';
+    
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    document.querySelectorAll('.nav-links a').forEach(a => {
+      if(a.innerText.toLowerCase().includes(view) || (view === 'home' && a.innerText.includes('Inicial'))) a.classList.add('active');
+    });
+
+    if(view === 'courses') renderCourseList();
+    window.scrollTo(0,0);
+  }
+
+  // RENDERIZAÇÃO DA LISTA DE CURSOS
+  function renderCourseList() {
+    const progress = getProgress();
+    const container = document.getElementById('courseListContainer');
+    container.innerHTML = COURSES_DATA.map(c => {
+      const completedCount = (progress[c.id] || []).length;
+      const totalLessons = c.chapters.reduce((acc, ch) => acc + ch.lessons.length, 0);
+      const percent = Math.round((completedCount / totalLessons) * 100) || 0;
+
+      return `
+        <div class="glass course-card" onclick="openCourse('${c.id}')">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">${c.icon}</div>
+            <div style="font-size: 0.75rem; color: var(--gold); font-weight: 700;">${percent}% CONCLUÍDO</div>
+          </div>
+          <h3>${c.title}</h3>
+          <p>${c.description}</p>
+          <div style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-bottom: 1.5rem; overflow: hidden;">
+            <div style="width: ${percent}%; height: 100%; background: var(--accent); transition: 0.5s;"></div>
+          </div>
+          <button class="btn-start">${percent > 0 ? 'Continuar Curso' : 'Iniciar Curso'} ›</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // MOTOR DO CURSO (LMS)
+  function openCourse(id) {
+    activeCourseId = id;
+    activeLessonIndex = { chapter: 0, lesson: 0 };
+    renderSidebar();
+    showLesson(0, 0);
+    navigateTo('lms');
+  }
+
+  function renderSidebar() {
+    const course = COURSES_DATA.find(c => c.id === activeCourseId);
+    const sidebar = document.getElementById('lmsSidebar');
+    let html = `<h2 style="font-size: 1.1rem; margin-bottom: 2rem; color: #fff;">${course.title}</h2>`;
+    
+    course.chapters.forEach((ch, chIdx) => {
+      html += `<div class="chapter-title">${ch.title}</div>`;
+      ch.lessons.forEach((l, lIdx) => {
+        const isActive = chIdx === activeLessonIndex.chapter && lIdx === activeLessonIndex.lesson;
+        const isComplete = isLessonComplete(course.id, chIdx, lIdx);
+        
+        const statusIcon = isComplete ? '✅' : (isActive ? '●' : '○');
+        const activeClass = isActive ? 'active' : '';
+        const completeClass = isComplete ? 'is-complete' : '';
+
+        html += `<div class="lesson-item ${activeClass} ${completeClass}" onclick="showLesson(${chIdx}, ${lIdx})">
+          <span style="font-size: 0.8rem;">${statusIcon}</span> ${l.title}
+        </div>`;
+      });
+    });
+    sidebar.innerHTML = html;
+  }
+
+  function showLesson(chIdx, lIdx) {
+    activeLessonIndex = { chapter: chIdx, lesson: lIdx };
+    const course = COURSES_DATA.find(c => c.id === activeCourseId);
+    const lesson = course.chapters[chIdx].lessons[lIdx];
+    
+    document.getElementById('lessonContent').innerHTML = `
+      <div style="font-size: 0.8rem; color: var(--gold); margin-bottom: 0.5rem; text-transform: uppercase;">Módulo: ${course.chapters[chIdx].title}</div>
+      <h1 style="font-size: 2.2rem; margin-top: 0; line-height: 1.2;">${lesson.title}</h1>
+      <div class="lesson-markdown">${marked.parse(lesson.body)}</div>
+    `;
+
+    renderSidebar();
+
+    const nextBtn = document.getElementById('btnNextLesson');
+    const isComplete = isLessonComplete(course.id, chIdx, lIdx);
+
+    const handleComplete = () => {
+      markAsComplete(course.id, chIdx, lIdx);
+      if (lIdx < course.chapters[chIdx].lessons.length - 1) {
+        showLesson(chIdx, lIdx + 1);
+      } else if (chIdx < course.chapters.length - 1) {
+        showLesson(chIdx + 1, 0);
+      } else {
+        alert('Parabéns! Você concluiu todas as aulas deste curso. 🎉');
+        navigateTo('courses');
+      }
+    };
+
+    if (lIdx < course.chapters[chIdx].lessons.length - 1 || chIdx < course.chapters.length - 1) {
+      nextBtn.innerText = isComplete ? "Próxima Aula ›" : "Concluir e Próxima Aula ›";
+      nextBtn.onclick = handleComplete;
+      nextBtn.style.display = 'inline-block';
+    } else {
+      nextBtn.innerText = "Finalizar Curso 🎉";
+      nextBtn.onclick = handleComplete;
+    }
+
+    const contentDiv = document.querySelector('.lms-content');
+    contentDiv.scrollTo(0,0);
+  }
+
+  // AI TOOLKIT LOGIC
+  let selectedText = "";
+  const helperBtn = document.getElementById('ai-float-helper');
+  const explanationPop = document.getElementById('ai-explanation-pop');
+
+  document.addEventListener('mouseup', (e) => {
+    const selection = window.getSelection().toString().trim();
+    if (selection && selection.length > 3) {
+      selectedText = selection;
+      helperBtn.style.display = 'block';
+      helperBtn.style.top = `${e.pageY - 40}px`;
+      helperBtn.style.left = `${e.pageX}px`;
+    } else {
+      if(e.target.id !== 'ai-float-helper') helperBtn.style.display = 'none';
+    }
+  });
+
+  async function askAI() {
+    helperBtn.style.display = 'none';
+    explanationPop.style.display = 'block';
+    
+    const loading = document.getElementById('ai-loading');
+    const responseBox = document.getElementById('ai-response-text');
+    
+    loading.style.display = 'block';
+    responseBox.innerText = "";
+
+    const course = COURSES_DATA.find(c => c.id === activeCourseId);
+    const lesson = course.chapters[activeLessonIndex.chapter].lessons[activeLessonIndex.lesson];
+
+    try {
+      const response = await fetch('https://n8n.ipexdesenvolvimento.cloud/webhook/ai-helper', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          selection: selectedText,
+          lessonTitle: lesson.title
+        })
+      });
+      
+      const data = await response.json();
+      loading.style.display = 'none';
+      responseBox.innerText = data.explanation || "Não consegui encontrar uma explicação específica agora.";
+    } catch(e) {
+      loading.style.display = 'none';
+      responseBox.innerText = "Erro ao conectar com o Tutor IA. Verifique sua rede.";
+    }
+  }
+
+  function closeAI() {
+    explanationPop.style.display = 'none';
+  }
+
+  // VALIDADOR DE CERTIFICADOS
+  async function verifyCertificate() {
+    const id = document.getElementById('certIdInput').value.trim();
+    const status = document.getElementById('certStatus');
+    const result = document.getElementById('certResult');
+    const detail = document.getElementById('certDetails');
+
+    if(!id) return;
+    status.innerText = "Consultando base de dados do IPEX...";
+    result.style.display = 'none';
+
+    try {
+      // Simulação de chamada para o Frappe
+      // No ambiente real seria: fetch(`https://lms.ipexdesenvolvimento.cloud/api/resource/LMS Certificate/${id}`)
+      setTimeout(() => {
+        if(id.startsWith('CERT-')) {
+          status.innerText = "";
+          result.style.display = 'block';
+          detail.innerHTML = `
+            <div><strong>Aluno:</strong> JOSÉ DA SILVA</div>
+            <div><strong>Curso:</strong> ${COURSES_DATA[0].title}</div>
+            <div><strong>Data de Emissão:</strong> 09/04/2026</div>
+            <div><strong>Status:</strong> Ativo e Verificado</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem;">ID Único: ${id}</div>
+          `;
+        } else {
+          status.innerText = "⚠️ Certificado não encontrado ou código inválido.";
+        }
+      }, 1500);
+    } catch(e) {
+      status.innerText = "Erro ao conectar com o servidor.";
+    }
+  }
+
+  // INICIALIZAÇÃO
+  navigateTo('home');
+
+  // INTEGRAÇÃO CHATWOOT
+  (function(d,t) {
+    var BASE_URL="https://chat.ipexdesenvolvimento.cloud";
+    var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=BASE_URL+"/packs/js/sdk.js";
+    g.defer = true;
+    g.async = true;
+    g.onload=function(){
+      window.chatwootSDK.run({
+        websiteToken: 'w8BYLTQc1s5VMowjQw433rGy',
+        baseUrl: BASE_URL
+      })
+    }
+    s.parentNode.insertBefore(g,s);
+  })(document,"script");
+
+  // INTEGRAÇÃO EVERYTHINGLLM (Tutor IA Contextual)
+  function openTutorAI(workspaceSlug) {
+    const RAG_URL = 'https://rag.ipexdesenvolvimento.cloud';
+    window.open(`${RAG_URL}/workspace/${workspaceSlug}`, '_blank');
+  }
+
+  // INICIALIZAÇÃO FINAL
+  document.addEventListener('DOMContentLoaded', () => {
+    navigateTo('home');
+    
+    // Iniciar Chatwoot
+    (function(d,t) {
+      var BASE_URL="https://chat.ipexdesenvolvimento.cloud";
+      var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+      g.src=BASE_URL+"/packs/js/sdk.js";
+      g.defer = true;
+      g.async = true;
+      g.onload=function(){
+        window.chatwootSDK.run({
+          websiteToken: 'w8BYLTQc1s5VMowjQw433rGy',
+          baseUrl: BASE_URL
+        })
+      }
+      s.parentNode.insertBefore(g,s);
+    })(document,"script");
+  });
+</script>
+
+</body>
+</html>

@@ -2,17 +2,27 @@
 
 Este documento define as chaves essenciais para a operação do ecossistema. Use estes templates para configurar os serviços no Dokploy.
 
-## 1. Gateway de IA (AnythingLLM)
+## 1. Gateway de IA (AnythingLLM via OpenRouter)
 
-A configuração global do AnythingLLM exige o motor do Gemini.
+O AnythingLLM usa OpenRouter como provedor LLM. Em testes, usar modelos `:free`.
+Para produção, adicionar créditos e trocar pelo modelo premium equivalente.
 
-| Chave | Valor de Exemplo / Origem |
-| :--- | :--- |
-| `LLM_PROVIDER` | `google` |
-| `GOOGLE_MODEL_API_KEY` | `Sua_Chave_Gemini_Pro_ou_Flash` |
-| `GOOGLE_MODEL_NAME` | `gemini-1.5-flash` |
-| `VECTOR_DB` | `lancedb` (ou `pgvector` se escalável) |
-| `ANYTHINGLLM_API_KEY` | `Gerar no painel do AnythingLLM` |
+| Chave | Valor (Teste — Free) | Valor (Produção) |
+| :--- | :--- | :--- |
+| `LLM_PROVIDER` | `openai` | `openai` |
+| `OPENAI_API_KEY` | `sk-or-v1-...` (chave OpenRouter) | mesma chave, com crédito |
+| `OPENAI_BASE_URL` | `https://openrouter.ai/api/v1` | `https://openrouter.ai/api/v1` |
+| `OPENAI_MODEL_NAME` | `google/gemini-2.0-flash-lite:free` | `google/gemini-2.0-flash-001` |
+| `OPENAI_MODEL_MAX_TOKENS` | `4096` | `8192` |
+| `VECTOR_DB` | `lancedb` | `lancedb` |
+| `ANYTHINGLLM_API_KEY` | `Gerar no painel AnythingLLM > API Keys` | idem |
+
+**Modelos free alternativos para teste:**
+- `deepseek/deepseek-r1:free` — raciocínio complexo
+- `meta-llama/llama-3.3-70b-instruct:free` — geração de texto geral
+- `mistralai/mistral-7b-instruct:free` — leve e rápido
+
+> Troque `OPENAI_MODEL_NAME` no painel do AnythingLLM (Settings > LLM Provider) sem precisar restartar o container.
 
 ## 2. Mensageria (Evolution API)
 
@@ -33,7 +43,7 @@ O n8n precisa de acesso à API do Dokploy e das outras ferramentas.
 | `DOKPLOY_API_KEY` | `Gerar no painel do Dokploy` |
 | `ANYTHINGLLM_URL` | `https://ai.seuservidor.com` |
 | `CHATWOOT_API_KEY` | `Sua_Chave_Chatwoot` |
-| `FRAPPE_API_KEY` | `Sua_Chave_Frappe` |
+| `FRAPPE_API_KEY` | `RESERVADO — edição futura` |
 
 ## 4. Banco de Dados Global (PostgreSQL)
 

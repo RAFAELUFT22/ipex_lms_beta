@@ -1,0 +1,101 @@
+[
+    {
+        "title": "Gestão Financeira para Empreendimentos",
+        "description": "Aprenda a controlar caixa, custos, receitas e margens para tomar decisões assertivas no seu negócio.",
+        "instructor": "Administrator",
+        "chapters": [
+            {
+                "title": "Fundamentos Financeiros",
+                "lessons": [
+                    {
+                        "title": "O que é gestão financeira para empreendedor?",
+                        "body": "### Introdução à Gestão Financeira\n\nGestão financeira é o conjunto de processos, métodos e ferramentas que permitem a uma empresa controlar suas finanças. Para o empreendedor, isso significa saber exatamente quanto dinheiro entra, quanto sai e, o mais importante, quanto sobra.\n\n**Por que é importante?**\n- Evita a quebra por falta de caixa.\n- Permite planejar investimentos.\n- Ajuda a separar o dinheiro pessoal do dinheiro da empresa."
+                    },
+                    {
+                        "title": "Receita, custo, despesa e lucro",
+                        "body": "### Entendendo os Termos\n\n1. **Receita**: Tudo o que entra no caixa através das vendas.\n2. **Custo**: Gastos ligados diretamente à produção (ex: matéria-prima).\n3. **Despesa**: Gastos fixos para manter a empresa aberta (ex: aluguel).\n4. **Lucro**: O que sobra da receita após pagar todos os custos e despesas."
+                    },
+                    {
+                        "title": "Conceitos: margem, markup, ponto de equilíbrio",
+                        "body": "### Indicadores de Sucesso\n\n- **Margem de Lucro**: Qual a porcentagem de lucro em cada venda.\n- **Markup**: Índice aplicado sobre o custo para chegar ao preço de venda.\n- **Ponto de Equilíbrio**: O quanto você precisa vender apenas para empatar as contas (zero lucro, zero prejuízo)."
+                    }
+                ]
+            },
+            {
+                "title": "Planejamento Financeiro",
+                "lessons": [
+                    {
+                        "title": "Controle de caixa básico (fluxo de caixa)",
+                        "body": "### O Fluxo de Caixa\n\nO fluxo de caixa é o registro de todas as entradas e saídas de dinheiro em um período.\n\n**Dica de Ouro**: Nunca deixe de registrar nem um centavo. O descontrole começa nos pequenos gastos."
+                    },
+                    {
+                        "title": "Planejando despesas fixas e variáveis",
+                        "body": "### Fixas vs Variáveis\n\n- **Fixas**: Aquelas que não mudam se você vender mais ou menos (Internet, Aluguel).\n- **Variáveis**: Mudam conforme a produção (Embalagens, Comissão de vendas)."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "title": "Boas Práticas na Produção e Manipulação de Alimentos",
+        "description": "Guia essencial sobre segurança, higiene e procedimentos para manipulação correta de alimentos.",
+        "instructor": "Administrator",
+        "chapters": [
+            {
+                "title": "Fundamentos de Segurança Alimentar",
+                "lessons": [
+                    {
+                        "title": "Por que boas práticas são obrigatórias?",
+                        "body": "### Segurança em Primeiro Lugar\n\nAs Boas Práticas de Fabricação (BPF) são obrigatórias por lei e essenciais para garantir que o alimento não cause doenças ao consumidor. Um erro na manipulação pode destruir a reputação de um negócio."
+                    },
+                    {
+                        "title": "Tipos de contaminação",
+                        "body": "### Os 3 Perigos\n\n1. **Física**: Cabelos, pedras, pedaços de plástico.\n2. **Química**: Resíduos de produtos de limpeza.\n3. **Biológica**: Fungos, bactérias e vírus."
+                    }
+                ]
+            },
+            {
+                "title": "Higiene Pessoal e Ambiental",
+                "lessons": [
+                    {
+                        "title": "Boa higiene pessoal",
+                        "body": "### O Manipulador\n\n- Unhas curtas e sem esmalte.\n- Uso de touca e uniforme limpo.\n- Lavagem das mãos a cada troca de tarefa."
+                    },
+                    {
+                        "title": "Limpeza e sanitização",
+                        "body": "### Ambiente Seguro\n\nLimpar é tirar a sujeira visível. Sanitizar é eliminar os microrganismos. Use sempre produtos autorizados pela ANVISA."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "title": "Organização da Produção para o Mercado",
+        "description": "Estruture seus processos produtivos para atender a demanda de forma eficiente e organizada.",
+        "instructor": "Administrator",
+        "chapters": [
+            {
+                "title": "Entendendo o Mercado",
+                "lessons": [
+                    {
+                        "title": "Identificar demanda e nicho",
+                        "body": "### Para quem você produz?\n\nEntender o seu nicho é o primeiro passo para organizar a produção. Você produz em massa ou sob encomenda? Quem é seu cliente ideal?"
+                    },
+                    {
+                        "title": "Estudar concorrência e público-alvo",
+                        "body": "### Conheça o Terreno\n\nAnalise o que seus concorrentes entregam e como você pode fazer melhor ou de forma mais eficiente."
+                    }
+                ]
+            },
+            {
+                "title": "Fluxo de Produção",
+                "lessons": [
+                    {
+                        "title": "Mapeando o processo produtivo",
+                        "body": "### O Fluxograma\n\nDesenhe o caminho do produto: da entrada da matéria-prima até a entrega ao cliente. Visualize cada etapa para identificar desperdícios."
+                    }
+                ]
+            }
+        ]
+    }
+]

@@ -229,6 +229,14 @@ services:
       - dokploy-network
     depends_on:
       - postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kreativ-evolution.rule=Host(`evolution.ipexdesenvolvimento.cloud`)"
+      - "traefik.http.routers.kreativ-evolution.entrypoints=websecure"
+      - "traefik.http.routers.kreativ-evolution.tls=true"
+      - "traefik.http.routers.kreativ-evolution.tls.certresolver=letsencrypt"
+      - "traefik.http.services.kreativ-evolution.loadbalancer.server.port=8080"
+      - "traefik.docker.network=dokploy-network"
 
   # ---------------------------------------------------------------------------
   # ORCHESTRATOR (n8n)
@@ -255,6 +263,14 @@ services:
       - dokploy-network
     depends_on:
       - postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kreativ-n8n.rule=Host(`n8n.ipexdesenvolvimento.cloud`)"
+      - "traefik.http.routers.kreativ-n8n.entrypoints=websecure"
+      - "traefik.http.routers.kreativ-n8n.tls=true"
+      - "traefik.http.routers.kreativ-n8n.tls.certresolver=letsencrypt"
+      - "traefik.http.services.kreativ-n8n.loadbalancer.server.port=5678"
+      - "traefik.docker.network=dokploy-network"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:5678/healthz || exit 1"]
       interval: 30s
@@ -324,6 +340,14 @@ services:
       - dokploy-network
     depends_on:
       - postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kreativ-chatwoot.rule=Host(`chat.ipexdesenvolvimento.cloud`)"
+      - "traefik.http.routers.kreativ-chatwoot.entrypoints=websecure"
+      - "traefik.http.routers.kreativ-chatwoot.tls=true"
+      - "traefik.http.routers.kreativ-chatwoot.tls.certresolver=letsencrypt"
+      - "traefik.http.services.kreativ-chatwoot.loadbalancer.server.port=3005"
+      - "traefik.docker.network=dokploy-network"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3005/ || exit 1"]
       interval: 30s

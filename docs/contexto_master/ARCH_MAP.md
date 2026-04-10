@@ -11,12 +11,12 @@ Este documento define a arquitetura de microserviços e o fluxo de dados do ecos
 | **AnythingLLM** | Motor de RAG e Inteligência Artificial | Node.js / VectorDB | Dokploy (Docker) |
 | **n8n** | Orquestrador de Fluxos e "Unified API" | Node.js / Low-Code | Dokploy (Docker) |
 | **Chatwoot** | Atendimento Humano + Transbordo Bot | Ruby on Rails | Dokploy (Docker) |
-| **Frappe LMS** | Gestão Acadêmica (Registros Legais) | Python / ERPNext | Dokploy (Docker) |
+| **Frappe LMS** | Gestão Acadêmica (Registros Legais) — **FASE FUTURA** | Python / ERPNext | Dokploy (Docker) |
 
 ## 2. Fluxo de Inteligência (RAG)
 
 1.  **Ingestão:** O `n8n` monitora pastas ou bancos de dados e sincroniza documentos com o **AnythingLLM**.
-2.  **Processamento:** O `AnythingLLM` usa o modelo **Gemini 1.5 Flash** para interpretar os documentos empenados.
+2.  **Processamento:** O `AnythingLLM` usa **OpenRouter** como gateway LLM (modelo free em testes, pago em produção).
 3.  **Entrega:** O aluno interage via **WhatsApp (Evolution API)** ou **LMS Lite**. O `n8n` atua como middleware, enviando a pergunta para o AnythingLLM e retornando a resposta formatada.
 
 ## 3. Estrutura Multi-tenancy
@@ -31,4 +31,5 @@ O sistema é desenhado para suportar múltiplos domínios (Ex: `ead.ipex.org`, `
 
 -   **n8n <-> AnythingLLM:** Comunicação via API REST (`/api/v1/workspace/{slug}/chat`).
 -   **n8n <-> Evolution API:** Webhooks para recebimento de mensagens e chamadas POST para envio.
--   **n8n <-> Frappe:** Utiliza a API do Frappe para verificar matrícula e progresso do aluno.
+-   **n8n <-> Frappe:** RESERVADO — integração de matrícula e registros legais (fase futura).
+-   **n8n <-> PostgreSQL:** Registra progresso de quizzes, pontuações e emissão de certificados (fase atual).
