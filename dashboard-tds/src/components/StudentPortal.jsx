@@ -3,6 +3,8 @@ import { BookOpen, GraduationCap, Award, MessageSquare, Download, CheckCircle, C
 import { QRCodeSVG } from 'qrcode.react';
 import { lmsLiteApi } from '../api/lms_lite';
 
+const VALIDATE_BASE = import.meta.env.VITE_APP_URL || 'https://ops.ipexdesenvolvimento.cloud';
+
 export default function StudentPortal() {
   const [step, setStep] = useState('phone'); // 'phone' | 'otp' | 'portal'
   const [phone, setPhone] = useState('');
@@ -225,7 +227,7 @@ export default function StudentPortal() {
           <div className="flex flex-col md:flex-row gap-6 items-center">
             <div className="bg-white p-3 rounded-xl">
               <QRCodeSVG
-                value={`https://ops.ipexdesenvolvimento.cloud/validate/${completedEnrollment.certificate_hash}`}
+                value={`${VALIDATE_BASE}/validate/${completedEnrollment.certificate_hash}`}
                 size={140}
               />
             </div>
@@ -273,7 +275,7 @@ export default function StudentPortal() {
             <p className="font-bold text-lg mb-4">{student.full_name || student.name}</p>
             <div className="bg-white p-3 rounded-xl mx-auto w-fit mb-4">
               <QRCodeSVG
-                value={`https://ops.ipexdesenvolvimento.cloud/validate/${certPreview.certificate_hash}`}
+                value={`${VALIDATE_BASE}/validate/${certPreview.certificate_hash}`}
                 size={160}
               />
             </div>
