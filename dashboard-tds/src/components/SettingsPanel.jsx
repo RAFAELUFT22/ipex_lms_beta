@@ -141,9 +141,16 @@ export default function SettingsPanel() {
 
       {/* WhatsApp Cloud API */}
       <Section title="WhatsApp Cloud API — Oficial (OTP/Certs)">
-        <Field label="Phone Number ID" name="wa_phone_number_id" value={settings.wa_phone_number_id} onChange={handleChange} placeholder="1234567890" />
-        <Field label="Business Account ID" name="wa_business_id" value={settings.wa_business_id} onChange={handleChange} placeholder="1234567890" />
-        <Field label="Access Token" name="wa_cloud_token" value={settings.wa_cloud_token} onChange={handleChange} sensitive placeholder="EAAB..." />
+        <Field label="Phone Number ID" name="wa_phone_number_id" value={settings.wa_phone_number_id || ''} onChange={handleChange} placeholder="1234567890" />
+        <Field label="Business Account ID" name="wa_business_id" value={settings.wa_business_id || ''} onChange={handleChange} placeholder="1234567890" />
+        <Field label="Access Token" name="wa_cloud_token" value={settings.wa_cloud_token || ''} onChange={handleChange} sensitive placeholder="EAAB..." />
+      </Section>
+
+      {/* Supabase */}
+      <Section title="Supabase — Realtime & Auth">
+        <Field label="URL do Projeto" name="supabase_url" value={settings.supabase_url || ''} onChange={handleChange} placeholder="https://xyzabc.supabase.co" />
+        <Field label="Service Role Key" name="supabase_service_key" value={settings.supabase_service_key || ''} onChange={handleChange} sensitive placeholder="eyJhbGci..." />
+        <Field label="Website Token (Chatwoot Widget)" name="chatwoot_website_token" value={settings.chatwoot_website_token || ''} onChange={handleChange} sensitive placeholder="token do widget do portal" />
       </Section>
 
       {/* Feedback + Save */}

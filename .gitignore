@@ -1,80 +1,69 @@
+!.env.example
+!scripts/seed-courses.py
+# --- AI Agents ---
+# --- Backups ---
+# --- Build artifacts ---
+# --- Docker ---
+# --- Editor / IDE ---
+# --- Logs & Debug ---
+# --- NodeJS ---
+# --- OS ---
+# --- Python ---
+# --- Secrets & Environment ---
+# --- Temp scripts ---
 # =============================================================================
 # kreativ-education — .gitignore
-# =============================================================================
-
-# --- Secrets & Environment ---
-.env
-.env.*
-!.env.example
-frappe_api_keys.txt
-*.secret
+*.dump
+*.egg-info/
 *.key
+*.log
 *.pem
-
-# --- NodeJS ---
-node_modules/
-dist/
-npm-debug.log*
-yarn-error.log
-.pnpm-store/
-
-# --- Python ---
-__pycache__/
 *.pyc
 *.pyo
-*.egg-info/
-.eggs/
-*.whl
-venv/
-.venv/
-env/
-
-# --- Docker ---
-docker-compose.override.yml
-
-# --- Editor / IDE ---
-.vscode/
-.idea/
-*.swp
+*.secret
+*.sql.bak
+*.sql.gz
 *.swo
+*.swp
+*.whl
+*_output*.txt
 *~
-.project
-.settings/
-
-# --- OS ---
 .DS_Store
-Thumbs.db
-desktop.ini
-
-# --- AI Agents ---
-.claude/
-.gemini/
 .agent/
 .agents/
-brain/
-.cursor/
+.claude/
 .continue/
-
-# --- Logs & Debug ---
-*.log
-deploy_output*.txt
-debug_*.txt
-*_output*.txt
-
-# --- Temp scripts ---
-check_*.py
-trigger_*.py
-test_*.py
-!scripts/seed-courses.py
-
-# --- Build artifacts ---
-build/
+.cursor/
+.eggs/
+.env
+.env.*
+.gemini/
+.idea/
 .next/
 .nuxt/
-
-# --- Backups ---
+.pnpm-store/
+.project
+.settings/
+.venv/
+.vscode/
+Thumbs.db
+__pycache__/
 backups/
-*.sql.gz
-*.sql.bak
-*.dump
+brain/
+build/
+check_*.py
+debug_*.txt
+deploy_output*.txt
+desktop.ini
+dist/
+docker-compose.override.yml
+env/
+frappe_api_keys.txt
+node_modules/
+npm-debug.log*
 settings.json
+supabase/volumes/db/data/
+test_*.py
+trigger_*.py
+venv/
+yarn-error.log

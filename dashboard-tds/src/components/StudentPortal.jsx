@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, GraduationCap, Award, MessageSquare, Download, CheckCircle, Clock, Send, RefreshCw } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { lmsLiteApi } from '../api/lms_lite';
+import { supabase } from '../lib/supabase';
 
 const VALIDATE_BASE = import.meta.env.VITE_APP_URL || 'https://ops.ipexdesenvolvimento.cloud';
+const CHATWOOT_TOKEN = import.meta.env.VITE_CHATWOOT_WEBSITE_TOKEN || ''; // Should be in .env
+const CHATWOOT_BASE_URL = 'https://chatwoot.ipexdesenvolvimento.cloud';
 
 export default function StudentPortal() {
   const [step, setStep] = useState('phone'); // 'phone' | 'otp' | 'portal'
@@ -23,6 +26,37 @@ export default function StudentPortal() {
         .catch(() => sessionStorage.removeItem('tds_student_token'));
     }
   }, []);
+
+  // Chatwoot Integration
+  useEffect(() => {
+    if (step === 'portal' && CHATWOOT_TOKEN) {
+      (function(d,t) {
+        var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=CHATWOOT_BASE_URL+"/packs/js/sdk.js";
+        g.defer = true; g.async = true;
+        g.onload=function(){
+          window.chatwootSDK.run({
+            websiteToken: CHATWOOT_TOKEN,
+            baseUrl: CHATWOOT_BASE_URL
+          })
+          // Set user identity if student is loaded
+          if (student) {
+            window.chatwootSDK.setUser(student.whatsapp, {
+              email: student.email || '',
+              name: student.full_name || student.name,
+              avatar_url: '',
+              identifier_hash: ''
+            });
+            window.chatwootSDK.setCustomAttributes({
+              whatsapp: student.whatsapp,
+              catraca_estado: student.catraca?.estado || 'inativo'
+            });
+          }
+        }
+        s.parentNode.insertBefore(g,s);
+      })(document,"script");
+    }
+  }, [step, student]);
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
@@ -53,6 +87,22 @@ export default function StudentPortal() {
       setLoading(false);
     }
   };
+
+  // Supabase Realtime Sync (optional — only runs when credentials are set)
+  useEffect(() => {
+    if (!supabase || step !== 'portal' || !student) return;
+
+    const channel = supabase
+      .channel('public:enrollments')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'enrollments', filter: `whatsapp=eq.${student.whatsapp}` },
+        () => { lmsLiteApi.getMe().then(setStudent).catch(console.error); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [step, student?.whatsapp]);
 
   const handleLogout = () => {
     sessionStorage.removeItem('tds_student_token');
