@@ -9,8 +9,11 @@ from pathlib import Path
 from typing import Optional
 
 import requests
-from fastapi import FastAPI, HTTPException, Header
+import csv
+import io
+from fastapi import FastAPI, HTTPException, Header, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
 
 # --- CONFIG ---
@@ -421,6 +424,302 @@ def put_settings(body: SettingsUpdate, x_admin_key: Optional[str] = Header(defau
     current.update(updates)
     save_settings(current)
     return {"status": "saved"}
+
+
+# Agents Management
+
+class AgentProvisionRequest(BaseModel):
+    name: str
+    course_slug: Optional[str] = "geral"
+
+@app.get("/agents")
+def list_agents(x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    llm_url = settings.get("anythingllm_url", "http://anythingllm:3001")
+    llm_key = settings.get("anythingllm_key")
+    
+    if not llm_key:
+        return []
+        
+    try:
+        resp = requests.get(f"{llm_url}/api/v1/workspaces", headers={"Authorization": f"Bearer {llm_key}"}, timeout=5)
+        if resp.status_code == 200:
+            return resp.json().get("workspaces", [])
+    except Exception as e:
+        print(f"Error listing agents: {e}")
+    
+    return []
+
+@app.post("/agents/provision")
+def provision_agent_route(body: AgentProvisionRequest, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    # Import here to avoid circular or early deps issues
+    import subprocess
+    
+    try:
+        # Run the script we just created
+        cmd = ["python3", "/root/projeto-tds/scripts/agent_factory.py", body.name]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode == 0:
+            return {"status": "ok", "message": f"Agent {body.name} provisioned successfully.", "output": result.stdout}
+        else:
+            raise HTTPException(500, f"Factory Error: {result.stderr}")
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+@app.get("/whatsapp/groups")
+def list_whatsapp_groups(x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    evo_url = settings.get("evolution_url")
+    evo_key = settings.get("evolution_key")
+    evo_inst = settings.get("evolution_instance")
+    
+    if not evo_url or not evo_key:
+        return []
+        
+    try:
+        # Fetch all groups for the configured instance
+        url = f"{evo_url}/group/findAll/{evo_inst}"
+        resp = requests.get(url, headers={"apikey": evo_key}, timeout=10)
+        if resp.status_code == 200:
+            return resp.json()
+    except Exception as e:
+        print(f"Error fetching WhatsApp groups: {e}")
+    
+    return []
+
+
+@app.get("/external/sheets")
+def fetch_external_sheet(url: str, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    if "docs.google.com/spreadsheets/d/" not in url:
+        raise HTTPException(400, "URL de planilha inválida")
+    
+    # Transform URL to CSV export if not already
+    export_url = url
+    if "/edit" in url:
+        export_url = url.split("/edit")[0] + "/export?format=csv"
+        # Preserve GID if present
+        if "gid=" in url:
+            gid = url.split("gid=")[1].split("&")[0]
+            export_url += f"&gid={gid}"
+    
+    try:
+        resp = requests.get(export_url, timeout=15)
+        if resp.status_code != 200:
+            raise HTTPException(resp.status_code, "Falha ao baixar planilha")
+        
+        content = resp.content.decode("utf-8")
+        reader = csv.DictReader(io.StringIO(content))
+        data = [row for row in reader]
+        # Get headers for mapping
+        headers = reader.fieldnames or []
+        
+        return {"headers": headers, "rows": data}
+    except Exception as e:
+        raise HTTPException(500, f"Erro ao processar planilha: {str(e)}")
+
+
+@app.get("/admin/students/export")
+def export_students_csv(x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    db = load_db()
+    students = db.get("students", {})
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Headers
+    writer.writerow(["Whatsapp", "Nome", "Nome Completo", "CPF", "Localidade", "Cidade", "Curso Atual", "Progresso"])
+    
+    for phone, s in students.items():
+        writer.writerow([
+            phone,
+            s.get("name", ""),
+            s.get("full_name", ""),
+            s.get("cpf", ""),
+            s.get("localidade", ""),
+            s.get("city", ""),
+            s.get("current_course", ""),
+            s.get("progress", 0)
+        ])
+    
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=relatorio_alunos_tds.csv"}
+    )
+
+
+# --- PROXY: RAG (AnythingLLM) ---
+
+@app.get("/admin/rag/documents")
+def proxy_list_rag_docs(x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    llm_url = settings.get("anythingllm_url", "").rstrip('/')
+    llm_key = settings.get("anythingllm_key")
+    workspace = settings.get("anythingllm_workspace", "tds-lms-knowledge")
+    
+    if not llm_key: return []
+    
+    try:
+        url = f"{llm_url}/v1/workspace/{workspace}"
+        resp = requests.get(url, headers={"Authorization": f"Bearer {llm_key}"}, timeout=10)
+        if resp.status_code == 200:
+            return resp.json().get("workspace", {}).get("documents", [])
+    except Exception as e:
+        print(f"RAG List Error: {e}")
+    return []
+
+@app.post("/admin/rag/upload")
+async def proxy_upload_rag_doc(file: UploadFile = File(...), x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    llm_url = settings.get("anythingllm_url", "").rstrip('/')
+    llm_key = settings.get("anythingllm_key")
+    workspace = settings.get("anythingllm_workspace", "tds-lms-knowledge")
+    
+    try:
+        # 1. Upload to system
+        upload_url = f"{llm_url}/v1/document/upload"
+        contents = await file.read()
+        files = {"file": (file.filename, contents, file.content_type)}
+        headers = {"Authorization": f"Bearer {llm_key}"}
+        
+        res_upload = requests.post(upload_url, files=files, headers=headers, timeout=30)
+        if res_upload.status_code != 200:
+            raise HTTPException(res_upload.status_code, f"AnythingLLM Upload Error: {res_upload.text}")
+            
+        doc_path = res_upload.json().get("documents", [])[0].get("location")
+        
+        # 2. Add to workspace
+        update_url = f"{llm_url}/v1/workspace/{workspace}/update-embeddings"
+        requests.post(update_url, json={"adds": [doc_path]}, headers=headers, timeout=20)
+        
+        return {"success": True, "path": doc_path}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+@app.delete("/admin/rag/documents/{path:path}")
+def proxy_delete_rag_doc(path: str, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    llm_url = settings.get("anythingllm_url", "").rstrip('/')
+    llm_key = settings.get("anythingllm_key")
+    workspace = settings.get("anythingllm_workspace", "tds-lms-knowledge")
+    
+    try:
+        update_url = f"{llm_url}/v1/workspace/{workspace}/update-embeddings"
+        requests.post(update_url, json={"deletes": [path]}, headers={"Authorization": f"Bearer {llm_key}"}, timeout=10)
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+# --- PROXY: Evolution API ---
+
+@app.post("/admin/evolution/instance/create")
+def proxy_evo_create(body: dict, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    url = f"{settings.get('evolution_url')}/instance/create"
+    # Ensure integration is set
+    body.setdefault("integration", "WHATSAPP-BAILEYS")
+    resp = requests.post(url, json=body, headers={"apikey": settings.get("evolution_key")}, timeout=15)
+    return JSONResponse(status_code=resp.status_code, content=resp.json())
+
+@app.get("/admin/evolution/instance/fetch")
+def proxy_evo_fetch(x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    url = f"{settings.get('evolution_url')}/instance/fetchInstances"
+    resp = requests.get(url, headers={"apikey": settings.get("evolution_key")}, timeout=15)
+    return JSONResponse(status_code=resp.status_code, content=resp.json())
+
+@app.get("/admin/evolution/instance/connect/{instance}")
+def proxy_evo_connect(instance: str, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    url = f"{settings.get('evolution_url')}/instance/connect/{instance}"
+    resp = requests.get(url, headers={"apikey": settings.get("evolution_key")}, timeout=15)
+    return JSONResponse(status_code=resp.status_code, content=resp.json())
+
+@app.post("/admin/evolution/chatwoot/set/{instance}")
+def proxy_evo_chatwoot(instance: str, body: dict, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    url = f"{settings.get('evolution_url')}/chatwoot/set/{instance}"
+    resp = requests.post(url, json=body, headers={"apikey": settings.get("evolution_key")}, timeout=15)
+    return JSONResponse(status_code=resp.status_code, content=resp.json())
+
+@app.delete("/admin/evolution/instance/delete/{instance}")
+def proxy_evo_delete(instance: str, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    url = f"{settings.get('evolution_url')}/instance/delete/{instance}"
+    resp = requests.delete(url, headers={"apikey": settings.get("evolution_key")}, timeout=15)
+    return JSONResponse(status_code=resp.status_code, content=resp.json())
+
+@app.post("/admin/evolution/message/send/{instance}")
+def proxy_evo_send(instance: str, body: dict, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    url = f"{settings.get('evolution_url')}/message/sendText/{instance}"
+    resp = requests.post(url, json=body, headers={"apikey": settings.get("evolution_key")}, timeout=15)
+    return JSONResponse(status_code=resp.status_code, content=resp.json())
+
+
+# --- PROXY: Chatwoot Automation ---
+
+@app.get("/admin/chatwoot/contacts/search")
+def proxy_chatwoot_search(q: str, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    account_id = settings.get("chatwoot_account_id", "1")
+    url = f"{settings.get('chatwoot_url')}/api/v1/accounts/{account_id}/contacts/search?q={q}"
+    resp = requests.get(url, headers={"api_access_token": settings.get("chatwoot_token")}, timeout=10)
+    return JSONResponse(status_code=resp.status_code, content=resp.json())
+
+@app.post("/admin/chatwoot/conversations/{conv_id}/toggle_status")
+def proxy_chatwoot_toggle(conv_id: str, body: dict, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    account_id = settings.get("chatwoot_account_id", "1")
+    url = f"{settings.get('chatwoot_url')}/api/v1/accounts/{account_id}/conversations/{conv_id}/toggle_status"
+    resp = requests.post(url, json=body, headers={"api_access_token": settings.get("chatwoot_token")}, timeout=10)
+    return JSONResponse(status_code=resp.status_code, content=resp.json())
+
+@app.get("/admin/chatwoot/contacts/{contact_id}/conversations")
+def proxy_chatwoot_contact_convs(contact_id: str, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    account_id = settings.get("chatwoot_account_id", "1")
+    url = f"{settings.get('chatwoot_url')}/api/v1/accounts/{account_id}/contacts/{contact_id}/conversations"
+    resp = requests.get(url, headers={"api_access_token": settings.get("chatwoot_token")}, timeout=10)
+    return JSONResponse(status_code=resp.status_code, content=resp.json())
+
+@app.post("/admin/chatwoot/conversations/{conv_id}/messages")
+def proxy_chatwoot_msg(conv_id: str, body: dict, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    account_id = settings.get("chatwoot_account_id", "1")
+    url = f"{settings.get('chatwoot_url')}/api/v1/accounts/{account_id}/conversations/{conv_id}/messages"
+    resp = requests.post(url, json=body, headers={"api_access_token": settings.get("chatwoot_token")}, timeout=10)
+    return JSONResponse(status_code=resp.status_code, content=resp.json())
+
+@app.post("/admin/chatwoot/inboxes")
+def proxy_chatwoot_inbox(body: dict, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    account_id = settings.get("chatwoot_account_id", "1")
+    url = f"{settings.get('chatwoot_url')}/api/v1/accounts/{account_id}/inboxes"
+    resp = requests.post(url, json=body, headers={"api_access_token": settings.get("chatwoot_token")}, timeout=10)
+    return JSONResponse(status_code=resp.status_code, content=resp.json())
 
 
 if __name__ == "__main__":

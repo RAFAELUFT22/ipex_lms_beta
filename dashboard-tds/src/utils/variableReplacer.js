@@ -17,7 +17,7 @@ export const replaceVariables = (template, profile = {}, course = {}) => {
     ...profile // Allow dynamic tags from additional profile fields
   };
 
-  return template.replace(/{(\w+)}/g, (match, key) => {
+  return template.replace(/{([^}]+)}/g, (match, key) => {
     return data[key] !== undefined ? data[key] : match;
   });
 };

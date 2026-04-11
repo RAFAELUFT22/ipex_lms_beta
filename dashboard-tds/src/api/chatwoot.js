@@ -1,109 +1,46 @@
-import axios from 'axios';
-
-const CHATWOOT_URL = "https://chat.ipexdesenvolvimento.cloud";
-const CHATWOOT_TOKEN = "w8BYLTQc1s5VMowjQw433rGy";
-const ACCOUNT_ID = "1";
-
-const chatwootClient = axios.create({
-  baseURL: `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}`,
-  headers: {
-    'api_access_token': CHATWOOT_TOKEN,
-    'Content-Type': 'application/json'
-  }
-});
+import { lmsLiteApi } from './lms_lite';
 
 export const chatwootApi = {
-  // Criar uma nova Inbox do tipo API (que a Evolution usa)
-  createInbox: async (name) => {
-    const response = await chatwootClient.post('/inboxes', {
-      name: name,
-      channel: {
-        type: "api",
-        webhook_url: "" // Será preenchido pela Evolution posteriormente
-      }
-    });
-    return response.data;
+  // Search for a contact by phone/identifier
+  async searchContact(query) {
+    return lmsLiteApi.cwSearch(query);
   },
 
-  // Adicionar um tutor (agente) a uma Inbox específica
-  addAgentToInbox: async (inboxId, userId) => {
-    const response = await chatwootClient.post('/inbox_members', {
-      inbox_id: inboxId,
-      user_id: userId
-    });
-    return response.data;
+  // Get active conversations for a contact
+  async getContactConversations(contactId) {
+    return lmsLiteApi.cwGetConvs(contactId);
   },
 
-  // Listar agentes para selecionar qual vincular
-  getAgents: async () => {
-    const response = await chatwootClient.get('/agents');
-    return response.data;
-  },
-
-  // Listar Inboxes existentes
-  getInboxes: async () => {
-    const response = await chatwootClient.get('/inboxes');
-    return response.data;
-  },
-
-  // Prova de Gestão: Enviar mensagem para o aluno com o Hash do Certificado via Chatwoot
-  sendCertificateToStudent: async (phone, courseName, certHash) => {
-    // ... (código existente)
-  },
-
-  // Automação: Assumir conversa e enviar apresentação oficial do tutor humano
-  assignAndGreet: async (phone, agentName = "Suporte TDS") => {
+  // Simplified Handoff: Assign contact, send presentation, and pause IA
+  async assignAndGreet(contactId, tutorName) {
     try {
-      // 1. Busca o contato
-      const contactRes = await chatwootClient.get(`/contacts/search?q=${encodeURIComponent(phone)}`);
-      const contacts = contactRes.data.payload;
-      if (!contacts || contacts.length === 0) throw new Error("Contato não encontrado.");
-      const contactId = contacts[0].id;
+      // 1. Get Conversation
+      const convs = await this.getContactConversations(contactId);
+      if (!convs || convs.length === 0) throw new Error("No active conversation found");
+      const convId = convs[0].id;
 
-      // 2. Busca a conversa
-      const convRes = await chatwootClient.get(`/contacts/${contactId}/conversations`);
-      const conversationId = convRes.data.payload[0]?.id;
-      if (!conversationId) throw new Error("Nenhuma conversa ativa.");
-
-      // 3. Muda o status para 'Open' (Assumir controle)
-      await chatwootClient.post(`/conversations/${conversationId}/toggle_status`, { status: "open" });
-
-      // 4. Envia Apresentação Automática
-      const introMsg = `🤝 *Atendimento Humano Ativado*\n\nOlá! Eu sou o Tutor *${agentName}* e assumi sua conversa agora para te dar um suporte especializado.\n\nO Tutor IA foi colocado em modo de espera. Como posso te ajudar hoje?`;
+      // 2. Pause IA (Toggle Status to 'pending' or similar trigger)
+      // In TDS, human takeover often means changing status or adding a 'takeover' label
+      await lmsLiteApi.cwToggleStatus(convId, "open"); // Ensure it's open for human
       
-      await chatwootClient.post(`/conversations/${conversationId}/messages`, {
-        content: introMsg,
-        message_type: "outgoing"
-      });
+      // 3. Send Hello Message from Tutor
+      const msg = `Olá! Sou o ${tutorName}, seu tutor sênior. Vou assumir este atendimento para te ajudar com detalhes mais complexos. Como posso ajudar?`;
+      await lmsLiteApi.cwSendMsg(convId, msg);
 
-      return { status: "success", conversationId };
-    } catch (e) {
-      throw new Error(`Erro na automação: ${e.message}`);
+      return { success: true, convId };
+    } catch (error) {
+      console.error("Handoff Error:", error);
+      throw error;
     }
   },
 
-  // Finalizar atendimento e devolver para o Bot
-  resolveAndReturnToBot: async (phone) => {
-    try {
-      const contactRes = await chatwootClient.get(`/contacts/search?q=${encodeURIComponent(phone)}`);
-      const contactId = contactRes.data.payload[0].id;
-      const convRes = await chatwootClient.get(`/contacts/${contactId}/conversations`);
-      const conversationId = convRes.data.payload[0].id;
+  // Terminate handoff and return to IA
+  async resolveAndReturn(convId) {
+    return lmsLiteApi.cwToggleStatus(convId, "resolved");
+  },
 
-      // 1. Resolve no Chatwoot
-      await chatwootClient.post(`/conversations/${conversationId}/toggle_status`, { status: "resolved" });
-
-      // 2. Mensagem de Retorno
-      const returnMsg = `🤖 *Tutor IA Reativado*\n\nSuporte humano finalizado com sucesso! Estou de volta para continuarmos sua trilha de aprendizado. Vamos lá?`;
-      
-      await chatwootClient.post(`/conversations/${conversationId}/messages`, {
-        content: returnMsg,
-        message_type: "outgoing"
-      });
-
-      return { status: "success" };
-    } catch (e) {
-      throw new Error(`Erro ao finalizar: ${e.message}`);
-    }
+  // Create inbox for a tutor
+  async createInbox(name) {
+    return lmsLiteApi.cwCreateInbox(name);
   }
 };

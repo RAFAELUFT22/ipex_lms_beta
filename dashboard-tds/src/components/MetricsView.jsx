@@ -104,7 +104,14 @@ export default function MetricsView() {
             ))}
           </div>
           <div className="mt-6 pt-6 border-t border-border">
-            <button className="btn btn-outline w-full text-xs">Gerar Relatório para o Ministério</button>
+            <a 
+              href={lmsLiteApi.getExportUrl()} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="btn btn-outline w-full text-xs flex items-center justify-center gap-2"
+            >
+              <Users size={14} /> Baixar Relatório de Alunos (CSV)
+            </a>
           </div>
         </div>
       </div>

@@ -1,91 +1,27 @@
-import axios from 'axios';
-
-const EVOLUTION_URL = "https://evolution.ipexdesenvolvimento.cloud";
-const EVOLUTION_API_KEY = "tds_evolution_key_50f5aacc";
+import { lmsLiteApi } from './lms_lite';
 
 export const evolutionApi = {
-  createGroup: async (instance, name, description, participants) => {
-    const response = await axios.post(`${EVOLUTION_URL}/group/create/${instance}`, {
-      subject: name,
-      description: description,
-      participants: participants
-    }, {
-      headers: { 'apikey': EVOLUTION_API_KEY }
-    });
-    return response.data;
-  },
-  
-  sendMessage: async (instance, number, text) => {
-    const response = await axios.post(`${EVOLUTION_URL}/message/sendText/${instance}`, {
-      number: number,
-      text: text
-    }, {
-      headers: { 'apikey': EVOLUTION_API_KEY }
-    });
-    return response.data;
+  async fetchInstances() {
+    return lmsLiteApi.evoFetch();
   },
 
-  getGroups: async (instance) => {
-    const response = await axios.get(`${EVOLUTION_URL}/group/fetchAllGroups/${instance}`, {
-      headers: { 'apikey': EVOLUTION_API_KEY }
-    });
-    return response.data;
+  async createInstance(params) {
+    return lmsLiteApi.evoCreate(params);
   },
 
-  // --- Instance Management ---
-  
-  createInstance: async (name) => {
-    try {
-      const response = await axios.post(`${EVOLUTION_URL}/instance/create`, {
-        instanceName: name,
-        token: "",
-        qrcode: true
-      }, {
-        headers: { 'apikey': EVOLUTION_API_KEY }
-      });
-      return response.data;
-    } catch (e) {
-      if (e.response?.status === 400 && e.response?.data?.message?.includes('already exists')) {
-        console.warn("Instância já existe, seguindo para conexão...");
-        return { instance: { instanceName: name } };
-      }
-      throw e;
-    }
+  async connectInstance(instanceName) {
+    return lmsLiteApi.evoConnect(instanceName);
   },
 
-  getInstanceStatus: async (instanceName) => {
-    const response = await axios.get(`${EVOLUTION_URL}/instance/connectionStatus/${instanceName}`, {
-      headers: { 'apikey': EVOLUTION_API_KEY }
-    });
-    return response.data;
+  async setChatwoot(instanceName, config) {
+    return lmsLiteApi.evoSetChatwoot(instanceName, config);
   },
 
-  fetchInstances: async () => {
-    const response = await axios.get(`${EVOLUTION_URL}/instance/fetchInstances`, {
-      headers: { 'apikey': EVOLUTION_API_KEY }
-    });
-    return response.data;
+  async deleteInstance(instanceName) {
+    return lmsLiteApi.evoDelete(instanceName);
   },
 
-  connectInstance: async (instanceName) => {
-    const response = await axios.get(`${EVOLUTION_URL}/instance/connect/${instanceName}`, {
-      headers: { 'apikey': EVOLUTION_API_KEY }
-    });
-    return response.data;
-  },
-
-  setChatwoot: async (instanceName, config) => {
-    // config should have enabled, accountId, token, url, etc.
-    const response = await axios.post(`${EVOLUTION_URL}/chatwoot/set/${instanceName}`, config, {
-      headers: { 'apikey': EVOLUTION_API_KEY }
-    });
-    return response.data;
-  },
-
-  deleteInstance: async (instanceName) => {
-    const response = await axios.delete(`${EVOLUTION_URL}/instance/delete/${instanceName}`, {
-      headers: { 'apikey': EVOLUTION_API_KEY }
-    });
-    return response.data;
+  async sendMessage(instanceName, number, text) {
+    return lmsLiteApi.evoSendMessage(instanceName, number, text);
   }
 };

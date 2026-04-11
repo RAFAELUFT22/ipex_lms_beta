@@ -52,4 +52,79 @@ export const lmsLiteApi = {
       headers: { 'X-Admin-Key': ADMIN_KEY },
       body: JSON.stringify(data),
     }),
+
+  fetchSheet: (url) =>
+    apiFetch(`/external/sheets?url=${encodeURIComponent(url)}`, {
+      headers: { 'X-Admin-Key': ADMIN_KEY },
+    }),
+
+  getExportUrl: () => `${API_BASE}/admin/students/export?x_admin_key=${ADMIN_KEY}`,
+
+  // --- PROXIES ---
+
+  // RAG Proxy
+  ragList: () => apiFetch('/admin/rag/documents', { headers: { 'X-Admin-Key': ADMIN_KEY } }),
+  ragUpload: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return fetch(`${API_BASE}/admin/rag/upload`, {
+      method: 'POST',
+      headers: { 'X-Admin-Key': ADMIN_KEY },
+      body: formData
+    }).then(res => res.json());
+  },
+  ragDelete: (path) => apiFetch(`/admin/rag/documents/${encodeURIComponent(path)}`, {
+    method: 'DELETE',
+    headers: { 'X-Admin-Key': ADMIN_KEY }
+  }),
+
+  // Evolution Proxy
+  evoCreate: (body) => apiFetch('/admin/evolution/instance/create', {
+    method: 'POST',
+    headers: { 'X-Admin-Key': ADMIN_KEY },
+    body: JSON.stringify(body)
+  }),
+  evoFetch: () => apiFetch('/admin/evolution/instance/fetch', {
+    headers: { 'X-Admin-Key': ADMIN_KEY }
+  }),
+  evoConnect: (name) => apiFetch(`/admin/evolution/instance/connect/${name}`, {
+    headers: { 'X-Admin-Key': ADMIN_KEY }
+  }),
+  evoSetChatwoot: (instance, body) => apiFetch(`/admin/evolution/chatwoot/set/${instance}`, {
+    method: 'POST',
+    headers: { 'X-Admin-Key': ADMIN_KEY },
+    body: JSON.stringify(body)
+  }),
+  evoDelete: (name) => apiFetch(`/admin/evolution/instance/delete/${name}`, {
+    method: 'DELETE',
+    headers: { 'X-Admin-Key': ADMIN_KEY }
+  }),
+  evoSendMessage: (instance, number, text) => apiFetch(`/admin/evolution/message/send/${instance}`, {
+    method: 'POST',
+    headers: { 'X-Admin-Key': ADMIN_KEY },
+    body: JSON.stringify({ number, text, linkPreview: false })
+  }),
+
+  // Chatwoot Proxy
+  cwSearch: (q) => apiFetch(`/admin/chatwoot/contacts/search?q=${encodeURIComponent(q)}`, {
+    headers: { 'X-Admin-Key': ADMIN_KEY }
+  }),
+  cwGetConvs: (contactId) => apiFetch(`/admin/chatwoot/contacts/${contactId}/conversations`, {
+    headers: { 'X-Admin-Key': ADMIN_KEY }
+  }),
+  cwToggleStatus: (convId, status) => apiFetch(`/admin/chatwoot/conversations/${convId}/toggle_status`, {
+    method: 'POST',
+    headers: { 'X-Admin-Key': ADMIN_KEY },
+    body: JSON.stringify({ status })
+  }),
+  cwSendMsg: (convId, content) => apiFetch(`/admin/chatwoot/conversations/${convId}/messages`, {
+    method: 'POST',
+    headers: { 'X-Admin-Key': ADMIN_KEY },
+    body: JSON.stringify({ content, message_type: "outgoing" })
+  }),
+  cwCreateInbox: (name) => apiFetch('/admin/chatwoot/inboxes', {
+    method: 'POST',
+    headers: { 'X-Admin-Key': ADMIN_KEY },
+    body: JSON.stringify({ name, channel: { type: "api", webhook_url: "" } })
+  }),
 };

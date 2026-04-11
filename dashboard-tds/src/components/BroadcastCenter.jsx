@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Send, Sliders, AlertTriangle, Mic, MicOff, Tag, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, Sliders, AlertTriangle, Mic, MicOff, Tag, Info, FileSpreadsheet, RefreshCcw, CheckCircle2 } from 'lucide-react';
 import { evolutionApi } from '../api/evolution';
 import { recognitionService } from '../utils/RecognitionService';
 import { lmsLiteApi } from '../api/lms_lite';
@@ -13,6 +13,17 @@ export default function BroadcastCenter() {
   const [isListening, setIsListening] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [logs, setLogs] = useState([]);
+
+  // Sheets Integration
+  const [useExternalSheet, setUseExternalSheet] = useState(false);
+  const [sheetUrl, setSheetUrl] = useState("");
+  const [sheetData, setSheetData] = useState(null); // { headers: [], rows: [] }
+  const [isLoadingSheet, setIsLoadingSheet] = useState(false);
+  const [mapping, setMapping] = useState({
+    whatsapp: "",
+    name: "",
+    course: ""
+  });
 
   const handleDictation = () => {
     if (isListening) {
@@ -29,24 +40,79 @@ export default function BroadcastCenter() {
     }
   };
 
+  const connectSheet = async () => {
+    if (!sheetUrl) return;
+    setIsLoadingSheet(true);
+    try {
+      const data = await lmsLiteApi.fetchSheet(sheetUrl);
+      setSheetData(data);
+      // Auto-map if headers match common names
+      const newMapping = { ...mapping };
+      data.headers.forEach(h => {
+        const lower = h.toLowerCase();
+        if (lower.includes("whatsapp") || lower.includes("telefone") || lower.includes("number")) newMapping.whatsapp = h;
+        if (lower.includes("nome") || lower.includes("name") || lower.includes("aluno")) newMapping.name = h;
+        if (lower.includes("curso") || lower.includes("trilha")) newMapping.course = h;
+      });
+      setMapping(newMapping);
+      setLogs(prev => [`[${new Date().toLocaleTimeString()}] 📊 Planilha conectada: ${data.rows.length} registros encontrados.`, ...prev]);
+    } catch (e) {
+      setLogs(prev => [`[${new Date().toLocaleTimeString()}] ❌ Erro ao conectar planilha: ${e.message}`, ...prev]);
+    } finally {
+      setIsLoadingSheet(false);
+    }
+  };
+
   const startBroadcast = async () => {
-    const list = numbers.split('\n').map(n => n.trim()).filter(Boolean);
+    let list = [];
+    let externalData = [];
+
+    if (useExternalSheet) {
+      if (!sheetData || !mapping.whatsapp) {
+        alert("Conecte uma planilha e mapeie o campo de Whatsapp");
+        return;
+      }
+      externalData = sheetData.rows;
+      list = externalData.map(row => row[mapping.whatsapp]).filter(Boolean);
+    } else {
+      list = numbers.split('\n').map(n => n.trim()).filter(Boolean);
+    }
+
+    if (list.length === 0) return;
+
     setIsSending(true);
     setProgress({ current: 0, total: list.length });
 
     let allStudents = [];
     try {
+      // Still fetch students to enrich data if possible
       allStudents = await lmsLiteApi.getStudents();
     } catch (e) {
-      setLogs(prev => [`[${new Date().toLocaleTimeString()}] ❌ Erro ao buscar perfis: ${e.message}`, ...prev]);
+      setLogs(prev => [`[${new Date().toLocaleTimeString()}] ⚠️ Aviso: Falha ao buscar perfis locais para enriquecimento.`, ...prev]);
     }
 
     const profileMap = allStudents.reduce((acc, s) => ({ ...acc, [s.whatsapp]: s }), {});
 
     for (let i = 0; i < list.length; i++) {
       const num = list[i];
-      const studentProfile = profileMap[num] || {};
-      const enrollment = studentProfile.enrollments?.[0];
+      let studentProfile = profileMap[num] || {};
+      let enrollment = studentProfile.enrollments?.[0] || {};
+      
+      // Merge with External Data if available
+      if (useExternalSheet) {
+        const row = externalData[i];
+        studentProfile = {
+           ...studentProfile,
+           full_name: row[mapping.name] || studentProfile.full_name,
+           name: row[mapping.name] || studentProfile.name,
+           whatsapp: num,
+           ...row // Inject all columns as potential variables
+        };
+        if (mapping.course && row[mapping.course]) {
+          enrollment = { course: { title: row[mapping.course] } };
+        }
+      }
+
       const personalizedMessage = replaceVariables(message, studentProfile, enrollment?.course || {});
 
       try {
@@ -71,16 +137,31 @@ export default function BroadcastCenter() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 space-y-6">
         <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4 flex justify-between items-center gap-2">
+          <h3 className="text-xl font-semibold mb-6 flex justify-between items-center gap-2">
             <div className="flex items-center gap-2">
               <Send size={20} className="text-primary" />
               Nova Transmissão
             </div>
           </h3>
+
+          <div className="flex gap-4 mb-8 p-1 bg-slate-900/50 rounded-xl">
+             <button 
+               onClick={() => setUseExternalSheet(false)}
+               className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all ${!useExternalSheet ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-text-dim hover:text-text-main'}`}
+             >
+               Lista Manual
+             </button>
+             <button 
+               onClick={() => setUseExternalSheet(true)}
+               className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all ${useExternalSheet ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-text-dim hover:text-text-main'}`}
+             >
+               Planilha Google (SISEC)
+             </button>
+          </div>
           
           <div className="input-group">
             <div className="flex justify-between items-center mb-2">
-              <label className="input-label mb-0">Mensagem (Suporte a Variáveis {name})</label>
+              <label className="input-label mb-0">Mensagem (Variáveis {`{tags}`})</label>
               <button 
                 onClick={handleDictation}
                 className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-primary/10 text-primary hover:bg-primary/20'}`}
@@ -97,17 +178,86 @@ export default function BroadcastCenter() {
             />
           </div>
 
-          <div className="input-group">
-            <label className="input-label">Lista de Números (Um por linha)</label>
-            <textarea 
-              className="w-full h-32 font-mono text-sm"
-              placeholder="5563999999999&#10;5563888888888"
-              value={numbers}
-              onChange={(e) => setNumbers(e.target.value)}
-            />
-          </div>
+          {!useExternalSheet ? (
+            <div className="input-group">
+              <label className="input-label">Lista de Números (Um por linha)</label>
+              <textarea 
+                className="w-full h-32 font-mono text-sm"
+                placeholder="5563999999999&#10;5563888888888"
+                value={numbers}
+                onChange={(e) => setNumbers(e.target.value)}
+              />
+            </div>
+          ) : (
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+              <div className="input-group">
+                <label className="input-label">URL da Planilha Google (Compartilhada via link)</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text"
+                    className="flex-1"
+                    placeholder="https://docs.google.com/spreadsheets/d/..."
+                    value={sheetUrl}
+                    onChange={(e) => setSheetUrl(e.target.value)}
+                  />
+                  <button 
+                    className="btn btn-secondary px-4 flex items-center gap-2"
+                    onClick={connectSheet}
+                    disabled={isLoadingSheet}
+                  >
+                    {isLoadingSheet ? <RefreshCcw size={16} className="animate-spin" /> : <FileSpreadsheet size={16} />}
+                    {sheetData ? "Atualizar" : "Conectar"}
+                  </button>
+                </div>
+              </div>
 
-          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-4 mb-6">
+              {sheetData && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                  <div className="md:col-span-3 mb-2 flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase text-primary flex items-center gap-1">
+                      <CheckCircle2 size={14} /> Mapeamento de Colunas
+                    </span>
+                    <span className="text-[10px] text-text-dim">{sheetData.rows.length} contatos carregados</span>
+                  </div>
+                  <div className="input-group mb-0">
+                    <label className="text-[10px] uppercase font-bold text-text-muted mb-1 block">Whatsapp</label>
+                    <select 
+                      className="w-full text-xs"
+                      value={mapping.whatsapp}
+                      onChange={(e) => setMapping({...mapping, whatsapp: e.target.value})}
+                    >
+                      <option value="">Selecione...</option>
+                      {sheetData.headers.map(h => <option key={h} value={h}>{h}</option>)}
+                    </select>
+                  </div>
+                  <div className="input-group mb-0">
+                    <label className="text-[10px] uppercase font-bold text-text-muted mb-1 block">Nome do Aluno</label>
+                    <select 
+                      className="w-full text-xs"
+                      value={mapping.name}
+                      onChange={(e) => setMapping({...mapping, name: e.target.value})}
+                    >
+                      <option value="">Selecione...</option>
+                      {sheetData.headers.map(h => <option key={h} value={h}>{h}</option>)}
+                    </select>
+                  </div>
+                  <div className="input-group mb-0">
+                    <label className="text-[10px] uppercase font-bold text-text-muted mb-1 block">Curso/Turma</label>
+                    <select 
+                      className="w-full text-xs"
+                      value={mapping.course}
+                      onChange={(e) => setMapping({...mapping, course: e.target.value})}
+                    >
+                      <option value="">Selecione...</option>
+                      {sheetData.headers.map(h => <option key={h} value={h}>{h}</option>)}
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-4 my-6">
             <AlertTriangle className="text-amber-500 shrink-0" size={24} />
             <div>
               <p className="text-amber-500 text-sm font-semibold mb-1">Atenção ao Spam</p>
@@ -117,7 +267,7 @@ export default function BroadcastCenter() {
 
           <button 
             className="btn btn-primary w-full py-4"
-            disabled={isSending || !message || !numbers}
+            disabled={isSending || !message || (useExternalSheet ? !sheetData : !numbers)}
             onClick={startBroadcast}
           >
             {isSending ? "Processando Envio..." : "Iniciar Transmissão"}
@@ -129,15 +279,14 @@ export default function BroadcastCenter() {
         <div className="glass-card p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Tag size={18} className="text-primary" />
-            Variáveis do SISEC
+            Variáveis Dinâmicas
           </h3>
-          <p className="text-[10px] text-text-dim mb-4">Use as tags abaixo na sua mensagem para personalização automática:</p>
+          <p className="text-[10px] text-text-dim mb-4">Use as tags abaixo ou qualquer nome de coluna da sua planilha (ex: {'{custom}'}):</p>
           <div className="grid grid-cols-1 gap-2">
             {[
               { id: 'name', label: 'Nome Completo' },
-              { id: 'cpf', label: 'CPF' },
+              { id: 'cpf', label: 'CPF (LMS)' },
               { id: 'localidade', label: 'Localidade' },
-              { id: 'cidade', label: 'Cidade' },
               { id: 'curso', label: 'Curso Atual' },
             ].map(v => (
               <div 
@@ -151,13 +300,18 @@ export default function BroadcastCenter() {
                 </div>
               </div>
             ))}
-          </div>
-          <div className="mt-6 p-3 bg-primary/5 rounded-lg border border-primary/10">
-             <div className="flex items-center gap-2 text-primary mb-1">
-               <Info size={14} />
-               <span className="text-[10px] font-bold uppercase">Como funciona</span>
-             </div>
-             <p className="text-[10px] text-text-dim leading-relaxed">O sistema buscará automaticamente os dados vinculados ao número do WhatsApp via LMS API.</p>
+            {useExternalSheet && sheetData && sheetData.headers.map(h => (
+               <div 
+                 key={h} 
+                 className="bg-secondary/5 border border-secondary/10 p-2 rounded-lg cursor-pointer hover:bg-secondary/10 transition-colors group"
+                 onClick={() => setMessage(prev => prev + `{${h}}`)}
+               >
+                 <div className="flex justify-between items-center">
+                   <span className="text-xs font-mono text-secondary">{"{" + h + "}"}</span>
+                   <span className="text-[10px] text-text-muted italic">Coluna Planilha</span>
+                 </div>
+               </div>
+            ))}
           </div>
         </div>
 
@@ -179,7 +333,6 @@ export default function BroadcastCenter() {
               onChange={(e) => setDelay(e.target.value)}
               className="accent-primary"
             />
-            <p className="text-[10px] text-text-muted mt-2">Delay recomendado para listas &gt; 50 contatos: acima de 30s.</p>
           </div>
 
           <div className="mt-8">

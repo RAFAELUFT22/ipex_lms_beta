@@ -5,12 +5,34 @@ import { FORM_FIELDS, BLOCKS } from '../api/form-fields';
 import { supabase } from '../lib/supabase';
 
 export default function GroupManager({ simulation }) {
-  const [list, setList] = useState("");
-  const [participants, setParticipants] = useState([]);
-  const [groupName, setGroupName] = useState("");
+  const [activeSubTab, setActiveSubTab] = useState("import"); // "import" or "list"
+  const [existingGroups, setExistingGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [adminKey] = useState(localStorage.getItem('tds_admin_key') || 'admin-tds-2026');
+
+  const fetchGroups = async () => {
+    setIsLoading(true);
+    try {
+      const resp = await fetch('/api/whatsapp/groups', {
+        headers: { 'X-Admin-Key': adminKey }
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        setExistingGroups(data);
+      }
+    } catch (e) {
+      console.error("Error fetching groups", e);
+    }
+    setIsLoading(false);
+  };
+
+  React.useEffect(() => {
+    if (activeSubTab === "list") {
+      fetchGroups();
+    }
+  }, [activeSubTab]);
 
   const processList = async () => {
     setIsLoading(true);
@@ -71,27 +93,98 @@ export default function GroupManager({ simulation }) {
 
   return (
     <div className="space-y-6">
-      <div className="glass-card p-6">
-        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Upload size={20} className="text-primary" />
-          Importar Lista de Participantes
-        </h3>
-        <textarea 
-          className="w-full h-32 mb-4"
-          placeholder="5563999999999, Nome do Aluno&#10;5511888888888, Outro Nome"
-          value={list}
-          onChange={(e) => setList(e.target.value)}
-        />
-        <div className="flex gap-4">
-          <button 
-            className="btn btn-outline flex-1"
-            onClick={processList}
-            disabled={isLoading || !list}
-          >
-            {isLoading ? "Processando..." : "Validar Números & Buscar Contexto SISEC"}
-          </button>
-        </div>
+      {/* Tabs Switcher */}
+      <div className="flex gap-2 p-1 bg-white/5 rounded-xl w-fit">
+        <button 
+          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeSubTab === "import" ? 'bg-primary text-white shadow-lg' : 'text-text-dim hover:text-text-main'}`}
+          onClick={() => setActiveSubTab("import")}
+        >
+          Criar Novo Grupo
+        </button>
+        <button 
+          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeSubTab === "list" ? 'bg-primary text-white shadow-lg' : 'text-text-dim hover:text-text-main'}`}
+          onClick={() => setActiveSubTab("list")}
+        >
+          Listar & Insights
+        </button>
       </div>
+
+      {activeSubTab === "import" ? (
+        <div className="glass-card p-6 animate-fade">
+          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Upload size={20} className="text-primary" />
+            Importar Lista de Participantes
+          </h3>
+          <textarea 
+            className="w-full h-32 mb-4 bg-black/20 border-white/10"
+            placeholder="5563999999999, Nome do Aluno&#10;5511888888888, Outro Nome"
+            value={list}
+            onChange={(e) => setList(e.target.value)}
+          />
+          <div className="flex gap-4">
+            <button 
+              className="btn btn-outline flex-1"
+              onClick={processList}
+              disabled={isLoading || !list}
+            >
+              {isLoading ? "Processando..." : "Validar Números & Buscar Contexto SISEC"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6 animate-fade">
+          {/* Insights Card */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="glass-card p-4 border-l-4 border-secondary">
+              <span className="text-[10px] font-bold text-text-muted uppercase">Total de Grupos</span>
+              <div className="text-3xl font-bold">{existingGroups.length}</div>
+            </div>
+            <div className="glass-card p-4 border-l-4 border-primary">
+              <span className="text-[10px] font-bold text-text-muted uppercase">Monitoramento Bot</span>
+              <div className="text-sm font-semibold text-emerald-400 flex items-center gap-1">
+                <Zap size={14}/> Ativo (Filtro /tds)
+              </div>
+            </div>
+            <div className="glass-card p-4 border-l-4 border-amber-500">
+              <span className="text-[10px] font-bold text-text-muted uppercase">Handoff Automático</span>
+              <div className="text-sm font-semibold">Sincronizado com Chatwoot</div>
+            </div>
+          </div>
+
+          <div className="glass-card p-6">
+            <h3 className="text-xl font-semibold mb-6">Grupos Existentes</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-border text-text-dim text-sm">
+                    <th className="pb-3 px-2">Nome do Grupo</th>
+                    <th className="pb-3">Jid (ID Único)</th>
+                    <th className="pb-3 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {existingGroups.length > 0 ? existingGroups.map((g, i) => (
+                    <tr key={i} className="border-b border-border/50 hover:bg-glass">
+                      <td className="py-3 px-2 font-bold text-primary">{g.subject}</td>
+                      <td className="py-3 font-mono text-xs text-text-dim">{g.id}</td>
+                      <td className="py-3 text-right">
+                        <button className="text-secondary hover:underline font-bold text-xs mr-4">Ver Insights</button>
+                        <button className="text-text-dim hover:text-white">⚙️</button>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan="3" className="py-8 text-center text-text-dim italic">
+                        {isLoading ? "Carregando grupos..." : "Nenhum grupo encontrado nesta instância."}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {participants.length > 0 && (
         <div className="glass-card p-6 animate-fade">
