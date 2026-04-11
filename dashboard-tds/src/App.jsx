@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, 
-  Send, 
-  MessageSquare, 
-  Settings, 
-  ShieldCheck, 
-  BarChart3, 
+import {
+  Users,
+  Send,
+  MessageSquare,
+  Settings,
+  ShieldCheck,
+  BarChart3,
   LogOut,
   PlusCircle,
   AlertTriangle,
@@ -13,7 +13,8 @@ import {
   Play,
   BookOpen,
   BrainCircuit,
-  GraduationCap
+  GraduationCap,
+  SlidersHorizontal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -27,7 +28,8 @@ import MetricsView from './components/MetricsView';
 import TutorsManager from './components/TutorsManager';
 import KnowledgeBase from './components/KnowledgeBase';
 import StudentPortal from './components/StudentPortal';
-import ValidateCert from './pages/ValidateCert';
+import SettingsPanel from './components/SettingsPanel';
+import ValidateCert from './components/ValidateCert';
 
 export default function App() {
   // Public route: certificate validation (computed before hooks, returned after)
@@ -160,11 +162,17 @@ export default function App() {
             active={activeTab === "knowledge"} 
             onClick={() => setActiveTab("knowledge")}
           />
-          <NavItem 
-            icon={<BarChart3 size={22} />} 
-            label="Métricas" 
-            active={activeTab === "metrics"} 
+          <NavItem
+            icon={<BarChart3 size={22} />}
+            label="Métricas"
+            active={activeTab === "metrics"}
             onClick={() => setActiveTab("metrics")}
+          />
+          <NavItem
+            icon={<SlidersHorizontal size={22} />}
+            label="Configurações"
+            active={activeTab === "settings"}
+            onClick={() => setActiveTab("settings")}
           />
         </nav>
 
@@ -215,6 +223,7 @@ export default function App() {
               {activeTab === "tutors" && "Gestão de Tutores"}
               {activeTab === "knowledge" && "Base de Conhecimento RAG"}
               {activeTab === "metrics" && "Métricas Operacionais"}
+              {activeTab === "settings" && "Configurações do Sistema"}
             </h2>
             <div className="flex items-center gap-2">
               <div className="w-8 h-1 bg-secondary rounded-full" />
@@ -225,6 +234,7 @@ export default function App() {
                 {activeTab === "tutors" && "Gerencie instâncias e agentes de atendimento."}
                 {activeTab === "knowledge" && "Alimente o cérebro da IA com manuais e regras do curso."}
                 {activeTab === "metrics" && "Visão analítica da performance educacional."}
+                {activeTab === "settings" && "Chaves de API e integrações — persistem no servidor."}
               </p>
             </div>
           </div>
@@ -250,6 +260,7 @@ export default function App() {
             {activeTab === "tutors" && <TutorsManager />}
             {activeTab === "knowledge" && <KnowledgeBase />}
             {activeTab === "metrics" && <MetricsView />}
+            {activeTab === "settings" && <SettingsPanel />}
           </motion.div>
         </AnimatePresence>
       </main>

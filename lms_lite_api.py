@@ -15,12 +15,14 @@ from pydantic import BaseModel
 
 # --- CONFIG ---
 DB_FILE = "/app/lms_lite_db.json"
+SETTINGS_FILE = "/app/settings.json"
 COURSES_FILE = "/app/courses/tds/tds-courses-2026.json"
 TDS_SECRET = os.getenv("CERT_SALT", "TDS_SECRET_2026")
 EVOLUTION_URL = os.getenv("EVOLUTION_URL", "https://evolution.ipexdesenvolvimento.cloud")
 EVOLUTION_KEY = os.getenv("EVOLUTION_KEY", "")
 EVOLUTION_INSTANCE = os.getenv("EVOLUTION_INSTANCE", "tds_suporte_audiovisual")
 VALIDATION_BASE_URL = os.getenv("VALIDATION_BASE_URL", "https://ops.ipexdesenvolvimento.cloud")
+ADMIN_KEY = os.getenv("ADMIN_KEY", "admin-tds-2026")
 
 # In-memory stores (reset on restart — ok for beta)
 _otp_store: dict = {}   # phone -> {"code": "123456", "expires": timestamp, "attempts": 0}
@@ -50,6 +52,36 @@ def load_db() -> dict:
 def save_db(db: dict):
     with open(DB_FILE, "w") as f:
         json.dump(db, f, indent=2, ensure_ascii=False)
+
+
+SETTINGS_DEFAULTS = {
+    "anythingllm_url": "https://llm.ipexdesenvolvimento.cloud",
+    "anythingllm_key": "",
+    "anythingllm_workspace": "tds-lms-knowledge",
+    "openrouter_key": "",
+    "openrouter_model": "openai/gpt-4o-mini",
+    "evolution_url": "https://evolution.ipexdesenvolvimento.cloud",
+    "evolution_key": "",
+    "evolution_instance": "tds_suporte_audiovisual",
+    "chatwoot_url": "https://chatwoot.ipexdesenvolvimento.cloud",
+    "chatwoot_token": "",
+    "chatwoot_inbox_id": "",
+}
+
+
+def load_settings() -> dict:
+    if not Path(SETTINGS_FILE).exists():
+        return dict(SETTINGS_DEFAULTS)
+    with open(SETTINGS_FILE) as f:
+        saved = json.load(f)
+    result = dict(SETTINGS_DEFAULTS)
+    result.update(saved)
+    return result
+
+
+def save_settings(data: dict):
+    with open(SETTINGS_FILE, "w") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
 
 def load_courses() -> list:
@@ -307,6 +339,47 @@ def session_me(authorization: Optional[str] = Header(default=None)):
     if not s:
         raise HTTPException(404, "Aluno não encontrado")
     return build_student_response(phone, s)
+
+
+# Settings (admin only — requires X-Admin-Key header)
+def require_admin(x_admin_key: Optional[str] = Header(default=None)):
+    if x_admin_key != ADMIN_KEY:
+        raise HTTPException(401, "Chave administrativa inválida")
+
+
+@app.get("/settings")
+def get_settings(x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    return load_settings()
+
+
+class SettingsUpdate(BaseModel):
+    anythingllm_url: Optional[str] = None
+    anythingllm_key: Optional[str] = None
+    anythingllm_workspace: Optional[str] = None
+    openrouter_key: Optional[str] = None
+    openrouter_model: Optional[str] = None
+    evolution_url: Optional[str] = None
+    evolution_key: Optional[str] = None
+    evolution_instance: Optional[str] = None
+    chatwoot_url: Optional[str] = None
+    chatwoot_token: Optional[str] = None
+    chatwoot_inbox_id: Optional[str] = None
+
+
+@app.put("/settings")
+def put_settings(body: SettingsUpdate, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    current = load_settings()
+    updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    current.update(updates)
+    save_settings(current)
+    # Refresh runtime env vars so current process picks up new keys
+    global EVOLUTION_URL, EVOLUTION_KEY, EVOLUTION_INSTANCE
+    EVOLUTION_URL = current.get("evolution_url", EVOLUTION_URL)
+    EVOLUTION_KEY = current.get("evolution_key", EVOLUTION_KEY)
+    EVOLUTION_INSTANCE = current.get("evolution_instance", EVOLUTION_INSTANCE)
+    return {"status": "saved"}
 
 
 if __name__ == "__main__":

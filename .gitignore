@@ -77,3 +77,4 @@ backups/
 *.sql.gz
 *.sql.bak
 *.dump
+settings.json

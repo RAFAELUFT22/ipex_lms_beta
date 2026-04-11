@@ -1,4 +1,5 @@
 const API_BASE = import.meta.env.VITE_LMS_API_URL || 'https://api-lms.ipexdesenvolvimento.cloud';
+const ADMIN_KEY = import.meta.env.VITE_ADMIN_KEY || 'admin-tds-2026';
 
 async function apiFetch(path, options = {}) {
   const token = sessionStorage.getItem('tds_student_token');
@@ -41,4 +42,14 @@ export const lmsLiteApi = {
     }),
 
   validateCert: (hash) => apiFetch(`/validate_cert/${hash}`),
+
+  getSettings: () =>
+    apiFetch('/settings', { headers: { 'X-Admin-Key': ADMIN_KEY } }),
+
+  saveSettings: (data) =>
+    apiFetch('/settings', {
+      method: 'PUT',
+      headers: { 'X-Admin-Key': ADMIN_KEY },
+      body: JSON.stringify(data),
+    }),
 };

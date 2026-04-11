@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  lms-lite-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: lms-lite-api
+    restart: always
+    volumes:
+      - ./lms_lite_db.json:/app/lms_lite_db.json
+      - ./settings.json:/app/settings.json
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api-lms.rule=Host(`api-lms.ipexdesenvolvimento.cloud`)"
+      - "traefik.http.routers.api-lms.entrypoints=websecure"
+      - "traefik.http.routers.api-lms.tls=true"
+      - "traefik.http.routers.api-lms.tls.certresolver=letsencrypt"
+      - "traefik.http.services.api-lms.loadbalancer.server.port=8081"
+      - "traefik.docker.network=dokploy-network"
+
+  lms-lite-dashboard:
+    build:
+      context: ./dashboard-tds
+      dockerfile: Dockerfile
+    container_name: lms-lite-dashboard
+    restart: always
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ops-tds.rule=Host(`ops.ipexdesenvolvimento.cloud`)"
+      - "traefik.http.routers.ops-tds.entrypoints=websecure"
+      - "traefik.http.routers.ops-tds.tls=true"
+      - "traefik.http.routers.ops-tds.tls.certresolver=letsencrypt"
+      - "traefik.http.services.ops-tds.loadbalancer.server.port=80"
+      - "traefik.docker.network=dokploy-network"
+
+networks:
+  dokploy-network:
+    external: true
