@@ -86,6 +86,7 @@ SETTINGS_DEFAULTS = {
     "supabase_url": "https://api-lms.ipexdesenvolvimento.cloud",
     "supabase_service_key": "",
     "chatwoot_website_token": "",
+    "n8n_webhook_url": "",
 }
 
 
