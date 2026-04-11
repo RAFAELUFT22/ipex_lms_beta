@@ -64,6 +64,17 @@ services:
       # NEXT_ANALYTICS_BACKEND_PROVIDER: bigquery
       SNIPPETS_MANAGEMENT_FOLDER: /app/snippets
       EDGE_FUNCTIONS_MANAGEMENT_FOLDER: /app/edge-functions
+    networks:
+      default: {}
+      dokploy-network: {}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.supabase-studio.rule=Host(`studio.ipexdesenvolvimento.cloud`)"
+      - "traefik.http.routers.supabase-studio.entrypoints=websecure"
+      - "traefik.http.routers.supabase-studio.tls=true"
+      - "traefik.http.routers.supabase-studio.tls.certresolver=letsencrypt"
+      - "traefik.http.services.supabase-studio.loadbalancer.server.port=3000"
+      - "traefik.docker.network=dokploy-network"
     volumes:
       - ./volumes/snippets:/app/snippets:Z
       - ./volumes/functions:/app/edge-functions:Z
