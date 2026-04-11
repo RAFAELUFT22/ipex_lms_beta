@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#fef2e0",
+                    "on-background": "#201b10",
+                    "secondary": "#7c5800",
+                    "surface": "#fff8f2",
+                    "error": "#ba1a1a",
+                    "on-secondary-container": "#745200",
+                    "secondary-fixed-dim": "#f4be55",
+                    "inverse-primary": "#7cd0ff",
+                    "surface-bright": "#fff8f2",
+                    "primary-fixed-dim": "#7cd0ff",
+                    "secondary-fixed": "#ffdea7",
+                    "surface-container-highest": "#ede1cf",
+                    "on-primary-fixed-variant": "#004c69",
+                    "outline-variant": "#bfc8cf",
+                    "on-surface-variant": "#3f484e",
+                    "surface-dim": "#e4d9c7",
+                    "on-tertiary-container": "#fff7f6",
+                    "background": "#fff8f2",
+                    "inverse-surface": "#363024",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb4a9",
+                    "surface-variant": "#ede1cf",
+                    "on-tertiary-fixed": "#400101",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed": "#ffdad5",
+                    "on-secondary-fixed": "#271900",
+                    "primary": "#006184",
+                    "on-tertiary": "#ffffff",
+                    "inverse-on-surface": "#fbefdd",
+                    "primary-fixed": "#c4e7ff",
+                    "on-tertiary-fixed-variant": "#7c2c23",
+                    "on-primary-fixed": "#001e2c",
+                    "secondary-container": "#fdc65c",
+                    "on-primary-container": "#f5faff",
+                    "surface-tint": "#00658b",
+                    "error-container": "#ffdad6",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#6f787f",
+                    "primary-container": "#007ba7",
+                    "on-secondary-fixed-variant": "#5e4200",
+                    "on-surface": "#201b10",
+                    "surface-container-high": "#f2e7d5",
+                    "on-error": "#ffffff",
+                    "tertiary-container": "#b4564a",
+                    "tertiary": "#953f34",
+                    "surface-container": "#f8ecda",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Lexend"],
+                    "body": ["Lexend"],
+                    "label": ["Lexend"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-shift-only {
+            box-shadow: none !important;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="w-full sticky top-0 z-40 bg-[#fff8f2] dark:bg-stone-950 flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<button class="text-[#006184] dark:text-[#007ba7] active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-xl font-bold tracking-tighter text-[#006184] dark:text-[#007ba7] font-['Lexend']">Horizonte Cerrado</h1>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-surface-container-highest">
+<img alt="Profile" data-alt="Close-up portrait of a professional man with a friendly expression in warm, natural sunlight with soft bokeh background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWZ3QdIF6ADpUzAjYZFvYDL6dIdNHrt5O9Qm9QHKtY8zO-9DchFUGj3AObwo8GJoI_lKLmEtx7WX35QDlSguEhGCWFl0q1YWzFYTy0EGIVqCJEJ7lSfrbXSH809ErXsfnVP3sWQw_O4QBD-l8LWkUyqmQ5mnDIXL_cCayX_G1xb4sXyhoG0cgzQaiI9xGFjcGraHrmtz_rg51SJqQEp-ELUOnoHu9RdXpFCTcklFs_gKyO8GTfS-pOzWs8Isn9FuKgQ--LT8-38eKM"/>
+</div>
+</div>
+</header>
+<main class="max-w-4xl mx-auto px-6 py-8">
+<!-- Quiz Header & Progress -->
+<section class="mb-12">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+<div>
+<span class="text-tertiary font-label text-xs tracking-[0.05em] uppercase font-bold">Módulo 04 • Ecossistemas</span>
+<h2 class="text-3xl font-headline font-semibold text-on-surface -tracking-[0.02em] mt-1">Quiz de Avaliação - Cerrado</h2>
+</div>
+<div class="text-right">
+<span class="text-on-surface-variant font-label text-sm uppercase tracking-wider">Questão <span class="text-primary font-bold">04</span> de 12</span>
+</div>
+</div>
+<!-- Progress Bar (Sky Blue) -->
+<div class="h-3 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary-container w-1/3 rounded-full" style="background: linear-gradient(135deg, #006184 0%, #007ba7 100%);"></div>
+</div>
+</section>
+<!-- Question Canvas -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Question Content -->
+<div class="lg:col-span-7">
+<div class="bg-surface-container-low rounded-[1.5rem] p-8 relative overflow-hidden">
+<!-- Atmospheric Depth Layer -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-secondary-container/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+<p class="text-xl leading-relaxed text-on-surface relative z-10">
+                        O Cerrado é frequentemente chamado de "Pai das Águas" do Brasil. Qual dessas características morfológicas das árvores do Cerrado é fundamental para a manutenção desse ciclo hidrológico?
+                    </p>
+<div class="mt-8 rounded-xl overflow-hidden shadow-sm">
+<img alt="Cerrado landscape" data-alt="Vast Cerrado horizon at sunset with silhouette of gnarled trees and golden grass under a deep blue sky" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzOMTW5PJoqa_oXPHCUdNmKkSO1Vl1_GHT2-pTHP4RSBscbv9MNjpOY6BQQghtXXyddcBEvykkkDnqys_qvGxeVDh5WGSkyozA3HyYAOC9Crbi2gpMFwqI-1dyRFXIrULHTNecsjUliEKpMgBh7JPRqgadgFAY82AnhLd3gPs-ZVBM51Ike83pk8zwKy2Bp0OC3NO2vJBkumIcJUxvNV_OTNN94lD6dxVBQIclNdaSp-tXBCtz7oxF_5rGbiK8oN6BTXMckhkBFeV-"/>
+</div>
+</div>
+</div>
+<!-- Options Bento -->
+<div class="lg:col-span-5 space-y-4">
+<!-- Option 1 -->
+<button class="w-full text-left p-5 rounded-xl bg-surface-container-highest hover:bg-surface-container-high transition-all duration-200 group relative">
+<div class="flex items-center gap-4">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-lowest text-primary font-bold group-hover:scale-110 transition-transform">A</span>
+<span class="text-on-surface-variant group-hover:text-on-surface font-medium">Cascas grossas e corticosas para proteção contra o fogo.</span>
+</div>
+</button>
+<!-- Option 2 (Selected State) -->
+<button class="w-full text-left p-5 rounded-xl bg-white ring-2 ring-primary transition-all duration-200 relative overflow-hidden shadow-[0_4px_32px_rgba(116,82,0,0.06)]">
+<div class="flex items-center gap-4 relative z-10">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-on-primary font-bold">B</span>
+<span class="text-on-surface font-semibold">Raízes profundas que funcionam como uma "floresta invertida".</span>
+</div>
+<!-- Subtle tone shift for active state -->
+<div class="absolute inset-0 bg-primary/5"></div>
+</button>
+<!-- Option 3 -->
+<button class="w-full text-left p-5 rounded-xl bg-surface-container-highest hover:bg-surface-container-high transition-all duration-200 group">
+<div class="flex items-center gap-4">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-lowest text-primary font-bold group-hover:scale-110 transition-transform">C</span>
+<span class="text-on-surface-variant group-hover:text-on-surface font-medium">Folhas largas e brilhantes que refletem a luz solar intensa.</span>
+</div>
+</button>
+<!-- Option 4 -->
+<button class="w-full text-left p-5 rounded-xl bg-surface-container-highest hover:bg-surface-container-high transition-all duration-200 group">
+<div class="flex items-center gap-4">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-lowest text-primary font-bold group-hover:scale-110 transition-transform">D</span>
+<span class="text-on-surface-variant group-hover:text-on-surface font-medium">Crescimento rápido durante a curta estação chuvosa.</span>
+</div>
+</button>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="mt-12 flex items-center justify-between">
+<button class="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-tertiary hover:bg-tertiary/5 transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+                Anterior
+            </button>
+<button class="px-10 py-4 rounded-xl bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold shadow-lg active:scale-95 transition-all flex items-center gap-2">
+                Confirmar Resposta
+                <span class="material-symbols-outlined">check_circle</span>
+</button>
+</div>
+<!-- Success Suggestion (Ipê Yellow) -->
+<div class="mt-12 p-6 bg-secondary-container rounded-[1.5rem] flex items-start gap-5 border-l-8 border-secondary">
+<div class="bg-white/40 p-3 rounded-full shrink-0">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+</div>
+<div>
+<h4 class="font-headline font-bold text-on-secondary-fixed-variant mb-1 uppercase text-xs tracking-wider">Dica do Especialista</h4>
+<p class="text-on-secondary-fixed-variant leading-relaxed">
+                    Lembre-se: no Cerrado, a maior parte da biomassa está abaixo do solo. Essas raízes não apenas buscam água, mas ajudam a recarregar os aquíferos brasileiros.
+                </p>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#fff8f2]/80 dark:bg-stone-950/80 backdrop-blur-md z-50 rounded-t-[1.5rem] shadow-[0_-4px_32px_rgba(116,82,0,0.06)] border-t border-[#bfc8cf]/15">
+<a class="flex flex-col items-center justify-center text-[#3f484e] dark:text-stone-400 px-5 py-1.5 hover:text-[#006184] active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Lexend'] text-[11px] uppercase tracking-[0.05em] font-medium mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#ffdea7] dark:bg-[#7c5800] text-[#006184] dark:text-stone-100 rounded-full px-5 py-1.5 active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="school" style="font-variation-settings: 'FILL' 1;">school</span>
+<span class="font-['Lexend'] text-[11px] uppercase tracking-[0.05em] font-medium mt-1">Courses</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#3f484e] dark:text-stone-400 px-5 py-1.5 hover:text-[#006184] active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="verified">verified</span>
+<span class="font-['Lexend'] text-[11px] uppercase tracking-[0.05em] font-medium mt-1">Certificates</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#3f484e] dark:text-stone-400 px-5 py-1.5 hover:text-[#006184] active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Lexend'] text-[11px] uppercase tracking-[0.05em] font-medium mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Megaphone, PlusCircle, Users, Send } from 'lucide-react';
 import { lmsLiteApiV2 } from '../api/lms_lite_v2';
 
 export default function CommunityManager() {
@@ -64,80 +63,174 @@ export default function CommunityManager() {
   }
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-8 bg-surface text-on-surface">
+      {/* Header */}
       <header className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Megaphone className="h-5 w-5 text-teal-400" />
-          <h2 className="text-xl font-semibold text-white">Gerenciar Comunidades</h2>
+        <div>
+          <p className="text-tertiary uppercase tracking-[0.05em] text-xs font-bold mb-1">
+            Comunidades WhatsApp
+          </p>
+          <h2 className="text-on-surface font-headline font-bold text-3xl tracking-tight">
+            Dashboard de Comunidades
+          </h2>
         </div>
 
         <button
           type="button"
           onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 rounded-full border border-teal-500/40 bg-teal-500/20 px-4 py-2 text-sm text-teal-100"
+          className="inline-flex items-center gap-2 bg-secondary-container text-on-secondary-container rounded-xl font-bold px-4 py-2 text-sm"
         >
-          <PlusCircle className="h-4 w-4" />
+          <span className="material-symbols-outlined text-base">add_circle</span>
           Nova Comunidade
         </button>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {sortedCommunities.map((community) => (
-          <article
-            key={community.slug}
-            className="glass-card rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur"
-          >
-            <div className="mb-2 flex items-start justify-between">
-              <div>
-                <h3 className="text-base font-semibold text-white">{community.title}</h3>
-                <p className="text-xs text-slate-400">{community.whatsapp_group_id}</p>
-              </div>
+      {/* Stats row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-surface-container-low p-6 rounded-xl">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="material-symbols-outlined text-primary text-2xl">campaign</span>
+            <span className="text-on-surface-variant text-sm font-label font-bold uppercase tracking-wider">
+              Comunidades Ativas
+            </span>
+          </div>
+          <p className="text-3xl font-bold text-on-surface">{communities.length}</p>
+        </div>
 
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">
-                <Users className="h-3 w-3" />
-                {community.member_count || 0}
-              </span>
-            </div>
+        <div className="bg-surface-container-highest p-6 rounded-xl">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="material-symbols-outlined text-primary text-2xl">groups</span>
+            <span className="text-on-surface-variant text-sm font-label font-bold uppercase tracking-wider">
+              Total de Membros
+            </span>
+          </div>
+          <p className="text-3xl font-bold text-on-surface">
+            {communities.reduce((sum, c) => sum + (c.member_count || 0), 0)}
+          </p>
+        </div>
 
-            <p className="mb-4 text-sm text-slate-300">{community.description || 'Sem descrição.'}</p>
-
-            <button
-              type="button"
-              onClick={() => handleBroadcast(community.slug)}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-400/20 px-3 py-2 text-sm text-amber-200"
-            >
-              <Send className="h-4 w-4" />
-              Enviar Aviso
-            </button>
-          </article>
-        ))}
+        <div className="bg-secondary-fixed p-6 rounded-xl">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="material-symbols-outlined text-on-secondary-fixed text-2xl">trending_up</span>
+            <span className="text-on-secondary-fixed text-sm font-label font-bold uppercase tracking-wider">
+              Mensagens Enviadas
+            </span>
+          </div>
+          <p className="text-3xl font-bold text-on-secondary-fixed">—</p>
+        </div>
       </div>
 
-      {!loading && communities.length === 0 && (
-        <p className="rounded-xl border border-dashed border-white/20 p-6 text-center text-sm text-slate-400">
-          Nenhuma comunidade cadastrada.
-        </p>
+      {/* Community cards grid */}
+      {!loading && communities.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {sortedCommunities.map((community) => (
+            <article key={community.slug} className="cerrado-card p-6 space-y-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="text-on-surface font-bold text-base leading-tight truncate">
+                    {community.title}
+                  </h3>
+                  <p className="text-on-surface-variant text-xs mt-0.5 truncate">
+                    {community.whatsapp_group_id}
+                  </p>
+                </div>
+
+                <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-secondary-fixed text-on-secondary-fixed px-3 py-1 text-xs font-bold">
+                  <span className="material-symbols-outlined text-sm">groups</span>
+                  {community.member_count || 0}
+                </span>
+              </div>
+
+              <p className="text-on-surface-variant text-sm">
+                {community.description || 'Sem descrição.'}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => handleBroadcast(community.slug)}
+                className="inline-flex w-full items-center justify-center gap-2 bg-cerrado-gradient text-white rounded-xl font-bold px-4 py-2 text-sm"
+              >
+                <span className="material-symbols-outlined text-base">send</span>
+                Enviar Aviso
+              </button>
+            </article>
+          ))}
+        </div>
       )}
 
+      {/* Empty state */}
+      {!loading && communities.length === 0 && (
+        <div className="bg-surface-container-low rounded-xl p-12 text-center space-y-4">
+          <span className="material-symbols-outlined text-on-surface-variant text-6xl block">campaign</span>
+          <p className="text-on-surface-variant text-sm font-bold">
+            Nenhuma comunidade cadastrada.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-2 bg-secondary-container text-on-secondary-container rounded-xl font-bold px-4 py-2 text-sm"
+          >
+            <span className="material-symbols-outlined text-base">add_circle</span>
+            Criar primeira comunidade
+          </button>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {loading && (
+        <div className="bg-surface-container-low rounded-xl p-12 text-center">
+          <span className="material-symbols-outlined text-primary text-4xl block animate-spin">refresh</span>
+        </div>
+      )}
+
+      {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4">
-          <form onSubmit={handleCreateCommunity} className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6">
-            <h3 className="mb-4 text-lg font-semibold text-white">Nova Comunidade</h3>
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
+          <form
+            onSubmit={handleCreateCommunity}
+            className="w-full max-w-md bg-surface-container-low rounded-xl p-6 space-y-5 shadow-xl"
+          >
+            <div>
+              <p className="text-tertiary uppercase tracking-[0.05em] text-xs font-bold mb-1">
+                Nova comunidade
+              </p>
+              <h3 className="text-on-surface font-headline font-bold text-xl">
+                Criar Comunidade
+              </h3>
+            </div>
+
             {/* TODO: replace with reusable form fields */}
             <div className="space-y-3">
-              {['title', 'slug', 'whatsapp_group_id', 'description'].map((field) => (
+              {[
+                { key: 'title', placeholder: 'Nome da comunidade' },
+                { key: 'slug', placeholder: 'Slug (identificador único)' },
+                { key: 'whatsapp_group_id', placeholder: 'ID do grupo WhatsApp' },
+                { key: 'description', placeholder: 'Descrição (opcional)' },
+              ].map(({ key, placeholder }) => (
                 <input
-                  key={field}
-                  value={form[field]}
-                  onChange={(e) => setForm((prev) => ({ ...prev, [field]: e.target.value }))}
-                  placeholder={field}
-                  className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white"
+                  key={key}
+                  value={form[key]}
+                  onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
+                  placeholder={placeholder}
+                  className="w-full bg-surface-container-high border-none rounded-lg px-3 py-2 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-secondary/50 placeholder:text-on-surface-variant"
                 />
               ))}
             </div>
-            <div className="mt-5 flex justify-end gap-2">
-              <button type="button" onClick={() => setShowModal(false)} className="rounded-lg px-3 py-2 text-sm text-slate-300">Cancelar</button>
-              <button type="submit" className="rounded-lg bg-teal-600 px-3 py-2 text-sm text-white">Criar</button>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="rounded-xl px-4 py-2 text-sm font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="bg-cerrado-gradient text-white rounded-xl font-bold px-4 py-2 text-sm"
+              >
+                Criar
+              </button>
             </div>
           </form>
         </div>

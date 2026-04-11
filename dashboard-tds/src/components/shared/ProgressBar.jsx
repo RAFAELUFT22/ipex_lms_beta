@@ -1,18 +1,19 @@
-export function ProgressBar({ value = 0, label = '', showPercent = true }) {
-  const normalized = Math.max(0, Math.min(100, Number(value) || 0));
-
+export function ProgressBar({ value = 0, label, showPercent = true }) {
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs text-slate-300">
-        <span>{label}</span>
-        {showPercent && <span>{normalized}%</span>}
-      </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
+    <div className="w-full space-y-1">
+      {(label || showPercent) && (
+        <div className="flex justify-between items-center">
+          {label && <span className="text-xs font-bold text-on-surface-variant font-label uppercase tracking-wider">{label}</span>}
+          {showPercent && <span className="text-xs font-bold text-secondary">{value}%</span>}
+        </div>
+      )}
+      <div className="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
         <div
-          className="h-full rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${normalized}%`, backgroundColor: 'var(--accent, #f4bf00)' }}
+          className="h-full bg-cerrado-gradient rounded-full transition-all duration-700 ease-out"
+          style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
         />
       </div>
     </div>
   );
 }
+export default ProgressBar;

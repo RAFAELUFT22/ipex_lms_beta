@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login - Horizonte LMS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#fef2e0",
+                    "on-background": "#201b10",
+                    "secondary": "#7c5800",
+                    "surface": "#fff8f2",
+                    "error": "#ba1a1a",
+                    "on-secondary-container": "#745200",
+                    "secondary-fixed-dim": "#f4be55",
+                    "inverse-primary": "#7cd0ff",
+                    "surface-bright": "#fff8f2",
+                    "primary-fixed-dim": "#7cd0ff",
+                    "secondary-fixed": "#ffdea7",
+                    "surface-container-highest": "#ede1cf",
+                    "on-primary-fixed-variant": "#004c69",
+                    "outline-variant": "#bfc8cf",
+                    "on-surface-variant": "#3f484e",
+                    "surface-dim": "#e4d9c7",
+                    "on-tertiary-container": "#fff7f6",
+                    "background": "#fff8f2",
+                    "inverse-surface": "#363024",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb4a9",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-variant": "#ede1cf",
+                    "on-tertiary-fixed": "#400101",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed": "#ffdad5",
+                    "on-secondary-fixed": "#271900",
+                    "primary": "#006184",
+                    "on-tertiary": "#ffffff",
+                    "inverse-on-surface": "#fbefdd",
+                    "primary-fixed": "#c4e7ff",
+                    "on-tertiary-fixed-variant": "#7c2c23",
+                    "on-primary-fixed": "#001e2c",
+                    "secondary-container": "#fdc65c",
+                    "on-primary-container": "#f5faff",
+                    "surface-tint": "#00658b",
+                    "error-container": "#ffdad6",
+                    "outline": "#6f787f",
+                    "primary-container": "#007ba7",
+                    "on-secondary-fixed-variant": "#5e4200",
+                    "on-surface": "#201b10",
+                    "surface-container-high": "#f2e7d5",
+                    "on-error": "#ffffff",
+                    "tertiary-container": "#b4564a",
+                    "tertiary": "#953f34",
+                    "surface-container": "#f8ecda",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Lexend"],
+                    "body": ["Lexend"],
+                    "label": ["Lexend"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .organic-texture {
+            background-image: radial-gradient(#74520010 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .ipe-bloom {
+            filter: drop-shadow(0 0 15px rgba(253, 198, 92, 0.4));
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface min-h-screen flex flex-col items-center justify-center organic-texture relative overflow-hidden">
+<!-- Atmospheric Layering: Background Elements -->
+<div class="absolute -top-20 -right-20 w-96 h-96 bg-secondary-container opacity-20 rounded-full blur-[100px]"></div>
+<div class="absolute -bottom-40 -left-20 w-[30rem] h-[30rem] bg-primary-container opacity-10 rounded-full blur-[120px]"></div>
+<!-- Main Container: Asymmetric Editorial Layout -->
+<main class="w-full max-w-4xl px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
+<!-- Left Side: Branding & Narrative -->
+<section class="space-y-8">
+<header class="space-y-2">
+<div class="inline-block bg-secondary-fixed text-on-secondary-fixed px-4 py-1 rounded-full text-xs font-label tracking-widest mb-4">
+                    BEM-VINDO AO HORIZONTE
+                </div>
+<h1 class="text-5xl md:text-6xl font-headline font-extrabold tracking-tighter leading-tight text-on-surface">
+                    Login - <span class="text-primary">Horizonte LMS</span>
+</h1>
+<p class="text-lg text-on-surface-variant max-w-md">
+                    Sua jornada de conhecimento começa onde o céu toca a terra. Acesse seu portal de cursos.
+                </p>
+</header>
+<div class="relative group">
+<div class="absolute -inset-2 bg-gradient-to-br from-secondary-container to-primary opacity-20 blur-xl rounded-[2rem]"></div>
+<div class="relative rounded-[2rem] overflow-hidden aspect-[4/3] bg-surface-container-high">
+<img alt="Cerrado landscape at sunset" class="w-full h-full object-cover" data-alt="Wide panoramic view of a Brazilian Cerrado landscape at golden hour with gnarled trees and vibrant orange sky" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2vteHHJdbrRF8xkoV9pXPFK7fLqC-gw2KPusROIbffZfKBNzxNNzL1ib2_qEwrlpc3ZKVgSLPwfnbSCOOsJtwHhAZb-FEYf8RdUCWj5FYHPE0ajvwXC0oGKHdvtSrwpTny5lE8ZWReHYwvoOgyWdVT7kKb9lO80w_hILc37BIhGDgVANejMPUR6cZvsr-8hsS2ZornoYlhFB-kRnLi3VnfQYGo5Z87Q4XgGiym65h_OlQgEqvysX7WK9gokyhxzRhEIx_1yR3E99r"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/40 to-transparent"></div>
+<div class="absolute bottom-6 left-6 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center ipe-bloom">
+<span class="material-symbols-outlined text-on-secondary-fixed" data-icon="light_mode">light_mode</span>
+</div>
+<span class="text-surface font-medium text-sm tracking-wide uppercase">Cerrado Digital</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Side: Login Card (Transactional Focus) -->
+<section class="flex flex-col items-center">
+<div class="w-full bg-surface-container-lowest/80 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(116,82,0,0.08)] border border-outline-variant/15">
+<div class="flex flex-col items-center mb-10 text-center">
+<div class="w-16 h-16 bg-primary-container rounded-2xl flex items-center justify-center mb-6 shadow-lg rotate-3 group-hover:rotate-0 transition-transform">
+<span class="material-symbols-outlined text-on-primary text-3xl" data-icon="forum">forum</span>
+</div>
+<h2 class="text-2xl font-headline font-bold text-on-surface">Acesso via WhatsApp</h2>
+<p class="text-sm text-on-surface-variant mt-2">Enviaremos um código de 6 dígitos para o seu celular.</p>
+</div>
+<form class="space-y-6">
+<!-- Phone Input -->
+<div class="space-y-2">
+<label class="block text-[11px] font-label text-tertiary tracking-widest uppercase ml-1">Telefone Celular</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined" data-icon="smartphone">smartphone</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-container-high rounded-xl border-none focus:ring-0 focus:border-b-2 focus:border-secondary text-on-surface placeholder:text-outline transition-all" placeholder="(00) 00000-0000" type="tel"/>
+</div>
+</div>
+<!-- CTA Button -->
+<button class="w-full py-4 px-6 bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline font-semibold rounded-xl text-lg shadow-lg hover:shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2" type="submit">
+<span>Receber Código</span>
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<!-- Divider -->
+<div class="flex items-center gap-4 py-4">
+<div class="h-px flex-1 bg-outline-variant/20"></div>
+<span class="text-[10px] font-label text-outline uppercase tracking-widest">Ou acesse com</span>
+<div class="h-px flex-1 bg-outline-variant/20"></div>
+</div>
+<!-- Alternate Flow Chips -->
+<div class="flex justify-center gap-3">
+<button class="flex items-center gap-2 px-6 py-2 bg-secondary-fixed hover:bg-secondary-container transition-colors rounded-full text-on-secondary-fixed text-sm font-medium" type="button">
+<span class="material-symbols-outlined text-lg" data-icon="mail">mail</span>
+                            E-mail
+                        </button>
+</div>
+</form>
+<footer class="mt-10 pt-6 border-t border-outline-variant/10 text-center">
+<p class="text-xs text-on-surface-variant">
+                        Não tem uma conta? <a class="text-tertiary font-bold hover:underline" href="#">Solicite acesso à sua empresa</a>
+</p>
+</footer>
+</div>
+<!-- Contextual Note (Floating) -->
+<div class="mt-8 flex items-start gap-3 max-w-xs text-[11px] text-on-surface-variant/80 italic leading-relaxed">
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="info">info</span>
+                Ao continuar, você concorda com os Termos de Uso e a Política de Privacidade do Horizonte LMS inspirado no Bioma Cerrado.
+            </div>
+</section>
+</main>
+<!-- Floating Ipe Petals (Decorative Background Elements) -->
+<div class="fixed top-1/4 left-10 w-4 h-4 bg-secondary-container rounded-full opacity-40 blur-[2px]"></div>
+<div class="fixed top-1/3 left-1/4 w-3 h-3 bg-tertiary opacity-20 rounded-full blur-[1px]"></div>
+<div class="fixed bottom-1/4 right-20 w-6 h-6 bg-secondary-container rounded-full opacity-30 blur-[4px]"></div>
+<div class="fixed top-2/3 right-1/3 w-2 h-2 bg-primary opacity-20 rounded-full blur-[1px]"></div>
+</body></html>

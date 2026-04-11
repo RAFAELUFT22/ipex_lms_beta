@@ -28,6 +28,8 @@ import MetricsView from './components/MetricsView';
 import TutorsManager from './components/TutorsManager';
 import KnowledgeBase from './components/KnowledgeBase';
 import StudentPortal from './components/StudentPortal';
+import CommunityManager from './components/CommunityManager';
+import WebhookMonitor from './components/WebhookMonitor';
 import SettingsPanel from './components/SettingsPanel';
 import ValidateCert from './components/ValidateCert';
 
@@ -156,11 +158,23 @@ export default function App() {
             active={activeTab === "tutors"} 
             onClick={() => setActiveTab("tutors")}
           />
-          <NavItem 
-            icon={<BookOpen size={22} />} 
-            label="Conhecimento" 
-            active={activeTab === "knowledge"} 
+          <NavItem
+            icon={<BookOpen size={22} />}
+            label="Conhecimento"
+            active={activeTab === "knowledge"}
             onClick={() => setActiveTab("knowledge")}
+          />
+          <NavItem
+            icon={<span className="material-symbols-outlined" style={{fontSize:22}}>campaign</span>}
+            label="Comunidades"
+            active={activeTab === "communities"}
+            onClick={() => setActiveTab("communities")}
+          />
+          <NavItem
+            icon={<span className="material-symbols-outlined" style={{fontSize:22}}>forum</span>}
+            label="WhatsApp Monitor"
+            active={activeTab === "monitor"}
+            onClick={() => setActiveTab("monitor")}
           />
           <NavItem
             icon={<BarChart3 size={22} />}
@@ -224,6 +238,8 @@ export default function App() {
               {activeTab === "knowledge" && "Base de Conhecimento RAG"}
               {activeTab === "metrics" && "Métricas Operacionais"}
               {activeTab === "settings" && "Configurações do Sistema"}
+              {activeTab === "communities" && "Comunidades de Avisos"}
+              {activeTab === "monitor" && "Monitor WhatsApp"}
             </h2>
             <div className="flex items-center gap-2">
               <div className="w-8 h-1 bg-secondary rounded-full" />
@@ -235,6 +251,8 @@ export default function App() {
                 {activeTab === "knowledge" && "Alimente o cérebro da IA com manuais e regras do curso."}
                 {activeTab === "metrics" && "Visão analítica da performance educacional."}
                 {activeTab === "settings" && "Chaves de API e integrações — persistem no servidor."}
+                {activeTab === "communities" && "Grupos de avisos gerais para turmas e públicos."}
+                {activeTab === "monitor" && "Mensagens recebidas via webhook em tempo real."}
               </p>
             </div>
           </div>
@@ -261,6 +279,8 @@ export default function App() {
             {activeTab === "knowledge" && <KnowledgeBase />}
             {activeTab === "metrics" && <MetricsView />}
             {activeTab === "settings" && <SettingsPanel />}
+            {activeTab === "communities" && <CommunityManager />}
+            {activeTab === "monitor" && <WebhookMonitor />}
           </motion.div>
         </AnimatePresence>
       </main>

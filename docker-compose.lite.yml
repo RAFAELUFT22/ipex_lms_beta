@@ -2,13 +2,16 @@ version: '3.8'
 
 services:
   lms-lite-api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
+    image: ghcr.io/rafaeluft22/tds-lms-api:latest
     restart: always
+    environment:
+      - DB_FILE=/data/lms_lite_db.json
+      - SETTINGS_FILE=/data/settings.json
+      - CERT_SALT=${CERT_SALT:-TDS_SECRET_2026}
+      - ADMIN_KEY=${ADMIN_KEY:-admin-tds-2026}
+      - VALIDATION_BASE_URL=https://ops.ipexdesenvolvimento.cloud
     volumes:
-      - ./lms_lite_db.json:/app/lms_lite_db.json
-      - ./settings.json:/app/settings.json
+      - tds_data:/data
     networks:
       - dokploy-network
     labels:
@@ -21,9 +24,7 @@ services:
       - "traefik.docker.network=dokploy-network"
 
   lms-lite-dashboard:
-    build:
-      context: ./dashboard-tds
-      dockerfile: Dockerfile
+    image: ghcr.io/rafaeluft22/tds-lms-dashboard:latest
     restart: always
     networks:
       - dokploy-network
@@ -35,6 +36,10 @@ services:
       - "traefik.http.routers.ops-tds.tls.certresolver=letsencrypt"
       - "traefik.http.services.ops-tds.loadbalancer.server.port=80"
       - "traefik.docker.network=dokploy-network"
+
+volumes:
+  tds_data:
+    name: tds_persistent_data
 
 networks:
   dokploy-network:

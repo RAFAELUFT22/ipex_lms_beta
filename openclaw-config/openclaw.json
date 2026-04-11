@@ -14,6 +14,15 @@
           { "id": "glm-4.6:cloud", "name": "GLM-4.6 Cloud" },
           { "id": "qwen2.5-coder:7b", "name": "Qwen 2.5 Coder 7B Local" }
         ]
+      },
+      "openrouter": {
+        "api": "openrouter",
+        "models": [ 
+          { "id": "anthropic/claude-3.7-sonnet", "name": "Claude 3.7 Sonnet (Strategic)" },
+          { "id": "anthropic/claude-3.5-haiku", "name": "Claude 3.5 Haiku (Fast)" },
+          { "id": "openai/gpt-4o", "name": "GPT-4o (Strategic)" },
+          { "id": "deepseek/deepseek-chat", "name": "DeepSeek V3 (Efficient)" }
+        ]
       }
     }
   },

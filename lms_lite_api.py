@@ -15,6 +15,7 @@ from fastapi import FastAPI, HTTPException, Header, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
+from lms_lite_v2_routes import router as v2_router
 
 # --- CONFIG ---
 DB_FILE = os.getenv("DB_FILE", "/app/lms_lite_db.json")
@@ -46,15 +47,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(v2_router)
+
 
 # --- DB HELPERS ---
 def load_db() -> dict:
     if not Path(DB_FILE).exists():
-        return {"students": {}, "certificates": {}}
+        return {"students": {}, "certificates": {}, "communities": {}, "webhook_events": []}
     with open(DB_FILE) as f:
         db = json.load(f)
     db.setdefault("students", {})
     db.setdefault("certificates", {})
+    db.setdefault("communities", {})
+    db.setdefault("webhook_events", [])
     return db
 
 

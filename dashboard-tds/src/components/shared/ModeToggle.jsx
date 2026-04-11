@@ -1,19 +1,22 @@
-export function ModeToggle({ phone, currentMode = 'bot', onToggle }) {
+export function ModeToggle({ phone, currentMode, onToggle }) {
   const isBot = currentMode === 'bot';
-
-  function handleClick() {
-    const nextMode = isBot ? 'human' : 'bot';
-    if (typeof onToggle === 'function') onToggle(phone, nextMode);
-  }
-
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={`inline-flex rounded-full p-0.5 text-xs ${isBot ? 'bg-teal-500/30' : 'bg-amber-500/30'}`}
-    >
-      <span className={`rounded-full px-2 py-1 ${isBot ? 'bg-teal-500 text-white' : 'text-slate-300'}`}>Bot</span>
-      <span className={`rounded-full px-2 py-1 ${!isBot ? 'bg-amber-500 text-black' : 'text-slate-300'}`}>Humano</span>
-    </button>
+    <div className="flex rounded-full overflow-hidden border border-outline-variant text-xs font-bold">
+      <button
+        onClick={() => !isBot && onToggle(phone, 'bot')}
+        className={`flex items-center gap-1 px-3 py-1 transition-colors ${isBot ? 'bg-cerrado-gradient text-white' : 'bg-surface text-on-surface-variant hover:bg-surface-container-low'}`}
+      >
+        <span className="material-symbols-outlined text-sm">smart_toy</span>
+        Bot
+      </button>
+      <button
+        onClick={() => isBot && onToggle(phone, 'human')}
+        className={`flex items-center gap-1 px-3 py-1 transition-colors ${!isBot ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface text-on-surface-variant hover:bg-surface-container-low'}`}
+      >
+        <span className="material-symbols-outlined text-sm">person</span>
+        Humano
+      </button>
+    </div>
   );
 }
+export default ModeToggle;

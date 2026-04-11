@@ -1,0 +1,163 @@
+{
+  "name": "TDS — Multi-Agent BPM Factory (Group Filter + Handoff)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tds-multi-agent",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Evolution Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract information and determine Workspace Slug and Group Trigger\nconst data = items[0].json.data;\nconst instance = items[0].json.instance || \"tds-geral\";\nconst remoteJid = data.key.remoteJid;\nconst text = data.message?.conversation || data.message?.extendedTextMessage?.text || \"\";\nconst isGroup = remoteJid.endsWith('@g.us');\n\n// Decision: Should the AI even try to process this?\nlet shouldProcess = true;\nif (isGroup && !text.toLowerCase().startsWith('/tds')) {\n  shouldProcess = false;\n}\n\n// Clean message text if it starts with /tds\nconst cleanText = text.replace(/^\\/tds\\s*/i, \"\");\n\nconst workspaceSlug = instance.toLowerCase().replace(/_/g, \"-\") + \"-rag\";\n\nreturn {\n  phoneNumber: remoteJid.split('@')[0],\n  remoteJid: remoteJid,\n  messageText: cleanText,\n  isGroup: isGroup,\n  shouldProcess: shouldProcess,\n  instance: instance,\n  workspaceSlug: workspaceSlug\n};"
+      },
+      "id": "node-logic-router",
+      "name": "BPM Logic Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "should-process",
+              "leftValue": "={{ $json.shouldProcess }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "node-filter",
+      "name": "Filter: Group Trigger?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://chat.ipexdesenvolvimento.cloud/api/v1/accounts/2/conversations/filter?payload=[{\"attribute_key\":\"phone_number\",\"filter_operator\":\"equal_to\",\"values\":[\"+{{ $json.phoneNumber }}\"],\"query_operator\":\"and\"}]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "api_access_token", "value": "={{ $env.CHATWOOT_TOKEN }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-chatwoot-check",
+      "name": "Chatwoot: Check Assignee",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [600, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "no-human",
+              "leftValue": "={{ $json.payload[0]?.meta?.assignee === null }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "node-is-human-assigned",
+      "name": "No Human Assigned?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [800, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://anythingllm:3001/api/v1/workspace/{{ $('BPM Logic Router').item.json.workspaceSlug }}/chat",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer {{ $env.ANYTHINGLLM_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "message", "value": "={{ $('BPM Logic Router').item.json.messageText }}" },
+            { "name": "mode", "value": "chat" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-anythingllm",
+      "name": "AnythingLLM (RAG)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1000, 150]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evolution.ipexdesenvolvimento.cloud/message/sendText/{{ $('BPM Logic Router').item.json.instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "{{ $env.EVOLUTION_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ $('BPM Logic Router').item.json.remoteJid }}" },
+            { "name": "text", "value": "={{ $json.textResponse }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-evo-reply",
+      "name": "Evolution: Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1200, 150]
+    }
+  ],
+  "connections": {
+    "Evolution Webhook": {
+      "main": [[{ "node": "BPM Logic Router", "type": "main", "index": 0 }]]
+    },
+    "BPM Logic Router": {
+      "main": [[{ "node": "node-filter", "type": "main", "index": 0 }]]
+    },
+    "node-filter": {
+      "main": [
+        [{ "node": "Chatwoot: Check Assignee", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Chatwoot: Check Assignee": {
+      "main": [[{ "node": "No Human Assigned?", "type": "main", "index": 0 }]]
+    },
+    "No Human Assigned?": {
+      "main": [
+        [{ "node": "AnythingLLM (RAG)", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "AnythingLLM (RAG)": {
+      "main": [[{ "node": "Evolution: Reply", "type": "main", "index": 0 }]]
+    }
+  }
+}

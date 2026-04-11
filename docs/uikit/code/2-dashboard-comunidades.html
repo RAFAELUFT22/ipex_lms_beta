@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Horizonte LMS - Comunidades</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#007ba7",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#3f484e",
+                        "surface-tint": "#00658b",
+                        "on-tertiary-container": "#fff7f6",
+                        "on-surface": "#201b10",
+                        "primary-fixed-dim": "#7cd0ff",
+                        "primary-fixed": "#c4e7ff",
+                        "on-background": "#201b10",
+                        "surface-dim": "#e4d9c7",
+                        "surface-bright": "#fff8f2",
+                        "error": "#ba1a1a",
+                        "secondary-fixed-dim": "#f4be55",
+                        "on-primary-fixed-variant": "#004c69",
+                        "outline-variant": "#bfc8cf",
+                        "on-primary-fixed": "#001e2c",
+                        "surface-container": "#f8ecda",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "outline": "#6f787f",
+                        "on-tertiary-fixed": "#400101",
+                        "on-secondary-fixed": "#271900",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb4a9",
+                        "secondary": "#7c5800",
+                        "background": "#fff8f2",
+                        "inverse-primary": "#7cd0ff",
+                        "inverse-surface": "#363024",
+                        "surface": "#fff8f2",
+                        "surface-container-low": "#fef2e0",
+                        "inverse-on-surface": "#fbefdd",
+                        "secondary-container": "#fdc65c",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#5e4200",
+                        "tertiary-container": "#b4564a",
+                        "on-primary": "#ffffff",
+                        "on-secondary-container": "#745200",
+                        "secondary-fixed": "#ffdea7",
+                        "primary": "#006184",
+                        "tertiary": "#953f34",
+                        "surface-container-highest": "#ede1cf",
+                        "on-primary-container": "#f5faff",
+                        "surface-container-high": "#f2e7d5",
+                        "surface-variant": "#ede1cf",
+                        "on-tertiary-fixed-variant": "#7c2c23",
+                        "tertiary-fixed": "#ffdad5"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Lexend", "sans-serif"],
+                        "body": ["Lexend", "sans-serif"],
+                        "label": ["Lexend", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Lexend', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-sun-gradient {
+            background: linear-gradient(135deg, #006184 0%, #007ba7 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-secondary-fixed selection:text-on-secondary-fixed">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-screen w-72 fixed left-0 top-0 rounded-r-[1.5rem] bg-orange-100 dark:bg-stone-900 shadow-[32px_0_32px_rgba(116,82,0,0.06)] z-50">
+<div class="flex flex-col h-full py-10 pr-4">
+<!-- Header -->
+<div class="px-8 mb-10 flex items-center gap-3">
+<div class="w-10 h-10 bg-secondary-container rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container">landscape</span>
+</div>
+<div>
+<h1 class="text-xl font-extrabold text-sky-900 tracking-tighter uppercase">Horizonte</h1>
+<p class="font-lexend uppercase tracking-widest text-[10px] font-bold text-slate-500">Learning Portal</p>
+</div>
+</div>
+<!-- Nav Items -->
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-4 text-slate-700 py-4 px-6 my-1 hover:bg-orange-200 rounded-r-full transition-all duration-300 hover:translate-x-2" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+<span class="font-lexend uppercase tracking-widest text-xs font-bold">Classroom</span>
+</a>
+<a class="flex items-center gap-4 text-slate-700 py-4 px-6 my-1 hover:bg-orange-200 rounded-r-full transition-all duration-300 hover:translate-x-2" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="font-lexend uppercase tracking-widest text-xs font-bold">Course Map</span>
+</a>
+<a class="flex items-center gap-4 text-slate-700 py-4 px-6 my-1 hover:bg-orange-200 rounded-r-full transition-all duration-300 hover:translate-x-2" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="font-lexend uppercase tracking-widest text-xs font-bold">Resources</span>
+</a>
+<a class="flex items-center gap-4 text-slate-700 py-4 px-6 my-1 hover:bg-orange-200 rounded-r-full transition-all duration-300 hover:translate-x-2" href="#">
+<span class="material-symbols-outlined" data-icon="workspace_premium">workspace_premium</span>
+<span class="font-lexend uppercase tracking-widest text-xs font-bold">Scholarship</span>
+</a>
+<a class="flex items-center gap-4 bg-gradient-to-r from-sky-900 to-sky-700 text-white rounded-r-full py-4 px-6 my-1 shadow-sm" href="#">
+<span class="material-symbols-outlined" data-icon="forum" style="font-variation-settings: 'FILL' 1;">forum</span>
+<span class="font-lexend uppercase tracking-widest text-xs font-bold">Community</span>
+</a>
+</nav>
+<!-- Footer Nav -->
+<div class="mt-auto border-t border-orange-200/50 pt-6">
+<a class="flex items-center gap-4 text-slate-700 py-4 px-6 hover:bg-orange-200 rounded-r-full transition-all duration-300 hover:translate-x-2" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-lexend uppercase tracking-widest text-xs font-bold">Help Center</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-72 min-h-screen bg-surface transition-all duration-500">
+<!-- TopAppBar -->
+<header class="bg-orange-50 sticky top-0 z-40 w-full px-8 py-4 flex justify-between items-center">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-bold tracking-tighter text-sky-900">Horizonte LMS</span>
+<div class="hidden lg:flex items-center gap-6">
+<a class="text-sky-800 font-bold border-b-2 border-amber-600 px-1 py-1" href="#">Dashboard</a>
+<a class="text-slate-600 hover:text-sky-800 transition-colors duration-300 px-1 py-1" href="#">Discover</a>
+<a class="text-slate-600 hover:text-sky-800 transition-colors duration-300 px-1 py-1" href="#">Events</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-high border-none rounded-xl text-sm focus:ring-2 focus:ring-secondary/50 w-64" placeholder="Search communities..." type="text"/>
+</div>
+<button class="p-2 text-sky-900 hover:bg-orange-100/50 rounded-full transition-all duration-300">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-sky-900 hover:bg-orange-100/50 rounded-full transition-all duration-300">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-secondary-container">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="close-up portrait of a cheerful person with warm lighting and a soft background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1F-T-AfZCxpqBjXYa1NL2-lfBIrcWE0V2qmIcM3jCZZc44-88qTvTBcRRaS21iGT9tLdr1q0K0WlE5IIkyj2z2Vxzlh6tBTWWvjL1dwqqGsZPmG8nM0j-uWiTfXdWJBW6HHtHvi595QTE66hNAouOfnaxMglJJJ_j5lxTDPK8a4t2FA9qccMuIKikwH5KCZLwOAddxMAbg0NdZxlYq7OwGUBTwgJZnUinRlzg1pR6hIKlTUqAS_vZk5SUwwgZ3mPHF5_1Jg9LkewJ"/>
+</div>
+</div>
+</header>
+<div class="p-8 lg:p-12 space-y-12">
+<!-- Hero / Header Section -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+<div class="lg:col-span-7 space-y-4">
+<span class="text-tertiary uppercase tracking-[0.2em] text-xs font-bold">Bem-vindo ao Cerrado</span>
+<h2 class="text-5xl font-headline font-bold text-on-surface -tracking-[0.02em]">Dashboard de <span class="text-primary">Comunidades</span></h2>
+<p class="text-lg text-on-surface-variant max-w-2xl leading-relaxed">
+                        Conecte-se com outros estudantes, compartilhe conhecimentos e expanda seus horizontes dentro do ecossistema Horizonte.
+                    </p>
+</div>
+<div class="lg:col-span-5 flex justify-end gap-4">
+<button class="bg-secondary-container text-on-secondary-container px-8 py-4 rounded-xl font-bold flex items-center gap-3 hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined">add_circle</span>
+                        Criar Comunidade
+                    </button>
+<button class="bg-sun-gradient text-on-primary px-8 py-4 rounded-xl font-bold hover:shadow-lg transition-all">
+                        Explorar Todas
+                    </button>
+</div>
+</section>
+<!-- Stats Grid (Bento Style) -->
+<section class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+<div class="md:col-span-2 bg-surface-container-low p-8 rounded-xl relative overflow-hidden group">
+<div class="relative z-10 space-y-2">
+<h3 class="text-tertiary uppercase tracking-widest text-xs font-bold">Sua Atividade</h3>
+<p class="text-4xl font-bold text-on-surface">12 Fóruns Ativos</p>
+<p class="text-on-surface-variant text-sm">+3 novos tópicos desde sua última visita</p>
+</div>
+<div class="absolute -bottom-8 -right-8 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-[160px]" data-icon="forum">forum</span>
+</div>
+</div>
+<div class="bg-surface-container-highest p-8 rounded-xl flex flex-col justify-between">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="groups">groups</span>
+<div>
+<p class="text-2xl font-bold text-on-surface">2.4k</p>
+<p class="text-tertiary uppercase tracking-widest text-[10px] font-bold">Membros Totais</p>
+</div>
+</div>
+<div class="bg-secondary-fixed p-8 rounded-xl flex flex-col justify-between">
+<span class="material-symbols-outlined text-secondary text-3xl" data-icon="trending_up">trending_up</span>
+<div>
+<p class="text-2xl font-bold text-on-surface">85%</p>
+<p class="text-on-secondary-fixed-variant uppercase tracking-widest text-[10px] font-bold">Engajamento Semanal</p>
+</div>
+</div>
+</section>
+<!-- Featured Communities (Asymmetric Grid) -->
+<section class="space-y-8">
+<div class="flex items-center justify-between">
+<h3 class="text-2xl font-bold font-headline">Comunidades em Destaque</h3>
+<div class="flex gap-2">
+<span class="px-4 py-1 rounded-full bg-primary text-white text-xs font-bold uppercase tracking-widest">Populares</span>
+<span class="px-4 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed text-xs font-bold uppercase tracking-widest">Novas</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Community Card 1 -->
+<div class="group bg-surface-container-low rounded-xl overflow-hidden hover:bg-surface-container-highest hover:-translate-y-1 transition-all duration-300">
+<div class="h-48 w-full relative overflow-hidden">
+<img alt="Study Group" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="aerial view of a group of diverse students collaborating around a large table in a modern sunlit library" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE6n_X8eCgtijsZKx-qrFz2ZbClszLXLxPxXTR-9ne4UB8KL_sHeOMrbg05Drxp5yOwhM_ko0-uED5lNsYEcgcWHgyBafXAohE4pEAMSEQ8qoaJ7URAMWuNjwwkhkDSaOjsL46tXzaUtEZo8uyP2yqDG-5sy8TL-H9ZBD_kFHEn-58fAbxUWMnvKnd_0jYmSGEd1Tzf_BPj1WilvyCwOCWhRpy5tqBUXuSYeSm2fB9YpVHs1a4nPMDZRz3nL3ts1p0xGIkchw8dc08"/>
+<div class="absolute top-4 left-4">
+<span class="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-tertiary">Design Thinking</span>
+</div>
+</div>
+<div class="p-6 space-y-4">
+<h4 class="text-xl font-bold text-on-surface">Cerrado UI Design</h4>
+<p class="text-on-surface-variant text-sm line-clamp-2">Explorando as raízes brasileiras no design de interface moderno e sistemas escaláveis.</p>
+<div class="flex items-center justify-between pt-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-slate-200"></div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-slate-300"></div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-slate-400"></div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-orange-100 flex items-center justify-center text-[10px] font-bold text-on-secondary-container">+42</div>
+</div>
+<button class="text-primary font-bold text-sm flex items-center gap-1 hover:gap-2 transition-all">
+                                    Participar <span class="material-symbols-outlined text-base">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Community Card 2 -->
+<div class="group bg-surface-container-low rounded-xl overflow-hidden hover:bg-surface-container-highest hover:-translate-y-1 transition-all duration-300">
+<div class="h-48 w-full relative overflow-hidden">
+<img alt="Dev Community" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="team of developers working in a bright office space with greenery and natural light pouring through large windows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFWEbVWm28HqH7uQBnCnIcjLe1eAuUpgGQL1ZUgxTIvRGghEwJAEJpqA_5mALBWNUabY3NrUdz9DcxPwDqum_2iJ7omVgGVvUlMJTKYWcPyYsua3EPak8NDB7orCBVEXY95rCMaOJKJgjnlBLgcJ9YBFjyND18V7ZILVpPW5mFAYFgbMwVY9oXqsIrVUuiJDbmlU33SLWOqZo05pl_kMx4-EPfmmzqG21g3FU_NLbEPMuKdd8gKdnwe8o2_wb1OTcJEbjpvvnfjlqS"/>
+<div class="absolute top-4 left-4">
+<span class="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-primary">Development</span>
+</div>
+</div>
+<div class="p-6 space-y-4">
+<h4 class="text-xl font-bold text-on-surface">Fullstack Brasil</h4>
+<p class="text-on-surface-variant text-sm line-clamp-2">Compartilhamento de práticas ágeis e discussões sobre o futuro da web no Brasil.</p>
+<div class="flex items-center justify-between pt-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-slate-200"></div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-slate-300"></div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-orange-100 flex items-center justify-center text-[10px] font-bold text-on-secondary-container">+150</div>
+</div>
+<button class="text-primary font-bold text-sm flex items-center gap-1 hover:gap-2 transition-all">
+                                    Participar <span class="material-symbols-outlined text-base">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Community Card 3 (Editorial Style Highlight) -->
+<div class="relative group lg:col-span-1 rounded-xl overflow-hidden bg-primary p-8 flex flex-col justify-between text-white">
+<div class="absolute top-0 right-0 p-8">
+<span class="material-symbols-outlined text-6xl opacity-20" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div class="relative z-10 space-y-4">
+<span class="text-secondary-fixed text-[10px] font-bold uppercase tracking-widest">Recomendado para você</span>
+<h4 class="text-3xl font-headline font-bold leading-tight">Liderança em Ambientes Inovadores</h4>
+<p class="text-sky-100 text-sm opacity-90">Um grupo exclusivo para mentoria e desenvolvimento de novas lideranças.</p>
+</div>
+<div class="relative z-10 pt-6">
+<button class="w-full bg-white text-primary px-6 py-3 rounded-xl font-bold hover:bg-secondary-fixed hover:text-on-secondary-fixed transition-colors">
+                                Solicitar Acesso
+                            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Recent Interactions / Feed Section -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+<div class="lg:col-span-2 space-y-8">
+<h3 class="text-2xl font-bold font-headline">Discussões Recentes</h3>
+<div class="space-y-6">
+<!-- Post 1 -->
+<div class="flex gap-6 items-start border-b border-outline-variant/20 pb-6 group">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex-shrink-0">
+<img alt="User" class="w-full h-full rounded-full" data-alt="digital avatar profile picture of a young professional woman with glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2AVxBi0jHXH41MsBjb9EvfXYUQDLhGef8nQj48vmqwzLzcKq0JpiEFlv7QbA-vNjVIAbQwmY_l0EELfj_MI7f9e7DMWLmASKu4YpMmwZryi77z47v2b-plJcnYMlq7YOxmdrs0eHQVQMP-XHnuR8TB0jCK8Dx8uEexzKj74q6BWg0ZEX18z6p4vKi3os8Fzjy0D5zeOQ5QGARWX0C25e2UVCDakcItVX8bohePSYYQrjbnwS7L1-WUS7sABSwm0eGJjcJtNIwpUMq"/>
+</div>
+<div class="space-y-2 flex-1">
+<div class="flex items-center justify-between">
+<span class="text-sm font-bold">Alice Mendes <span class="font-normal text-on-surface-variant ml-2">• 2h atrás em Design Thinking</span></span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">more_horiz</span>
+</div>
+<p class="text-on-surface font-bold text-lg group-hover:text-primary transition-colors cursor-pointer">Qual a melhor forma de aplicar Design System no Cerrado?</p>
+<p class="text-on-surface-variant text-sm line-clamp-2">Pessoal, estou com algumas dúvidas sobre como equilibrar a organicidade do nosso tema com componentes padronizados...</p>
+<div class="flex items-center gap-6 pt-2">
+<button class="flex items-center gap-1 text-xs text-on-surface-variant hover:text-tertiary">
+<span class="material-symbols-outlined text-base">favorite</span> 24
+                                    </button>
+<button class="flex items-center gap-1 text-xs text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-base" data-icon="forum">forum</span> 12
+                                    </button>
+<button class="flex items-center gap-1 text-xs text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-base">share</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Post 2 -->
+<div class="flex gap-6 items-start border-b border-outline-variant/20 pb-6 group">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex-shrink-0">
+<img alt="User" class="w-full h-full rounded-full" data-alt="digital avatar profile picture of a young man with a beard and smiling expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_182uZ5selZ_yma3C5IiInXZdpk_BP5HlE16kI402-YvSFBPhzen0YmLPGgyjAIk5AqRvKx9-qOuAIFlp-0o8DpfkKC9csmlsikgAqegT_Oh9nQA05P1Zt8HgcKr7QY7jAGe3Oyv90OzYRYLQWJZscdgQLem7m54xB0g8-iQd1sVK76nTOitPyyki7e6g1xPWQpYmo1kBm5wqGTJXW3q2TkEFGWhXgYW_9SHnlfV_m5mrKKOD4MOTOM52G_I-y8f5y3e1nuyHIBjJ"/>
+</div>
+<div class="space-y-2 flex-1">
+<div class="flex items-center justify-between">
+<span class="text-sm font-bold">Bruno Silveira <span class="font-normal text-on-surface-variant ml-2">• 5h atrás em Development</span></span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">more_horiz</span>
+</div>
+<p class="text-on-surface font-bold text-lg group-hover:text-primary transition-colors cursor-pointer">Desafios de Performance no Tailwind v4</p>
+<p class="text-on-surface-variant text-sm line-clamp-2">Estive testando a nova engine e notei algumas mudanças interessantes na compilação JIT. O que vocês acham?</p>
+<div class="flex items-center gap-6 pt-2">
+<button class="flex items-center gap-1 text-xs text-on-surface-variant hover:text-tertiary">
+<span class="material-symbols-outlined text-base">favorite</span> 18
+                                    </button>
+<button class="flex items-center gap-1 text-xs text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-base" data-icon="forum">forum</span> 8
+                                    </button>
+<button class="flex items-center gap-1 text-xs text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-base">share</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Sidebar content -->
+<div class="space-y-12">
+<!-- Events Section -->
+<div class="bg-surface-container p-8 rounded-xl space-y-6">
+<div class="flex items-center justify-between">
+<h4 class="font-bold">Eventos Próximos</h4>
+<span class="text-primary text-xs font-bold uppercase tracking-widest cursor-pointer">Ver todos</span>
+</div>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="bg-secondary-fixed w-12 h-12 rounded-xl flex flex-col items-center justify-center flex-shrink-0">
+<span class="text-[10px] font-bold uppercase text-on-secondary-fixed-variant">Out</span>
+<span class="text-lg font-bold text-on-secondary-fixed leading-none">12</span>
+</div>
+<div>
+<p class="text-sm font-bold">Workshop de UI Design</p>
+<p class="text-xs text-on-surface-variant">14:00 • Via Zoom</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="bg-primary-fixed w-12 h-12 rounded-xl flex flex-col items-center justify-center flex-shrink-0">
+<span class="text-[10px] font-bold uppercase text-on-primary-fixed-variant">Out</span>
+<span class="text-lg font-bold text-on-primary-fixed leading-none">15</span>
+</div>
+<div>
+<p class="text-sm font-bold">Hackathon Horizonte</p>
+<p class="text-xs text-on-surface-variant">09:00 • Híbrido</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Online Members -->
+<div class="space-y-6">
+<h4 class="font-bold flex items-center gap-2">
+                            Membros Online
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+</h4>
+<div class="flex flex-wrap gap-3">
+<div class="w-10 h-10 rounded-full border-2 border-secondary-container p-0.5" title="Membro Online">
+<img alt="Member" class="w-full h-full rounded-full" data-alt="circular profile avatar of a smiling man with brown hair" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDK4wUGOmq8gyDs4rG8A-skgMr-6YS4BCMoDBtnccfIzYcXYqBh8lbf6OkmfKxlxzI9pyUN56-g6oDvBh8tQeq55A1YdvrFfy7RJ35kRri1J-rtpYwETNbLaV9bTLIhpEiLiSo-yRyBwbTLDZnDR1L8Ee9luYBgxDo-P6nRBKoqS0zabFQhFY7O5XL41FlUC39F8ci9dMub92tStVGiLAGaBjaWTCWe1e5cX3yyAi_E13PjzlXF0hlHCbn4meYu4I858jlNHAVn8oDU"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-secondary-container p-0.5" title="Membro Online">
+<img alt="Member" class="w-full h-full rounded-full" data-alt="circular profile avatar of a young woman with curly hair and happy expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfleT5W-cjtnS_YDnswgYc_afDTjYehq145mZTybbxOvBnSLkbxrliYHc_s2p5-YK0Eif9uPl7JDfDfRBjBymA8Xuv83y1ZnkyRz6HVqCoUtOUYmyE078IxoC6xBp2QUOLqKMjInJH7tp5mFUvAZY4FpvkrnSV20iK5bZCizYLcCVkyRx9VxTlK98w7budQlXRSf4C0epytMJUH2n53JHCb5xZJNPvQHtjDscCeCfrjPUJxaDw2tAXa7VZCrdL6LCGCwNSgz2oh-vm"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-secondary-container p-0.5" title="Membro Online">
+<img alt="Member" class="w-full h-full rounded-full" data-alt="circular profile avatar of a middle aged man with a clean shave and professional look" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2IFiLvBaLwTetkSJGMY1zAR5RU-Lya1qVvs_YYbmeUj7YIVxvlHD2erzee3K8CgCsiYN9Jyzl04LOcNzxO8qjVfsjWalD2XUgip32W2gmTJIPLYEhlSOYLEaTKRXhnLjyJNkPtwbHMLFNpxAG6_aRTY60F1BvOywGk3bHnH1HpVVS_Em5Z1PvEguH1-xlT59fp9wl3x-2yr_NRs91409sY8MGV4sr9EOfUn4CVoLmxdOQZeGvyABlWml9srh20e8kUkz3oepg0riG"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-secondary-container p-0.5" title="Membro Online">
+<img alt="Member" class="w-full h-full rounded-full" data-alt="circular profile avatar of a woman with a headscarf and bright smile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_npHYoNuVIa9b1SxXMenYWOEYqDcMCZJQamQOViby-ahJVxrym6KkCDEADcQgqjazJy9an7PI7ZtmlPzdOOBuPJs2XAL0WAmT7IawYY6R0T_xRSMHrS7nvz10nQGv2Eh1LI3wkXKrbetFUL6vHhxlP5A6PPNaYTAh1fmFEJ_h2UrgNGm4whNCU9f7qOYZtzXcsiAenoEJbYa8bSBtgvZvk18uGqWali6r5t5jFLcC0VkScSg2JU5qKykVjJcXBXp2NC6n-RUxvsqu"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-secondary-container p-0.5" title="Membro Online">
+<img alt="Member" class="w-full h-full rounded-full" data-alt="circular profile avatar of a young person with short blonde hair" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBClHDFZRXgwvBqnBEsMO88fxUh0iS7w13eubUutC-n2gcE2-HKFmmmq67YmDLgu8eJluS_Q4-WvLj0hOZJ-ysJtPlGjRRPRDVMOWX1ckkS3T1Q4GJnXp-mL_Cv4DIhITxYSABPWAZNULbxZH39nGiLx55YnG90VmaWv9bnl637_DAoQrkaEe6ottHNib_5NR7k4dll8dO_AN9pSfQLQE_gPVraaC9vSYsydF5ctfjnXGjYqQhxOxdGTC8w4vlLmnXLnWjI7WskPRp3"/>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-[10px] font-bold text-on-surface-variant">
+                                +12
+                            </div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar (Mobile only) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-orange-50 z-50 flex items-center justify-around py-3 px-4 shadow-[0_-8px_32px_rgba(116,82,0,0.08)]">
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">school</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Sala</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">map</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Mapa</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-sky-800">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">forum</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Comunidade</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Perfil</span>
+</button>
+</nav>
+<!-- Floating Action Button -->
+<div class="fixed bottom-24 right-8 md:bottom-12 md:right-12 z-50">
+<button class="w-14 h-14 rounded-full bg-sun-gradient text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</div>
+</body></html>

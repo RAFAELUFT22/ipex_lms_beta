@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Meu Dashboard - Cerrado</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "surface-container-low": "#fef2e0",
+                "on-background": "#201b10",
+                "secondary": "#7c5800",
+                "surface": "#fff8f2",
+                "error": "#ba1a1a",
+                "on-secondary-container": "#745200",
+                "secondary-fixed-dim": "#f4be55",
+                "inverse-primary": "#7cd0ff",
+                "surface-bright": "#fff8f2",
+                "primary-fixed-dim": "#7cd0ff",
+                "secondary-fixed": "#ffdea7",
+                "surface-container-highest": "#ede1cf",
+                "on-primary-fixed-variant": "#004c69",
+                "outline-variant": "#bfc8cf",
+                "on-surface-variant": "#3f484e",
+                "surface-dim": "#e4d9c7",
+                "on-tertiary-container": "#fff7f6",
+                "background": "#fff8f2",
+                "inverse-surface": "#363024",
+                "on-primary": "#ffffff",
+                "tertiary-fixed-dim": "#ffb4a9",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-fixed": "#400101",
+                "on-secondary": "#ffffff",
+                "tertiary-fixed": "#ffdad5",
+                "on-secondary-fixed": "#271900",
+                "primary": "#006184",
+                "on-tertiary": "#ffffff",
+                "inverse-on-surface": "#fbefdd",
+                "primary-fixed": "#c4e7ff",
+                "on-tertiary-fixed-variant": "#7c2c23",
+                "on-primary-fixed": "#001e2c",
+                "secondary-container": "#fdc65c",
+                "on-primary-container": "#f5faff",
+                "surface-tint": "#00658b",
+                "error-container": "#ffdad6",
+                "outline": "#6f787f",
+                "primary-container": "#007ba7",
+                "on-secondary-fixed-variant": "#5e4200",
+                "on-surface": "#201b10",
+                "surface-container-high": "#f2e7d5",
+                "on-error": "#ffffff",
+                "tertiary-container": "#b4564a",
+                "tertiary": "#953f34",
+                "surface-container": "#f8ecda",
+                "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "fontFamily": {
+                "headline": ["Lexend"],
+                "body": ["Lexend"],
+                "label": ["Lexend"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Lexend', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-shift-only {
+            box-shadow: none !important;
+        }
+        .bg-primary-gradient {
+            background: linear-gradient(135deg, #006184 0%, #007ba7 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="w-full sticky top-0 z-40 bg-[#fff8f2] dark:bg-stone-950 flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#006184] dark:text-[#007ba7] cursor-pointer" data-icon="menu">menu</span>
+<h1 class="text-xl font-bold tracking-tighter text-[#006184] dark:text-[#007ba7]">Horizonte Cerrado</h1>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="Close-up portrait of a smiling young man with a friendly expression against a soft sun-drenched outdoor background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuczUz89YDw1aRmvqVebsQtqSvAjwo1RPbDQwyWZgn3XatKWG34YjOBGxgwO85oiLid6DxnXagXvHIUqC4yAmUpvO6WiWiYsQB4va2uZfExTNf1mKh2g1146cEZEjpzuyQIWB8EQUpp7RCZ1EnTPdqWfQeACdevlfMQMRyhlueO8uOa5DtdwVmQTiUoYqIpDqq-IUjix8Z-5FsaYcifrJw4Me-FMuIx1ombhmjM-YpiucvEoJz26Ze-SjLhX6b_3qoCl2ONPZIR8d2"/>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-6 pt-8 space-y-12">
+<!-- Welcome Header -->
+<section class="relative">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+<div>
+<span class="text-tertiary font-label uppercase tracking-[0.05em] text-xs font-bold">Painel do Aluno</span>
+<h2 class="text-4xl md:text-5xl font-headline font-bold text-on-surface tracking-tight mt-2">Olá, João!</h2>
+<p class="text-on-surface-variant mt-2 max-w-md">O sol já está alto sobre o Cerrado. Que tal continuarmos sua jornada de conhecimento hoje?</p>
+</div>
+<div class="hidden md:block">
+<div class="bg-surface-container-low px-6 py-3 rounded-xl flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="light_mode">light_mode</span>
+<span class="text-on-surface-variant text-sm font-medium">Tempo de estudo hoje: <strong class="text-on-surface">1h 45m</strong></span>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Current Course Progress Card (Large) -->
+<div class="md:col-span-8 bg-surface-container-low rounded-[1.5rem] overflow-hidden group hover:bg-surface-container-highest transition-colors duration-300">
+<div class="relative h-48 md:h-64 overflow-hidden">
+<img alt="Inteligência Artificial" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Abstract digital visualization of neural networks and data points glowing in deep blue and gold tones representing artificial intelligence" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTlVU3OANU02UdVnLbHkO8xoyaPC5474Q1BBhbap8l6NWYkLGry_odwVt3J6a-ZuWxcMeNEX5wKYg-nw6_nXaT4gTvI8l_5Y9fIjvq6CTO8fL349hxc4Q7XOmAghaFWi3d6X4aey7cUddFV-40g3p_ZEk9fYDuRrdGOHSLzUj_tfoV0ar8xBh8kLuJuOh9rCtSdxVE7fHT6Df39jo5Q5F3QeAGB0u7kqSuoidKu8Tyg3Axtv-KMkpd1eC6bBTKalVLjvTzxwJU5WvE"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+<div>
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Em Andamento</span>
+<h3 class="text-2xl md:text-3xl font-headline font-bold text-white mt-2">Inteligência Artificial</h3>
+</div>
+<div class="text-white text-right">
+<span class="text-4xl font-bold">65%</span>
+<p class="text-xs uppercase tracking-widest opacity-80">Concluído</p>
+</div>
+</div>
+</div>
+<div class="p-8 space-y-6">
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="h-full bg-primary-gradient w-[65%]"></div>
+</div>
+<div class="flex flex-wrap gap-4 items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="play_circle">play_circle</span>
+<span class="text-on-surface-variant font-medium">Próxima aula: Redes Neurais Convolucionais</span>
+</div>
+<button class="bg-primary-gradient text-on-primary px-8 py-3 rounded-xl font-bold hover:shadow-lg transition-all active:scale-95">Continuar Agora</button>
+</div>
+</div>
+</div>
+<!-- Achievements Section (Vertical Side) -->
+<div class="md:col-span-4 space-y-6">
+<div class="bg-surface-container-high p-8 rounded-[1.5rem] h-full">
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-xl font-headline font-bold text-on-surface">Minhas Conquistas</h3>
+<span class="material-symbols-outlined text-tertiary" data-icon="military_tech">military_tech</span>
+</div>
+<div class="space-y-6">
+<!-- Achievement 1 -->
+<div class="flex gap-4 items-center">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="bolt">bolt</span>
+</div>
+<div>
+<p class="text-on-surface font-bold text-sm">Estudante Ágil</p>
+<p class="text-on-surface-variant text-xs">7 dias seguidos de acesso</p>
+</div>
+</div>
+<!-- Achievement 2 -->
+<div class="flex gap-4 items-center">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="psychology">psychology</span>
+</div>
+<div>
+<p class="text-on-surface font-bold text-sm">Explorador I.A.</p>
+<p class="text-on-surface-variant text-xs">Completou o módulo básico</p>
+</div>
+</div>
+<!-- Achievement 3 -->
+<div class="flex gap-4 items-center opacity-40">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center border-2 border-dashed border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="workspace_premium">workspace_premium</span>
+</div>
+<div>
+<p class="text-on-surface font-bold text-sm">Mestre dos Dados</p>
+<p class="text-on-surface-variant text-xs">Bloqueado</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-10 text-tertiary font-bold text-sm border-2 border-tertiary/20 py-3 rounded-xl hover:bg-tertiary/5 transition-colors">Ver Todos os Troféus</button>
+</div>
+</div>
+<!-- AI Tutor History (Wide Bottom) -->
+<div class="md:col-span-12">
+<div class="bg-surface-container-low rounded-[1.5rem] p-8">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+<div>
+<h3 class="text-2xl font-headline font-bold text-on-surface">Conversas com o Tutor I.A.</h3>
+<p class="text-on-surface-variant">Suas dúvidas recentes respondidas por nossa inteligência</p>
+</div>
+<button class="flex items-center justify-center gap-2 bg-secondary-container text-on-secondary-container px-6 py-3 rounded-full font-bold active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+                            Nova Pergunta
+                        </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Chat Entry 1 -->
+<div class="bg-surface p-6 rounded-xl hover:bg-surface-container-highest transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-4">
+<div class="w-8 h-8 rounded-lg bg-primary-fixed-dim flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="smart_toy">smart_toy</span>
+</div>
+<span class="text-[10px] uppercase font-bold text-outline tracking-wider">Ontem</span>
+</div>
+<h4 class="font-bold text-on-surface mb-2 line-clamp-1">Explicação sobre Backpropagation</h4>
+<p class="text-sm text-on-surface-variant line-clamp-2">"O backpropagation é o algoritmo fundamental para o treinamento de redes neurais..."</p>
+<div class="mt-4 flex items-center text-primary text-xs font-bold group-hover:gap-2 transition-all">
+                                Ler Resposta <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+<!-- Chat Entry 2 -->
+<div class="bg-surface p-6 rounded-xl hover:bg-surface-container-highest transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-4">
+<div class="w-8 h-8 rounded-lg bg-primary-fixed-dim flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="smart_toy">smart_toy</span>
+</div>
+<span class="text-[10px] uppercase font-bold text-outline tracking-wider">2 dias atrás</span>
+</div>
+<h4 class="font-bold text-on-surface mb-2 line-clamp-1">Diferença entre CNN e RNN</h4>
+<p class="text-sm text-on-surface-variant line-clamp-2">"As CNNs são ideais para imagens, enquanto as RNNs focam em dados sequenciais..."</p>
+<div class="mt-4 flex items-center text-primary text-xs font-bold group-hover:gap-2 transition-all">
+                                Ler Resposta <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+<!-- Chat Entry 3 -->
+<div class="bg-surface p-6 rounded-xl hover:bg-surface-container-highest transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-4">
+<div class="w-8 h-8 rounded-lg bg-primary-fixed-dim flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="smart_toy">smart_toy</span>
+</div>
+<span class="text-[10px] uppercase font-bold text-outline tracking-wider">Semana passada</span>
+</div>
+<h4 class="font-bold text-on-surface mb-2 line-clamp-1">Otimização de Gradiente</h4>
+<p class="text-sm text-on-surface-variant line-clamp-2">"Pense no gradiente como a inclinação de uma colina no Cerrado..."</p>
+<div class="mt-4 flex items-center text-primary text-xs font-bold group-hover:gap-2 transition-all">
+                                Ler Resposta <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#fff8f2]/80 dark:bg-stone-950/80 backdrop-blur-md z-50 rounded-t-[1.5rem] shadow-[0_-4px_32px_rgba(116,82,0,0.06)] border-t border-[#bfc8cf]/15">
+<a class="flex flex-col items-center justify-center bg-[#ffdea7] dark:bg-[#7c5800] text-[#006184] dark:text-stone-100 rounded-full px-5 py-1.5 active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-['Lexend'] text-[11px] uppercase tracking-[0.05em] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#3f484e] dark:text-stone-400 px-5 py-1.5 hover:text-[#006184] active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+<span class="font-['Lexend'] text-[11px] uppercase tracking-[0.05em] font-medium">Courses</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#3f484e] dark:text-stone-400 px-5 py-1.5 hover:text-[#006184] active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="verified">verified</span>
+<span class="font-['Lexend'] text-[11px] uppercase tracking-[0.05em] font-medium">Certificates</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#3f484e] dark:text-stone-400 px-5 py-1.5 hover:text-[#006184] active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Lexend'] text-[11px] uppercase tracking-[0.05em] font-medium">Profile</span>
+</a>
+</nav>
+</body></html>

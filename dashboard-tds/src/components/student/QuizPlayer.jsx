@@ -15,7 +15,12 @@ export default function QuizPlayer({ quizId }) {
 
   const questions = useMemo(
     () => [
-      { id: 1, text: `Pergunta de exemplo para quiz ${quizId}`, options: ['A', 'B', 'C'], correct: 1 },
+      {
+        id: 1,
+        text: `Pergunta de exemplo para quiz ${quizId}`,
+        options: ['Opção A', 'Opção B', 'Opção C'],
+        correct: 1,
+      },
     ],
     [quizId],
   );
@@ -42,53 +47,166 @@ export default function QuizPlayer({ quizId }) {
     setStep(STEPS.question);
   }
 
-  if (step === STEPS.loading) return <p className="p-4 text-slate-300">Carregando quiz...</p>;
+  const current = questions[index];
+  const progressPercent =
+    step === STEPS.complete
+      ? 100
+      : Math.round(((index + (step === STEPS.feedback ? 1 : 0)) / questions.length) * 100);
 
-  if (step === STEPS.complete) {
+  /* ── Loading ─────────────────────────────────────────────── */
+  if (step === STEPS.loading) {
     return (
-      <section className="space-y-3 p-4 text-center">
-        <h2 className="text-2xl font-semibold text-white">Quiz concluído</h2>
-        <p className="text-slate-300">Pontuação: {score}/{questions.length}</p>
-        <span className="inline-flex rounded-full bg-amber-400/20 px-3 py-1 text-amber-200">Badge desbloqueada (stub)</span>
-      </section>
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-on-surface-variant">
+          <span className="material-symbols-outlined text-5xl text-primary animate-pulse">quiz</span>
+          <p className="font-bold font-headline text-on-surface">Carregando quiz...</p>
+        </div>
+      </div>
     );
   }
 
-  const current = questions[index];
+  /* ── Complete ─────────────────────────────────────────────── */
+  if (step === STEPS.complete) {
+    const passed = score >= Math.ceil(questions.length / 2);
+    return (
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center px-6 text-center space-y-6">
+        <span className="material-symbols-outlined text-8xl text-secondary">workspace_premium</span>
+        <div>
+          <span className="text-tertiary uppercase tracking-[0.05em] text-xs font-bold">
+            Quiz concluído
+          </span>
+          <p className="text-5xl font-bold text-primary font-headline mt-2">
+            {score}/{questions.length}
+          </p>
+          <p className="text-on-surface-variant mt-2 text-sm">
+            {passed ? 'Parabéns! Você foi aprovado.' : 'Continue estudando e tente novamente.'}
+          </p>
+        </div>
+
+        {passed && (
+          <div className="bg-secondary-fixed text-on-secondary-fixed rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2">
+            <span className="material-symbols-outlined text-base">workspace_premium</span>
+            Badge desbloqueada!
+          </div>
+        )}
+
+        <button
+          type="button"
+          className="bg-cerrado-gradient text-white rounded-xl py-4 px-8 font-bold w-full max-w-sm flex items-center justify-center gap-2"
+        >
+          <span className="material-symbols-outlined">verified</span>
+          Ver Certificado
+        </button>
+      </div>
+    );
+  }
+
+  /* ── Question / Feedback ──────────────────────────────────── */
+  const isCorrect = selected === current.correct;
+
+  function getOptionClass(optionIndex) {
+    const isSelected = selected === optionIndex;
+
+    // During feedback
+    if (step === STEPS.feedback) {
+      if (optionIndex === current.correct) {
+        return 'bg-secondary-fixed text-on-secondary-fixed border-2 border-transparent';
+      }
+      if (isSelected && !isCorrect) {
+        return 'bg-tertiary-fixed text-on-tertiary-fixed border-2 border-transparent';
+      }
+      return 'bg-surface-container-high text-on-surface opacity-50 border-2 border-transparent';
+    }
+
+    // During question selection
+    if (isSelected) {
+      return 'bg-primary-fixed border-2 border-primary text-on-primary-fixed';
+    }
+    return 'bg-surface-container-high text-on-surface border-2 border-transparent hover:bg-surface-container-highest';
+  }
+
   return (
-    <section className="space-y-4 p-4">
-      <h2 className="text-3xl font-semibold text-white" style={{ fontFamily: 'Lexend, sans-serif' }}>
-        {current.text}
-      </h2>
-      <div className="space-y-2">
+    <div className="min-h-screen bg-surface pb-24">
+      {/* Progress bar at top */}
+      <div className="bg-surface-container-high h-1.5 w-full">
+        <div
+          className="bg-cerrado-gradient h-full transition-all duration-700 ease-out"
+          style={{ width: `${progressPercent}%` }}
+        />
+      </div>
+
+      {/* Question card */}
+      <div className="bg-surface-container-low rounded-xl p-8 mx-4 my-6 shadow-cerrado-fab space-y-2">
+        <span className="text-tertiary uppercase tracking-[0.05em] text-xs font-bold">
+          Pergunta {index + 1} de {questions.length}
+        </span>
+        <p className="text-xl font-bold text-on-surface font-headline leading-tight">
+          {current.text}
+        </p>
+      </div>
+
+      {/* Options */}
+      <div className="px-4 space-y-3">
         {current.options.map((option, optionIndex) => (
           <button
             key={option}
             type="button"
+            disabled={step === STEPS.feedback}
             onClick={() => setSelected(optionIndex)}
-            className={`w-full rounded-xl border px-4 py-3 text-left ${selected === optionIndex ? 'border-teal-400 bg-teal-500/10 text-white' : 'border-white/10 text-slate-300'}`}
+            className={`w-full rounded-xl py-4 px-6 font-bold text-left transition-all duration-200 ${getOptionClass(optionIndex)}`}
           >
             {option}
           </button>
         ))}
       </div>
 
+      {/* Confirm button */}
       {step === STEPS.question && (
-        <button type="button" disabled={selected === null} onClick={confirmAnswer} className="w-full rounded-xl bg-teal-600 px-4 py-3 text-white disabled:opacity-40">
-          Confirmar resposta
-        </button>
-      )}
-
-      {step === STEPS.feedback && (
-        <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
-          <p className="text-sm text-slate-200">
-            {selected === current.correct ? '✅ Correto!' : '❌ Resposta incorreta.'}
-          </p>
-          <button type="button" onClick={next} className="w-full rounded-lg bg-[var(--accent,#f4bf00)] px-3 py-2 text-sm font-medium text-black">
-            Avançar
+        <div className="px-4 mt-6">
+          <button
+            type="button"
+            disabled={selected === null}
+            onClick={confirmAnswer}
+            className="bg-cerrado-gradient text-white rounded-xl py-4 px-8 font-bold w-full disabled:opacity-40 transition-opacity"
+          >
+            Confirmar resposta
           </button>
         </div>
       )}
-    </section>
+
+      {/* Feedback banner */}
+      {step === STEPS.feedback && (
+        <div className="px-4 mt-6 space-y-3">
+          {isCorrect ? (
+            <div className="bg-secondary-fixed text-on-secondary-fixed p-4 rounded-xl flex gap-3 items-start">
+              <span className="material-symbols-outlined text-xl shrink-0">check_circle</span>
+              <div>
+                <p className="font-bold">Correto!</p>
+                <p className="text-sm opacity-80 mt-0.5">Excelente! Continue assim.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-tertiary-fixed text-on-tertiary-fixed p-4 rounded-xl flex gap-3 items-start">
+              <span className="material-symbols-outlined text-xl shrink-0">cancel</span>
+              <div>
+                <p className="font-bold">Resposta incorreta.</p>
+                <p className="text-sm opacity-80 mt-0.5">
+                  A resposta certa era: {current.options[current.correct]}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={next}
+            className="bg-cerrado-gradient text-white rounded-xl py-4 px-8 font-bold w-full flex items-center justify-center gap-2"
+          >
+            <span className="material-symbols-outlined">arrow_forward</span>
+            {index + 1 >= questions.length ? 'Ver resultado' : 'Próxima pergunta'}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
