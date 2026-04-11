@@ -5,7 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.api
-    container_name: lms-lite-api
     restart: always
     volumes:
       - ./lms_lite_db.json:/app/lms_lite_db.json
@@ -25,7 +24,6 @@ services:
     build:
       context: ./dashboard-tds
       dockerfile: Dockerfile
-    container_name: lms-lite-dashboard
     restart: always
     networks:
       - dokploy-network
