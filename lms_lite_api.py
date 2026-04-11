@@ -3,7 +3,6 @@ import json
 import os
 import random
 import secrets
-import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
@@ -49,10 +48,8 @@ def load_db() -> dict:
 
 
 def save_db(db: dict):
-    tmp = DB_FILE + ".tmp"
-    with open(tmp, "w") as f:
+    with open(DB_FILE, "w") as f:
         json.dump(db, f, indent=2, ensure_ascii=False)
-    os.replace(tmp, DB_FILE)
 
 
 def load_courses() -> list:
