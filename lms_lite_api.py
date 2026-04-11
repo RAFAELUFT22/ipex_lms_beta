@@ -3,6 +3,7 @@ import json
 import os
 import random
 import secrets
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
@@ -48,8 +49,10 @@ def load_db() -> dict:
 
 
 def save_db(db: dict):
-    with open(DB_FILE, "w") as f:
+    tmp = DB_FILE + ".tmp"
+    with open(tmp, "w") as f:
         json.dump(db, f, indent=2, ensure_ascii=False)
+    os.replace(tmp, DB_FILE)
 
 
 def load_courses() -> list:
@@ -180,7 +183,7 @@ def get_student(phone: str):
 def upsert_student(body: StudentCreate):
     db = load_db()
     existing = db["students"].get(body.whatsapp, {})
-    existing.update({k: v for k, v in body.dict().items() if v is not None})
+    existing.update({k: v for k, v in body.model_dump().items() if v is not None})
     db["students"][body.whatsapp] = existing
     save_db(db)
     return {"status": "ok"}
@@ -211,6 +214,9 @@ def issue_cert(body: IssueCertRequest):
     if not s:
         raise HTTPException(404, "Aluno não encontrado")
 
+    if s.get("progress", 0) < 100 or s.get("current_course") != body.course_slug:
+        raise HTTPException(400, "Aluno não concluiu o curso.")
+
     cert_hash = generate_cert_hash(body.whatsapp, body.course_slug)
     issue_date = datetime.now().strftime("%d/%m/%Y %H:%M")
 
@@ -233,7 +239,7 @@ def validate_cert(cert_hash: str):
     db = load_db()
     cert = db["certificates"].get(cert_hash)
     if not cert:
-        raise HTTPException(404, detail={"valid": False})
+        return {"valid": False}
     return {"valid": True, **cert}
 
 
