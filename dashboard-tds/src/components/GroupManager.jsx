@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Plus, Upload, Search, Check, AlertCircle, Info } from 'lucide-react';
+import { Users, Plus, Upload, Search, Check, AlertCircle, Info, Zap } from 'lucide-react';
 import { evolutionApi } from '../api/evolution';
 import { FORM_FIELDS, BLOCKS } from '../api/form-fields';
 import { supabase } from '../lib/supabase';
@@ -11,6 +11,9 @@ export default function GroupManager({ simulation }) {
   const [status, setStatus] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [adminKey] = useState(localStorage.getItem('tds_admin_key') || 'admin-tds-2026');
+  const [list, setList] = useState("");
+  const [groupName, setGroupName] = useState("");
+  const [participants, setParticipants] = useState([]);
 
   const fetchGroups = async () => {
     setIsLoading(true);
@@ -44,15 +47,17 @@ export default function GroupManager({ simulation }) {
       const number = parts[0];
       const nameGuess = parts[1] || "Aluno";
       
+      let context = null;
       try {
         // Fetch context from Supabase (Migrated from Frappe)
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .eq('whatsapp', number)
-          .single();
-        
-        if (!error && profile) {
-          context = profile;
+        if (supabase) {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .eq('whatsapp', number)
+            .single();
+          if (!error && profile) {
+            context = profile;
+          }
         }
       } catch (e) {
         console.error("Error fetching context for", number, e);
