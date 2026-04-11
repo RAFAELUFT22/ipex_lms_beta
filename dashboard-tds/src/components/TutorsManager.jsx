@@ -10,6 +10,7 @@ export default function TutorsManager() {
   const [selectedQR, setSelectedQR] = useState(null);
   const [status, setStatus] = useState(null);
   const [stepLogs, setStepLogs] = useState([]);
+  const [isAutoTesting, setIsAutoTesting] = useState(false);
   const addLog = (msg) => setStepLogs(prev => [...prev, `${new Date().toLocaleTimeString()} ${msg}`]);
 
   const loadInstances = async () => {
@@ -86,8 +87,6 @@ export default function TutorsManager() {
       setStatus({ type: 'error', message: "Erro ao excluir." });
     }
   };
-
-  const [isAutoTesting, setIsAutoTesting] = useState(false);
 
   const runFullHandoffTest = async () => {
     setIsAutoTesting(true);

@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Send, Clock, Sliders, AlertTriangle, Play, Pause, Square, Mic, MicOff } from 'lucide-react';
+import { Send, Sliders, AlertTriangle, Mic, MicOff, Tag, Info } from 'lucide-react';
 import { evolutionApi } from '../api/evolution';
 import { recognitionService } from '../utils/RecognitionService';
 import { lmsLiteApi } from '../api/lms_lite';
 import { replaceVariables } from '../utils/variableReplacer';
-import { Tag, HelpCircle, Info } from 'lucide-react';
 
 export default function BroadcastCenter() {
   const [message, setMessage] = useState("");
@@ -47,7 +46,8 @@ export default function BroadcastCenter() {
     for (let i = 0; i < list.length; i++) {
       const num = list[i];
       const studentProfile = profileMap[num] || {};
-      const personalizedMessage = replaceVariables(message, studentProfile);
+      const enrollment = studentProfile.enrollments?.[0];
+      const personalizedMessage = replaceVariables(message, studentProfile, enrollment?.course || {});
 
       try {
         await evolutionApi.sendMessage("tds_suporte_audiovisual", num, personalizedMessage);
@@ -157,7 +157,7 @@ export default function BroadcastCenter() {
                <Info size={14} />
                <span className="text-[10px] font-bold uppercase">Como funciona</span>
              </div>
-             <p className="text-[10px] text-text-dim leading-relaxed">O sistema buscará automaticamente os dados vinculados ao número do WhatsApp no banco de dados do SISEC via Supabase.</p>
+             <p className="text-[10px] text-text-dim leading-relaxed">O sistema buscará automaticamente os dados vinculados ao número do WhatsApp via LMS API.</p>
           </div>
         </div>
 
