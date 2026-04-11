@@ -332,11 +332,20 @@ def otp_send(body: OtpSendRequest):
     evo_key = settings.get("evolution_key")
     evo_inst = settings.get("evolution_instance")
 
-    if evo_key and evo_url:
+    n8n_url = settings.get("n8n_webhook_url", "")
+    if n8n_url:
+        try:
+            requests.post(n8n_url, json={"phone": phone, "code": code}, timeout=10)
+        except Exception as e:
+            print(f"[OTP] Falha ao chamar n8n: {e}")
+    elif evo_key and evo_url:
         try:
             requests.post(
                 f"{evo_url}/message/sendText/{evo_inst}",
-                json={"number": phone, "text": f"🔐 Seu código TDS: *{code}*\n\nVálido por 5 minutos. Não compartilhe."},
+                json={
+                    "number": phone,
+                    "text": f"🔐 Seu código TDS: *{code}*\n\nVálido por 5 minutos. Não compartilhe com ninguém.",
+                },
                 headers={"apikey": evo_key},
                 timeout=10,
             )
