@@ -1,0 +1,113 @@
+/* TDS Aurora - LMS Lite Style System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lexend:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* Aurora Color Tokens */
+  --bg-deep: #000a14;
+  --bg-surface: #001529;
+  --primary: #003366;
+  --primary-light: #004d99;
+  --secondary: #008080;
+  --secondary-glow: rgba(0, 128, 128, 0.4);
+  --accent: #f4bf00;
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+  --text-muted: #64748b;
+  --border: rgba(255, 255, 255, 0.08);
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+body {
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, .font-heading {
+  font-family: 'Lexend', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--secondary);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px var(--secondary-glow);
+}
+
+/* Premium Gradients */
+.aurora-gradient {
+  background: radial-gradient(circle at top right, rgba(0, 128, 128, 0.15), transparent),
+              radial-gradient(circle at bottom left, rgba(0, 51, 102, 0.2), transparent);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--text-main) 30%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Component Overrides */
+.btn-aurora {
+  background: var(--secondary);
+  color: var(--bg-deep);
+  font-weight: 700;
+  padding: 12px 28px;
+  border-radius: 100px;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-aurora:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px var(--secondary-glow);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+}
+
+.btn-outline:hover {
+  border-color: var(--secondary);
+  background: var(--glass);
+}
+
+/* Course Progress */
+.progress-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--secondary), var(--primary-light));
+  transition: width 1s ease-out;
+}

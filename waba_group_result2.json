@@ -1,0 +1,1 @@
+{"error":{"message":"Your request has violated JSON schema constraint 'required' for the JSON field 'participants.0', please check the JSON schema for the JSON field 'participants.0' and make sure your request is valid for missing : 'user'","code":100,"type":"OAuthException","fbtrace_id":"AMmOcjxmMLImTeuMZ23mmKN"}}

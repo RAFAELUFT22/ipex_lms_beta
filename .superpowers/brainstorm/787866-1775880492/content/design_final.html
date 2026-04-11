@@ -1,0 +1,44 @@
+<h2>Design Final: Fluxos & Dashboard</h2>
+<p class="subtitle">Seções 3 e 4: A Experiência do Aluno e a Automação</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Fluxo n8n (A Catraca)</div>
+    <div class="mockup-body">
+      <div style="font-size: 0.85em; line-height: 1.4;">
+        <div style="padding: 5px; border-bottom: 1px solid #eee;">📥 <b>Webhook:</b> Chatwoot / WhatsApp</div>
+        <div style="padding: 5px; border-bottom: 1px solid #eee; background: #f9f9f9;">📝 <b>Log:</b> Insert <code>learning_logs</code> (Audit)</div>
+        <div style="padding: 5px; border-bottom: 1px solid #eee;">🧠 <b>Logic:</b> MCQ Check / Lesson Done</div>
+        <div style="padding: 5px; background: #e8f5e9;">🚀 <b>Update:</b> Supabase <code>enrollments</code></div>
+      </div>
+      <p style="font-size: 0.75em; color: #666; margin-top: 10px;">
+        *Usando <b>SERVICE_ROLE</b> para garantir que o n8n tenha poder total de escrita.
+      </p>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Dashboard SPA (Vite)</div>
+    <div class="mockup-body">
+      <div style="border: 1px solid #ddd; border-radius: 4px; padding: 10px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+          <b>TDS LMS</b> <span>👤 Aluno</span>
+        </div>
+        <div class="placeholder" style="height: 40px; margin-bottom: 10px;">
+          Curso: Gestão de Turismo 
+          <div style="background: var(--primary); width: 65%; height: 5px; border-radius: 5px;"></div>
+        </div>
+        <div style="font-size: 0.8em; color: var(--primary); font-weight: bold;">
+          ✨ Atualizado em tempo real!
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons" style="margin-top: 20px;">
+  <div class="pros">
+    <h4>Benefícios do Realtime</h4>
+    <p>O aluno não precisa atualizar a página. Quando ele responde o quiz no WhatsApp, o Dashboard brilha verde na hora. Isso gera <b>"UAU"</b> no engajamento.</p>
+  </div>
+</div>

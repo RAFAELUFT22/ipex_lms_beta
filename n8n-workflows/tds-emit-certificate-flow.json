@@ -1,0 +1,58 @@
+{
+  "name": "TDS — Emit Certificate Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tds-emit-certificate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-cert",
+      "name": "Webhook: Emitir Certificado",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const body = $input.item.json.body || {};\nconst courseName = body.courseName || 'Produção Audiovisual';\nconst studentName = body.studentName || 'Aluno TDS';\nconst certId = 'KRV-TDS-' + Math.random().toString(36).substring(2,8).toUpperCase();\nconst date = new Date().toLocaleDateString('pt-BR');\n\nconst html = `\n<!DOCTYPE html><html><head><meta charset='utf-8'><style>\nbody{font-family:'Arial',sans-serif;text-align:center;padding:40px;border:10px solid #003366;margin:20px;background:#fcfcfc;} \nh1{color:#003366;font-size:3em;text-transform:uppercase;}\nh2{color:#008080;} \n.info{font-size:1.5em;margin:30px 0;} \n.code{color:#555;font-size:1em;margin-top:50px;font-style:italic;} \n</style></head>\n<body>\n  <h1>Certificado de Conclusão</h1>\n  <h2>Projeto Territórios de Desenvolvimento Social - IPEX</h2>\n  <p class='info'>Certificamos que <strong>${studentName}</strong> concluiu com êxito o curso livre de <strong>${courseName}</strong> em ${date}.</p>\n  <p class='info'>Aproveitamento: 100% | Carga Horária: 40h</p>\n  <p class='code'>Código de Autenticidade: ${certId}</p>\n</body></html>\n`;\n\nreturn [{ json: { html, certId } }];"
+      },
+      "id": "node-generate-cert",
+      "name": "Gerar Certificado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $('Gerar Certificado').item.json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      },
+      "id": "node-respond",
+      "name": "Responder HTML",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [600, 300]
+    }
+  ],
+  "connections": {
+    "Webhook: Emitir Certificado": {
+      "main": [[{ "node": "Gerar Certificado", "type": "main", "index": 0 }]]
+    },
+    "Gerar Certificado": {
+      "main": [[{ "node": "Responder HTML", "type": "main", "index": 0 }]]
+    }
+  }
+}

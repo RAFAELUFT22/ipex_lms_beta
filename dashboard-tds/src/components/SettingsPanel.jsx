@@ -139,6 +139,13 @@ export default function SettingsPanel() {
         <Field label="ID do Inbox" name="chatwoot_inbox_id" value={settings.chatwoot_inbox_id} onChange={handleChange} placeholder="1" />
       </Section>
 
+      {/* WhatsApp Cloud API */}
+      <Section title="WhatsApp Cloud API — Oficial (OTP/Certs)">
+        <Field label="Phone Number ID" name="wa_phone_number_id" value={settings.wa_phone_number_id} onChange={handleChange} placeholder="1234567890" />
+        <Field label="Business Account ID" name="wa_business_id" value={settings.wa_business_id} onChange={handleChange} placeholder="1234567890" />
+        <Field label="Access Token" name="wa_cloud_token" value={settings.wa_cloud_token} onChange={handleChange} sensitive placeholder="EAAB..." />
+      </Section>
+
       {/* Feedback + Save */}
       {status && (
         <div className={`flex items-center gap-3 p-4 rounded-xl text-sm font-semibold ${

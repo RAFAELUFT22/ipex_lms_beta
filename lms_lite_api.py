@@ -14,14 +14,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # --- CONFIG ---
-DB_FILE = "/app/lms_lite_db.json"
-SETTINGS_FILE = "/app/settings.json"
-COURSES_FILE = "/app/courses/tds/tds-courses-2026.json"
+DB_FILE = os.getenv("DB_FILE", "/app/lms_lite_db.json")
+SETTINGS_FILE = os.getenv("SETTINGS_FILE", "/app/settings.json")
+COURSES_FILE = os.getenv("COURSES_FILE", "/app/courses/tds/tds-courses-2026.json")
+
+# Fallback paths for local development
+if not Path(DB_FILE).parent.exists() and Path("./lms_lite_db.json").exists():
+    DB_FILE = "./lms_lite_db.json"
+if not Path(SETTINGS_FILE).parent.exists():
+    if Path("./settings.json").exists():
+        SETTINGS_FILE = "./settings.json"
+    else:
+        SETTINGS_FILE = "settings.json" # create in current dir if app dir missing
+
 TDS_SECRET = os.getenv("CERT_SALT", "TDS_SECRET_2026")
-EVOLUTION_URL = os.getenv("EVOLUTION_URL", "https://evolution.ipexdesenvolvimento.cloud")
-EVOLUTION_KEY = os.getenv("EVOLUTION_KEY", "")
-EVOLUTION_INSTANCE = os.getenv("EVOLUTION_INSTANCE", "tds_suporte_audiovisual")
-VALIDATION_BASE_URL = os.getenv("VALIDATION_BASE_URL", "https://ops.ipexdesenvolvimento.cloud")
 ADMIN_KEY = os.getenv("ADMIN_KEY", "admin-tds-2026")
 
 # In-memory stores (reset on restart — ok for beta)
@@ -66,6 +72,9 @@ SETTINGS_DEFAULTS = {
     "chatwoot_url": "https://chatwoot.ipexdesenvolvimento.cloud",
     "chatwoot_token": "",
     "chatwoot_inbox_id": "",
+    "wa_cloud_token": "",
+    "wa_phone_number_id": "",
+    "wa_business_id": "",
 }
 
 
@@ -283,12 +292,17 @@ def otp_send(body: OtpSendRequest):
     code = str(random.randint(100000, 999999))
     _otp_store[phone] = {"code": code, "expires": time.time() + 300, "attempts": 0}
 
-    if EVOLUTION_KEY:
+    settings = load_settings()
+    evo_url = settings.get("evolution_url")
+    evo_key = settings.get("evolution_key")
+    evo_inst = settings.get("evolution_instance")
+
+    if evo_key and evo_url:
         try:
             requests.post(
-                f"{EVOLUTION_URL}/message/sendText/{EVOLUTION_INSTANCE}",
+                f"{evo_url}/message/sendText/{evo_inst}",
                 json={"number": phone, "text": f"🔐 Seu código TDS: *{code}*\n\nVálido por 5 minutos. Não compartilhe."},
-                headers={"apikey": EVOLUTION_KEY},
+                headers={"apikey": evo_key},
                 timeout=10,
             )
         except Exception as e:
@@ -365,6 +379,9 @@ class SettingsUpdate(BaseModel):
     chatwoot_url: Optional[str] = None
     chatwoot_token: Optional[str] = None
     chatwoot_inbox_id: Optional[str] = None
+    wa_cloud_token: Optional[str] = None
+    wa_phone_number_id: Optional[str] = None
+    wa_business_id: Optional[str] = None
 
 
 @app.put("/settings")
@@ -374,11 +391,6 @@ def put_settings(body: SettingsUpdate, x_admin_key: Optional[str] = Header(defau
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     current.update(updates)
     save_settings(current)
-    # Refresh runtime env vars so current process picks up new keys
-    global EVOLUTION_URL, EVOLUTION_KEY, EVOLUTION_INSTANCE
-    EVOLUTION_URL = current.get("evolution_url", EVOLUTION_URL)
-    EVOLUTION_KEY = current.get("evolution_key", EVOLUTION_KEY)
-    EVOLUTION_INSTANCE = current.get("evolution_instance", EVOLUTION_INSTANCE)
     return {"status": "saved"}
 
 

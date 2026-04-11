@@ -1,0 +1,40 @@
+<h2>Provisionamento do Supabase</h2>
+<p class="subtitle">Como você prefere rodar o Supabase no seu ecossistema TDS?</p>
+
+<div class="options">
+  <div class="option" data-choice="cloud" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Supabase Cloud (PaaS)</h3>
+      <p><b>Recomendado.</b> Rápido, grátis para começar, sem erros de "400 Bad Request" no seu servidor. Conecta via API.</p>
+      <small>Ideal para o LMS Lite focar em funcionalidades.</small>
+    </div>
+  </div>
+  <div class="option" data-choice="self" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Self-Hosted (Docker)</h3>
+      <p>Tentaremos corrigir o erro de provisionamento no seu servidor. Mais complexo de manter, mas tudo fica sob seu controle.</p>
+      <small>Exige configuração fina de memória e redes no Dokploy.</small>
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>Prós Cloud</h4>
+    <ul>
+      <li>Zero manutenção</li>
+      <li>Confiabilidade alta</li>
+      <li>Auth e Storage pronto</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Contras Self-Hosted</h4>
+    <ul>
+      <li>Consome RAM (CPU) local</li>
+      <li>Backup sob sua responsabilidade</li>
+      <li>Erros de rede como o que você teve</li>
+    </ul>
+  </div>
+</div>

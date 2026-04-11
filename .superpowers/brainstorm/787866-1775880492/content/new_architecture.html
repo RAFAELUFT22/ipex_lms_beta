@@ -1,0 +1,57 @@
+<h2>Nova Arquitetura: Supabase-First (LMS Lite)</h2>
+<p class="subtitle">Frappe deixa de ser o centro e passa a ser um satélite (ou reinstalado depois).</p>
+
+<div class="mockup">
+  <div class="mockup-header">Fluxo de Dados TDS + Supabase</div>
+  <div class="mockup-body">
+    <div style="display: flex; justify-content: space-around; align-items: center; padding: 20px; text-align: center;">
+      
+      <div class="card" style="width: 150px;">
+        <div class="label">Entrada</div>
+        <p><b>WhatsApp / SISEC</b></p>
+        <small>n8n Orquestra</small>
+      </div>
+
+      <div style="font-size: 24px;">➡️</div>
+
+      <div class="card" style="width: 200px; border: 2px solid var(--primary);">
+        <div class="label" style="background: var(--primary); color: white;">Coração</div>
+        <h3>Supabase</h3>
+        <p>PostgreSQL<br>Auth (Magic Link)<br>Real-time</p>
+      </div>
+
+      <div style="font-size: 24px;">➡️</div>
+
+      <div class="card" style="width: 150px;">
+        <div class="label">Saída</div>
+        <p><b>LMS Lite Dashboard</b></p>
+        <small>Vite + Tailwind</small>
+      </div>
+
+    </div>
+    
+    <div style="margin-top: 20px; padding: 10px; border-top: 1px dashed #ccc;">
+      <p><b>Vantagem:</b> Independência total do Frappe. O LMS Lite torna-se a aplicação principal, rápida e estável.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Pergunta sobre os Dados:</h3>
+  <div class="options">
+    <div class="option" data-choice="new" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>Começar do Zero</h3>
+        <p>Novos alunos via SISEC (Google Forms) entram direto no Supabase.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="migrate" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>Migrar Dados</h3>
+        <p>Preciso extrair os alunos que já estão no Frappe para o Supabase.</p>
+      </div>
+    </div>
+  </div>
+</div>

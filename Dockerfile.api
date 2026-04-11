@@ -1,0 +1,9 @@
+FROM python:3.12-slim
+WORKDIR /app
+RUN pip install requests uvicorn fastapi
+COPY lms_lite_api.py .
+COPY lms_lite_db.json .
+COPY lms_lite_cert_utils.py .
+COPY courses/ /app/courses/
+EXPOSE 8081
+CMD ["python", "lms_lite_api.py"]

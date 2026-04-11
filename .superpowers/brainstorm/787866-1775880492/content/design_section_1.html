@@ -1,0 +1,41 @@
+<h2>Design Detalhado: Infra & Schema</h2>
+<p class="subtitle">Seção 1: O Alicerce do TDS-LMS Lite</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Plano de Deploy (Nativo)</div>
+    <div class="mockup-body">
+      <ol>
+        <li><code>git clone</code> do repo oficial do Supabase Docker.</li>
+        <li>Ajuste do <code>.env</code> interno:
+          <ul>
+            <li><code>KONG_HTTP_PORT=8001</code></li>
+            <li><code>SITE_URL=ops.tds.cloud</code></li>
+          </ul>
+        </li>
+        <li>Injeção da rede <code>kreativ_education_net</code> no docker-compose.</li>
+        <li><code>docker compose up -d</code> no terminal.</li>
+      </ol>
+      <div class="label" style="color: green;">✅ Resolve Erro 400 do Dokploy</div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Modelo de Dados (Postgres)</div>
+    <div class="mockup-body">
+      <ul style="font-size: 0.9em;">
+        <li><b>profiles:</b> id, whatsapp (unique), name, role, metadata.</li>
+        <li><b>courses:</b> id, slug, title, category, description, active.</li>
+        <li><b>enrollments:</b> id, student_id, course_id, status (ativo/concluido), progress_percent.</li>
+        <li><b>learning_logs:</b> id, student_id, type (quiz_answer, lesson_read, catraca_trigger), payload (JSONB), created_at.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Fluxo da "Audit Table" (DLQ/Reporting)</h3>
+  <div class="placeholder" style="padding: 15px; border-left: 5px solid var(--primary);">
+    Toda vez que o n8n recebe um evento do WhatsApp, ele grava primeiro na <code>learning_logs</code>. Se o processamento da catraca falhar, o log já está lá para auditoria e retentativa manual/automática.
+  </div>
+</div>

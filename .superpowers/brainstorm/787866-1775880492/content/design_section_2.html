@@ -1,0 +1,40 @@
+<h2>Design Detalhado: Segurança & Redes</h2>
+<p class="subtitle">Seção 2: Blindando e Expondo o Sistema</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Gestão de Segredos</div>
+    <div class="mockup-body">
+      <ul style="font-size: 0.85em;">
+        <li><b>JWT_SECRET:</b> Chave mestra para Auth (Geral/Admin).</li>
+        <li><b>ANON_KEY:</b> Usada pelo Dashboard (SDK) com RLS ativo.</li>
+        <li><b>SERVICE_ROLE_KEY:</b> Usada pelo n8n (Bypass RLS para updates).</li>
+      </ul>
+      <div class="label" style="background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; padding: 5px;">
+        ⚠️ Nunca expor a SERVICE_ROLE no Frontend.
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Topologia de Rede (Traefik)</div>
+    <div class="mockup-body">
+      <p style="font-size: 0.9em;"><b>Traefik (Dokploy)</b> na rede <code>kreativ_net</code>:</p>
+      <ul style="font-size: 0.85em;">
+        <li>🌐 <code>api-lms.ipex...cloud</code> ➡️ <b>Kong (8000)</b></li>
+        <li>🌐 <code>ops.ipex...cloud</code> ➡️ <b>Vite App (80)</b></li>
+      </ul>
+      <p style="font-size: 0.8em; color: gray;">O Supabase fica "escondido" atrás do Kong, que gerencia o roteamento interno.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Modelo de Segurança RLS (Postgres)</h3>
+  <pre style="background: #f5f5f5; padding: 10px; font-size: 0.8em;">
+-- Exemplo de Política RLS
+CREATE POLICY "Alunos veem apenas seu próprio progresso"
+ON enrollments FOR SELECT
+USING (auth.uid() = student_id);
+  </pre>
+</div>

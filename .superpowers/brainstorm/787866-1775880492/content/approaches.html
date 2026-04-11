@@ -1,0 +1,44 @@
+<h2>Abordagens de Implementação</h2>
+<p class="subtitle">Escolha como o Supabase se integrará ao seu ecossistema TDS.</p>
+
+<div class="cards">
+  
+  <div class="card" data-choice="clean-slate" onclick="toggleSelect(this)">
+    <div class="label" style="background: var(--primary); color: white;">Recomendado</div>
+    <h3>1. The Clean Slate</h3>
+    <p><b>Supabase como Core.</b> O LMS Lite Dashboard (Vite) fala diretamente com o Supabase via SDK. O n8n apenas "carimba" a entrada do aluno via WhatsApp.</p>
+    <ul>
+      <li>✅ <b>Velocidade:</b> Real-time nativo e sem delay de intermediários.</li>
+      <li>✅ <b>Simplicidade:</b> Aposenta o <code>lms_lite_api.py</code> (Python).</li>
+      <li>⚠️ <b>Segurança:</b> Exige configuração de RLS (Row Level Security) no Postgres.</li>
+    </ul>
+  </div>
+
+  <div class="card" data-choice="orchestrated" onclick="toggleSelect(this)">
+    <h3>2. Orchestrated Flow</h3>
+    <p><b>n8n como Gateway.</b> O Dashboard não fala com o Supabase. Ele chama Webhooks do n8n, que então consultam o Supabase.</p>
+    <ul>
+      <li>✅ <b>Controle:</b> Lógica de negócio complexa fica centralizada no n8n.</li>
+      <li>⚠️ <b>Latência:</b> Mais lento (Dashboard → n8n → Supabase → n8n → Dashboard).</li>
+      <li>⚠️ <b>Complexidade:</b> Muitos workflows para gerenciar cada ação simples.</li>
+    </ul>
+  </div>
+
+  <div class="card" data-choice="hybrid-edge" onclick="toggleSelect(this)">
+    <h3>3. Hybrid Edge</h3>
+    <p><b>Edge Functions.</b> Usar Supabase Edge Functions (Deno) para substituir scripts Python e partes do n8n.</p>
+    <ul>
+      <li>✅ <b>Moderno:</b> Tudo dentro da stack do Supabase.</li>
+      <li>⚠️ <b>Curva de Aprendizado:</b> Exige aprender Deno/TypeScript para as funções de borda.</li>
+      <li>⚠️ <b>Overkill:</b> Pode ser complexo demais para o estágio atual do TDS.</li>
+    </ul>
+  </div>
+
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>Por que a Opção 1 (Clean Slate)?</h4>
+    <p>É a forma nativa de usar o Supabase. Você ganha o banco de dados, a autenticação e o real-time de uma só vez. O aluno completa uma aula no WhatsApp → o n8n atualiza o Supabase → o Dashboard do aluno brilha na hora sem que ele precise dar F5.</p>
+  </div>
+</div>

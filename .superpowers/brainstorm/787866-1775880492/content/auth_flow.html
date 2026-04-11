@@ -1,0 +1,44 @@
+<h2>Autenticação do Aluno (Login)</h2>
+<p class="subtitle">Como o aluno deve acessar o LMS Lite Dashboard?</p>
+
+<div class="options">
+  <div class="option" data-choice="whatsapp-magic" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Magic Link via WhatsApp</h3>
+      <p>O aluno pede o acesso no WhatsApp do TDS, o n8n gera um link único do Supabase e envia de volta. O aluno clica e entra direto, sem senha.</p>
+      <small>Mais seguro e integrado ao fluxo atual da "Catraca".</small>
+    </div>
+  </div>
+  <div class="option" data-choice="whatsapp-only" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Apenas Número de WhatsApp</h3>
+      <p>O aluno digita o número no Dashboard e entra. O Supabase valida se o número existe na base.</p>
+      <small>Experiência mais rápida, mas menos segura (qualquer um com o número entra).</small>
+    </div>
+  </div>
+  <div class="option" data-choice="email-pass" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>E-mail e Senha Tradicional</h3>
+      <p>O padrão do Supabase. O aluno cria uma conta com e-mail.</p>
+      <small>Mais burocrático para o perfil de aluno do TDS.</small>
+    </div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top: 20px;">
+  <div class="mockup-header">Preview: Fluxo Recomendado (Opção A)</div>
+  <div class="mockup-body">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px;">
+      <div style="background: #25D366; color: white; padding: 10px; border-radius: 10px; width: 80%; text-align: center;">
+        "Olá! Quero entrar na minha área do aluno."
+      </div>
+      <div style="font-size: 20px;">⬇️</div>
+      <div style="background: #e1f5fe; padding: 10px; border-radius: 10px; width: 80%; text-align: center; border-left: 5px solid #03a9f4;">
+        "Claro! Aqui está seu link de acesso único: <br><b>https://ops.tds.cloud/auth?token=xyz...</b>"
+      </div>
+    </div>
+  </div>
+</div>

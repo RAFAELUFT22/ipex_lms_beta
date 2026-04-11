@@ -1,0 +1,30 @@
+<h2>Estratégia para o Self-Hosted (Correção de Erros)</h2>
+<p class="subtitle">O erro "400 Bad Request" e "Network Error" no provisionamento provavelmente ocorreu porque o Supabase é uma stack pesada (10+ containers) e o Dokploy falhou ao tentar processar o arquivo docker-compose via API, ou houve conflito de portas.</p>
+
+<div class="options">
+  <div class="option" data-choice="native" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Deploy Nativo (Recomendado)</h3>
+      <p>Rodar o Supabase diretamente via terminal (<code>docker compose up -d</code>) na máquina, contornando o Dokploy.</p>
+      <small>Evita o erro 400 da API do Dokploy e garante que os containers subam corretamente. Vamos conectá-lo à rede do n8n/LMS.</small>
+    </div>
+  </div>
+  <div class="option" data-choice="dokploy" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Insistir no Dokploy</h3>
+      <p>Ajustar o docker-compose do Supabase, remover conflitos de porta e tentar criar manualmente pelo painel do Dokploy.</p>
+      <small>Mantém tudo no painel do Dokploy, mas corremos o risco de esbarrar novamente nos limites da API.</small>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Principais Ajustes Necessários (Para ambas as opções):</h3>
+  <ul>
+    <li><b>Portas:</b> O Supabase usa a porta 8000 por padrão, que já está sendo usada pelo Frappe Backend. Precisamos alterar para 8001 ou similar.</li>
+    <li><b>Banco de Dados:</b> O Supabase exige seu próprio Postgres. Ele vai rodar em paralelo com o seu Postgres atual (do Evolution/n8n/Chatwoot).</li>
+    <li><b>Rede:</b> Precisamos colocar o Supabase na rede <code>kreativ_net</code> para que o n8n e a nova API do LMS consigam conversar com ele.</li>
+  </ul>
+</div>

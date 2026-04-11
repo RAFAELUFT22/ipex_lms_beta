@@ -1,0 +1,116 @@
+--- lms_lite_prototype.html
++++ lms_lite_prototype.html
+@@ -74,21 +74,7 @@
+ 
+         <!-- Course Grid (Dynamic) -->
+         <div id="course-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+-            <!-- Shimmer/Loading items -->
+-            <div class="animate-pulse bg-white rounded-2xl p-4 shadow-sm">
+-                <div class="h-40 bg-gray-200 rounded-xl mb-4"></div>
+-                <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+-                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+-            </div>
+-            <div class="animate-pulse bg-white rounded-2xl p-4 shadow-sm">
+-                <div class="h-40 bg-gray-200 rounded-xl mb-4"></div>
+-                <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+-                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+-            </div>
+-            <div class="animate-pulse bg-white rounded-2xl p-4 shadow-sm">
+-                <div class="h-40 bg-gray-200 rounded-xl mb-4"></div>
+-                <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+-                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+-            </div>
++            <!-- Populated via JS -->
+         </div>
+     </main>
+ 
+@@ -107,6 +93,31 @@
+     <!-- Footer -->
+     <footer class="bg-gray-100 py-8 px-6 text-center border-t border-gray-200">
+         <p class="text-gray-500 text-sm">© 2026 IPEX / UFT / FAPTO / MDS - Projeto TDS</p>
+     </footer>
+ 
++    <!-- Modal de Módulos & Certificado -->
++    <div id="course-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex flex-col items-center justify-center p-4">
++        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
++            <button onclick="closeModal()" class="absolute top-4 right-4 bg-gray-100 w-8 h-8 rounded-full font-bold text-gray-500 hover:bg-gray-200">X</button>
++            <h3 id="modal-title" class="text-2xl font-bold text-[#003366] mb-2">Nome do Curso</h3>
++            <p id="modal-desc" class="text-gray-600 mb-6">Explore o conteúdo deste curso. Ao atingir 100% de conclusão, você poderá emitir o seu certificado automático.</p>
++            
++            <div id="modal-modules" class="space-y-4 mb-6">
++                <!-- Módulos carregados aqui -->
++            </div>
++            
++            <div class="border-t border-gray-200 pt-6 flex justify-between items-center">
++                <div>
++                    <span class="text-sm font-semibold text-gray-500">Progresso Atual:</span>
++                    <span id="modal-progress-text" class="text-lg font-bold text-[#008080] ml-2">0%</span>
++                </div>
++                <button id="cert-btn" onclick="requestCertificate()" class="hidden bg-[#FFCC00] text-[#003366] px-6 py-2 rounded-lg font-bold shadow hover:brightness-110 flex items-center gap-2">
++                    <svg xmlns="http://www.w0.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
++                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.286 1.05A3.981 3.981 0 0115 15a3.981 3.981 0 01-2.659-1.03 1 1 0 01-.286-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L11 4.323V3a1 1 0 01-1-1zm-5.65 4.69a1 1 0 01.894-1.79l1.599.8L10.795 4.12 10 3a1 1 0 00-2 0v1.323L4.046 5.905l-1.599-.8a1 1 0 00-.894 1.79l1.233.616-1.738 5.42a1 1 0 00.286 1.05A3.981 3.981 0 005 15a3.981 3.981 0 002.659-1.03 1 1 0 00.286-1.05l-1.738-5.42 1.233-.617z" clip-rule="evenodd" />
++                    </svg>
++                    Emitir Certificado
++                </button>
++            </div>
++        </div>
++    </div>
++
+@@ -115,11 +126,11 @@
+         const mockCourses = [
+-            { title: "Agricultura Sustentável", progress: 45, image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=400" },
+-            { title: "Empreendedorismo e Finanças", progress: 12, image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=400" },
+-            { title: "IA no Meu Bolso", progress: 90, image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=400" }
++            { id: 1, title: "Agricultura Sustentável", progress: 45, image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=400", modules: ["Módulo 1: Consciência Ambiental", "Módulo 2: Técnicas Verdes"] },
++            { id: 2, title: "Produção Audiovisual", progress: 100, image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=400", modules: ["Módulo 1: Roteiro e Decupagem", "Módulo 2: Iluminação e Filmagem", "Módulo 3: Edição Final"] },
++            { id: 3, title: "IA no Meu Bolso", progress: 90, image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=400", modules: ["Módulo 1: O que é IA?", "Módulo 2: Prompt Engineering"] }
+         ];
++        
++        let activeCourse = null;
+ 
+         async function loadCourses() {
+             const grid = document.getElementById('course-grid');
+@@ -144,7 +155,7 @@
+             const grid = document.getElementById('course-grid');
+             grid.innerHTML = courses.map(course => `
+-                <div class="course-card bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer">
++                <div onclick="openCourseModal(${course.id})" class="course-card bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer">
+                     <div class="h-40 bg-gray-200 relative">
+                         <img src="${course.image}" class="w-full h-full object-cover">
+@@ -165,6 +176,37 @@
+ 
+         window.onload = loadCourses;
++        
++        function openCourseModal(id) {
++            activeCourse = mockCourses.find(c => c.id === id);
++            if (!activeCourse) return;
++            
++            document.getElementById('modal-title').innerText = activeCourse.title;
++            document.getElementById('modal-progress-text').innerText = activeCourse.progress + '%';
++            
++            const modulesHtml = activeCourse.modules.map((m, idx) => `
++                <div class="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer">
++                    <div class="w-8 h-8 rounded-full ${idx === 0 || activeCourse.progress > 50 ? 'bg-[#008080] text-white' : 'bg-gray-200 text-gray-500'} flex items-center justify-center font-bold text-sm">
++                        ${idx + 1}
++                    </div>
++                    <span class="font-medium text-gray-700">${m}</span>
++                </div>
++            `).join('');
++            document.getElementById('modal-modules').innerHTML = modulesHtml;
++            
++            const certBtn = document.getElementById('cert-btn');
++            if (activeCourse.progress >= 100) certBtn.classList.remove('hidden');
++            else certBtn.classList.add('hidden');
++            
++            document.getElementById('course-modal').classList.remove('hidden');
++        }
++        
++        function closeModal() {
++            document.getElementById('course-modal').classList.add('hidden');
++        }
++        
++        function requestCertificate() {
++            alert(`Gerando certificado para ${activeCourse.title}... (Conectando via webhook n8n)`);
++        }
+ 
+         // Chatwoot Integration
