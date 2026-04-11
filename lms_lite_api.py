@@ -69,7 +69,7 @@ SETTINGS_DEFAULTS = {
     "evolution_url": "https://evolution.ipexdesenvolvimento.cloud",
     "evolution_key": "",
     "evolution_instance": "tds_suporte_audiovisual",
-    "chatwoot_url": "https://chatwoot.ipexdesenvolvimento.cloud",
+    "chatwoot_url": "https://chat.ipexdesenvolvimento.cloud",
     "chatwoot_token": "",
     "chatwoot_inbox_id": "",
     "wa_cloud_token": "",

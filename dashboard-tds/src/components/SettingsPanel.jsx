@@ -134,7 +134,7 @@ export default function SettingsPanel() {
 
       {/* Chatwoot */}
       <Section title="Chatwoot — Inbox Humana">
-        <Field label="URL" name="chatwoot_url" value={settings.chatwoot_url} onChange={handleChange} placeholder="https://chatwoot.ipexdesenvolvimento.cloud" />
+        <Field label="URL" name="chatwoot_url" value={settings.chatwoot_url} onChange={handleChange} placeholder="https://chat.ipexdesenvolvimento.cloud" />
         <Field label="Token de Agente" name="chatwoot_token" value={settings.chatwoot_token} onChange={handleChange} sensitive placeholder="seu-token-chatwoot" />
         <Field label="ID do Inbox" name="chatwoot_inbox_id" value={settings.chatwoot_inbox_id} onChange={handleChange} placeholder="1" />
       </Section>

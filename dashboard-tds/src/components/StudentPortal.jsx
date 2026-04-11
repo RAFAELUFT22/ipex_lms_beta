@@ -5,8 +5,8 @@ import { lmsLiteApi } from '../api/lms_lite';
 import { supabase } from '../lib/supabase';
 
 const VALIDATE_BASE = import.meta.env.VITE_APP_URL || 'https://ops.ipexdesenvolvimento.cloud';
-const CHATWOOT_TOKEN = import.meta.env.VITE_CHATWOOT_WEBSITE_TOKEN || ''; // Should be in .env
-const CHATWOOT_BASE_URL = 'https://chatwoot.ipexdesenvolvimento.cloud';
+const CHATWOOT_TOKEN = import.meta.env.VITE_CHATWOOT_WEBSITE_TOKEN || 'twnJ2K7tWtP2Fqey97p4hcwV';
+const CHATWOOT_BASE_URL = import.meta.env.VITE_CHATWOOT_BASE_URL || 'https://chat.ipexdesenvolvimento.cloud';
 
 export default function StudentPortal() {
   const [step, setStep] = useState('phone'); // 'phone' | 'otp' | 'portal'
