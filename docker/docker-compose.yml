@@ -27,6 +27,7 @@ volumes:
   mail_data:
   mail_state:
   mail_config:
+  lms_lite_data:
 
 services:
 
@@ -413,4 +414,54 @@ services:
       - "traefik.http.services.kreativ-webmail.loadbalancer.server.port=8888"
     depends_on:
       - mailserver
+
+  # ---------------------------------------------------------------------------
+  # TDS OPS DASHBOARD (React + Nginx)
+  # ---------------------------------------------------------------------------
+
+  tds-ops:
+    build:
+      context: ../dashboard-tds
+      dockerfile: Dockerfile
+    container_name: kreativ-tds-ops
+    restart: unless-stopped
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kreativ-tds-ops.rule=Host(`ops.ipexdesenvolvimento.cloud`)"
+      - "traefik.http.routers.kreativ-tds-ops.entrypoints=websecure"
+      - "traefik.http.routers.kreativ-tds-ops.tls=true"
+      - "traefik.http.routers.kreativ-tds-ops.tls.certresolver=letsencrypt"
+      - "traefik.http.services.kreativ-tds-ops.loadbalancer.server.port=80"
+      - "traefik.docker.network=dokploy-network"
+
+  # ---------------------------------------------------------------------------
+  # LMS LITE API (FastAPI — Python)
+  # ---------------------------------------------------------------------------
+
+  lms-lite-api:
+    build:
+      context: ..
+      dockerfile: Dockerfile.api
+    container_name: kreativ-lms-lite-api
+    restart: unless-stopped
+    environment:
+      ADMIN_KEY: ${ADMIN_KEY:-admin-tds-2026}
+      CERT_SALT: ${CERT_SALT:-TDS_SECRET_2026}
+      DB_FILE: /app/lms_lite_db.json
+      SETTINGS_FILE: /app/settings.json
+    volumes:
+      - lms_lite_data:/app
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kreativ-lms-api.rule=Host(`api-lms.ipexdesenvolvimento.cloud`)"
+      - "traefik.http.routers.kreativ-lms-api.entrypoints=websecure"
+      - "traefik.http.routers.kreativ-lms-api.tls=true"
+      - "traefik.http.routers.kreativ-lms-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.kreativ-lms-api.loadbalancer.server.port=8081"
+      - "traefik.docker.network=dokploy-network"
+
 # GitOps Trigger Test
