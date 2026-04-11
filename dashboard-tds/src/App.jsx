@@ -30,9 +30,8 @@ import StudentPortal from './components/StudentPortal';
 import ValidateCert from './pages/ValidateCert';
 
 export default function App() {
-  // Public route: certificate validation
+  // Public route: certificate validation (computed before hooks, returned after)
   const urlHash = window.location.pathname.match(/^\/validate\/([a-f0-9]+)$/)?.[1];
-  if (urlHash) return <ValidateCert hash={urlHash} />;
 
   const [viewMode, setViewMode] = useState("admin"); // "admin" or "student"
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -42,6 +41,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("groups");
   const [simulationMode, setSimulationMode] = useState(false);
   const [error, setError] = useState("");
+
+  if (urlHash) return <ValidateCert hash={urlHash} />;
 
   const handleLogin = (e) => {
     e.preventDefault();
