@@ -1,35 +1,43 @@
-from datetime import datetime, timezone
 import json
+import logging
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal, Optional
 
+import requests
 from fastapi import APIRouter, Header, HTTPException, Query
 from pydantic import BaseModel, Field
-import requests
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 ADMIN_KEY = os.getenv("ADMIN_KEY", "admin-tds-2026")
 DB_FILE = os.getenv("DB_FILE", "/app/lms_lite_db.json")
+SETTINGS_FILE = os.getenv("SETTINGS_FILE", "/app/settings.json")
 
-ANYTHINGLLM_URL = os.getenv("ANYTHINGLLM_URL", "")
-ANYTHINGLLM_KEY = os.getenv("ANYTHINGLLM_KEY", "")
-ANYTHINGLLM_WORKSPACE = os.getenv("ANYTHINGLLM_WORKSPACE", "tds")
+if not Path(DB_FILE).parent.exists() and Path("./lms_lite_db.json").exists():
+    DB_FILE = "./lms_lite_db.json"
+if not Path(SETTINGS_FILE).parent.exists() and Path("./settings.json").exists():
+    SETTINGS_FILE = "./settings.json"
 
 EVOLUTION_URL = os.getenv("EVOLUTION_URL", "").rstrip("/")
 EVOLUTION_KEY = os.getenv("EVOLUTION_KEY", "")
 EVOLUTION_INSTANCE = os.getenv("EVOLUTION_INSTANCE", "tds_suporte_audiovisual")
-
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+FRIENDLY_AI_ERROR = "O Tutor está revisando os manuais, tente novamente em instantes."
 
 
 # --- DB helpers (local copies to avoid circular import with lms_lite_api) ---
 
 def load_db() -> dict:
     if not Path(DB_FILE).exists():
-        return {"students": {}, "certificates": {}, "communities": {}, "webhook_events": [], "quiz_bank": {}, "notification_log": [], "tracking": []}
-    with open(DB_FILE) as f:
+        return {
+            "students": {}, "certificates": {}, "communities": {},
+            "webhook_events": [], "quiz_bank": {}, "notification_log": [],
+            "tracking": [], "course_workspace_links": {},
+        }
+    with open(DB_FILE, encoding="utf-8") as f:
         db = json.load(f)
     db.setdefault("students", {})
     db.setdefault("certificates", {})
@@ -38,12 +46,30 @@ def load_db() -> dict:
     db.setdefault("quiz_bank", {})
     db.setdefault("notification_log", [])
     db.setdefault("tracking", [])
+    db.setdefault("course_workspace_links", {})
     return db
 
 
 def save_db(db: dict):
-    with open(DB_FILE, "w") as f:
+    with open(DB_FILE, "w", encoding="utf-8") as f:
         json.dump(db, f, indent=2, ensure_ascii=False)
+
+
+def load_settings() -> dict:
+    defaults = {
+        "anythingllm_url": os.getenv("ANYTHINGLLM_URL", "https://llm.ipexdesenvolvimento.cloud"),
+        "anythingllm_key": os.getenv("ANYTHINGLLM_KEY", ""),
+        "anythingllm_workspace": os.getenv("ANYTHINGLLM_WORKSPACE", "tds"),
+    }
+    if not Path(SETTINGS_FILE).exists():
+        return defaults
+    try:
+        with open(SETTINGS_FILE, encoding="utf-8") as f:
+            saved = json.load(f)
+        defaults.update(saved)
+    except Exception as exc:
+        logger.error("Failed to load settings: %s", exc)
+    return defaults
 
 
 def now_iso() -> str:
@@ -100,27 +126,90 @@ def send_unified_reply(phone: str, message: str, channel: str = "whatsapp") -> d
     return {"status": "sent", "channel": channel, "whatsapp": wa_ok, "telegram": tg_ok, "phone": phone}
 
 
-# --- AnythingLLM helper ---
+# --- AnythingLLM helpers ---
 
-def _call_anythingllm(workspace: str, message: str, session_id: str) -> str:
-    if not ANYTHINGLLM_URL or not ANYTHINGLLM_KEY:
-        return "Tutor IA não configurado. Configure ANYTHINGLLM_URL e ANYTHINGLLM_KEY."
+def get_ai_response(message: str, workspace: str, session_id: str) -> str:
+    settings = load_settings()
+    llm_url = settings.get("anythingllm_url", "").rstrip("/")
+    llm_key = settings.get("anythingllm_key", "")
+
+    if not llm_url or not llm_key:
+        logger.error("AnythingLLM is not configured (url/key missing).")
+        return FRIENDLY_AI_ERROR
+
     try:
         resp = requests.post(
-            f"{ANYTHINGLLM_URL}/api/v1/workspace/{workspace}/chat",
-            headers={
-                "Authorization": f"Bearer {ANYTHINGLLM_KEY}",
-                "Content-Type": "application/json",
-            },
+            f"{llm_url}/api/v1/workspace/{workspace}/chat",
+            headers={"Authorization": f"Bearer {llm_key}", "Content-Type": "application/json"},
             json={"message": message, "mode": "chat", "sessionId": session_id},
             timeout=30,
         )
         if resp.status_code >= 400:
-            return f"Erro do tutor IA: {resp.status_code}"
+            logger.error("AnythingLLM error (%s): %s", resp.status_code, resp.text)
+            return FRIENDLY_AI_ERROR
         data = resp.json()
-        return data.get("textResponse") or data.get("text") or "Sem resposta do tutor IA."
+        return data.get("textResponse") or data.get("response") or data.get("text") or FRIENDLY_AI_ERROR
     except Exception as exc:
-        return f"Erro de conexão com o tutor IA: {exc}"
+        logger.exception("AnythingLLM request failed: %s", exc)
+        return FRIENDLY_AI_ERROR
+
+
+def resolve_workspace(db: dict, course_slug: Optional[str], fallback: str = "tds") -> str:
+    links = db.get("course_workspace_links", {})
+    if course_slug and links.get(course_slug):
+        return links[course_slug]
+    settings = load_settings()
+    return settings.get("anythingllm_workspace") or fallback
+
+
+def resolve_phone_from_session(authorization: Optional[str]) -> tuple[Optional[str], Optional[str]]:
+    if not authorization or not authorization.startswith("Bearer "):
+        return None, None
+    token = authorization.split(" ", 1)[1]
+    try:
+        import lms_lite_api  # local import to avoid module import cycle
+        session = lms_lite_api._sessions.get(token)
+        if not session:
+            return None, token
+        if datetime.now().timestamp() > session.get("expires", 0):
+            lms_lite_api._sessions.pop(token, None)
+            return None, token
+        return session.get("phone"), token
+    except Exception as exc:
+        logger.error("Failed to resolve session token: %s", exc)
+        return None, token
+
+
+def extract_phone(payload: "WebhookPayload") -> Optional[str]:
+    if payload.phone:
+        return payload.phone
+    event = payload.provider_event or {}
+    for candidate in [
+        event.get("phone"),
+        event.get("from"),
+        event.get("sender"),
+        event.get("senderNumber"),
+        event.get("data", {}).get("key", {}).get("remoteJid", "").split("@")[0],
+    ]:
+        if candidate:
+            return str(candidate)
+    return None
+
+
+def extract_message(payload: "WebhookPayload") -> str:
+    if payload.message:
+        return payload.message
+    event = payload.provider_event or {}
+    for candidate in [
+        event.get("message"),
+        event.get("text"),
+        event.get("body"),
+        event.get("data", {}).get("message", {}).get("conversation"),
+        event.get("data", {}).get("message", {}).get("extendedTextMessage", {}).get("text"),
+    ]:
+        if candidate:
+            return str(candidate)
+    return ""
 
 
 # --- Auth helper ---
@@ -144,7 +233,7 @@ class BroadcastRequest(BaseModel):
 
 
 class ChatQueryRequest(BaseModel):
-    phone: str
+    phone: Optional[str] = None
     message: str
     workspace: Optional[str] = None
     course_slug: Optional[str] = None
@@ -153,6 +242,11 @@ class ChatQueryRequest(BaseModel):
 class SetModeRequest(BaseModel):
     phone: str
     mode: Literal["bot", "human", "new"]
+
+
+class CourseWorkspaceLinkRequest(BaseModel):
+    course_slug: str
+    workspace_slug: str
 
 
 class WebhookPayload(BaseModel):
@@ -164,31 +258,71 @@ class WebhookPayload(BaseModel):
 
 # --- Routes ---
 
+@router.post("/admin/courses/link_workspace")
+def link_course_workspace(
+    body: CourseWorkspaceLinkRequest,
+    x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key"),
+):
+    """Link a course slug to a specific AnythingLLM workspace."""
+    require_admin_key(x_admin_key)
+    db = load_db()
+    db.setdefault("course_workspace_links", {})[body.course_slug] = body.workspace_slug
+    save_db(db)
+    return {"status": "linked", "course_slug": body.course_slug, "workspace_slug": body.workspace_slug}
+
+
+@router.get("/admin/courses/link_workspace")
+def list_course_workspace_links(
+    x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key"),
+):
+    require_admin_key(x_admin_key)
+    db = load_db()
+    return {"links": db.get("course_workspace_links", {})}
+
+
 @router.post("/whatsapp/webhook")
 def whatsapp_webhook(payload: WebhookPayload):
-    """Receive webhook payload from n8n / Evolution API and persist to DB."""
+    """Receive webhook from n8n / Evolution, persist event and auto-reply via AI."""
     db = load_db()
-    event = {
-        "phone": payload.phone,
-        "message": payload.message,
-        "timestamp": payload.timestamp or now_iso(),
-        "provider_event": payload.provider_event,
+    phone = extract_phone(payload)
+    message = extract_message(payload)
+
+    course_slug = None
+    workspace = "tds"
+    ai_reply = None
+
+    if phone and message:
+        student = db.get("students", {}).get(phone, {})
+        course_slug = student.get("current_course")
+        workspace = resolve_workspace(db, course_slug, fallback="tds")
+        # Only call AI for bot-mode students
+        mode = student.get("status_atendimento", "bot")
+        if mode == "bot":
+            ai_reply = get_ai_response(message, workspace, session_id=phone)
+        # Update student activity
+        if phone in db.get("students", {}):
+            db["students"][phone]["last_activity_at"] = now_iso()
+
+    event_record = {
         "received_at": now_iso(),
+        "phone": phone,
+        "message": message,
+        "course_slug": course_slug,
+        "workspace": workspace,
+        "reply": ai_reply,
+        "provider_event": payload.provider_event,
     }
     events = db.setdefault("webhook_events", [])
-    events.insert(0, event)
-    # Keep last 500 events
+    events.insert(0, event_record)
     db["webhook_events"] = events[:500]
-
-    # If student exists, update last_activity_at
-    if payload.phone and payload.phone in db.get("students", {}):
-        db["students"][payload.phone]["last_activity_at"] = now_iso()
-
     save_db(db)
+
     return {
         "status": "accepted",
-        "received_at": event["received_at"],
-        "phone": payload.phone,
+        "received_at": event_record["received_at"],
+        "phone": phone,
+        "workspace": workspace,
+        "reply": ai_reply,
     }
 
 
@@ -196,19 +330,14 @@ def whatsapp_webhook(payload: WebhookPayload):
 def get_communities(x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key")):
     require_admin_key(x_admin_key)
     db = load_db()
-    communities = db.get("communities", {})
-    return list(communities.values())
+    return list(db.get("communities", {}).values())
 
 
 @router.post("/communities")
 def create_community(body: CommunityCreate, x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key")):
     require_admin_key(x_admin_key)
     db = load_db()
-    community = {
-        **body.model_dump(),
-        "members": [],
-        "created_at": now_iso(),
-    }
+    community = {**body.model_dump(), "members": [], "created_at": now_iso()}
     db["communities"][body.slug] = community
     save_db(db)
     return {"status": "created", "community": community}
@@ -232,55 +361,43 @@ def broadcast_to_community(slug: str, body: BroadcastRequest, x_admin_key: Optio
     community = db.get("communities", {}).get(slug)
     if not community:
         raise HTTPException(404, "Comunidade não encontrada")
-
     members = community.get("members", [])
-    sent = 0
-    failed = 0
+    sent, failed = 0, 0
     for phone in members:
-        ok = _send_whatsapp(phone, body.message)
-        if ok:
+        if _send_whatsapp(phone, body.message):
             sent += 1
         else:
             failed += 1
-
     return {"status": "done", "slug": slug, "sent": sent, "failed": failed, "total": len(members)}
 
 
 @router.post("/chat/query")
-def chat_query(body: ChatQueryRequest):
-    """Forward message to AnythingLLM and return AI reply."""
+def chat_query(body: ChatQueryRequest, authorization: Optional[str] = Header(default=None)):
+    """Send message to AnythingLLM with course-aware workspace routing and session memory."""
     db = load_db()
-    student = db.get("students", {}).get(body.phone, {})
+    session_phone, token = resolve_phone_from_session(authorization)
+    phone = session_phone or body.phone
 
-    # Determine workspace: explicit > course_workspace_links > student current_course > default
-    workspace = body.workspace
-    if not workspace and body.course_slug:
-        links = db.get("course_workspace_links", {})
-        workspace = links.get(body.course_slug)
-    if not workspace and student.get("current_course"):
-        links = db.get("course_workspace_links", {})
-        workspace = links.get(student["current_course"])
-    if not workspace:
-        workspace = ANYTHINGLLM_WORKSPACE or "tds"
+    if not phone:
+        raise HTTPException(status_code=400, detail="phone é obrigatório quando não há Authorization token")
 
-    reply = _call_anythingllm(workspace, body.message, session_id=body.phone)
+    student = db.get("students", {}).get(phone, {})
+    course_slug = body.course_slug or student.get("current_course")
+    workspace = body.workspace or resolve_workspace(db, course_slug, fallback="tds")
+    session_id = token or phone
 
-    # Append to student conversation log
-    if body.phone in db.get("students", {}):
-        conversation = db["students"][body.phone].setdefault("conversation", [])
+    reply = get_ai_response(body.message, workspace, session_id=session_id)
+
+    # Persist conversation history on student record
+    if phone in db.get("students", {}):
+        conversation = db["students"][phone].setdefault("conversation", [])
         conversation.append({"role": "student", "text": body.message, "ts": now_iso()})
         conversation.append({"role": "ai", "text": reply, "ts": now_iso()})
-        # Keep last 100 messages
-        db["students"][body.phone]["conversation"] = conversation[-100:]
-        db["students"][body.phone]["last_activity_at"] = now_iso()
+        db["students"][phone]["conversation"] = conversation[-100:]
+        db["students"][phone]["last_activity_at"] = now_iso()
         save_db(db)
 
-    return {
-        "status": "ok",
-        "phone": body.phone,
-        "workspace": workspace,
-        "reply": reply,
-    }
+    return {"status": "ok", "phone": phone, "course_slug": course_slug, "workspace": workspace, "reply": reply}
 
 
 @router.post("/chat/set_mode")
@@ -306,11 +423,11 @@ def list_webhook_events(
     events = db.get("webhook_events", [])
 
     if filter:
-        filter_lower = filter.lower()
+        lowered = filter.lower()
         events = [
             e for e in events
-            if filter_lower in (e.get("phone") or "").lower()
-            or filter_lower in (e.get("message") or "").lower()
+            if lowered in (e.get("phone") or "").lower()
+            or lowered in (e.get("message") or "").lower()
         ]
 
     return {"items": events[:limit], "total": len(events), "filter": filter}
@@ -323,7 +440,11 @@ def get_student_conversation(phone: str, x_admin_key: Optional[str] = Header(def
     student = db.get("students", {}).get(phone)
     if not student:
         raise HTTPException(404, "Aluno não encontrado")
-    return {
-        "phone": phone,
-        "messages": student.get("conversation", []),
-    }
+    # Return from student conversation log (typed messages) + webhook events for this phone
+    typed = student.get("conversation", [])
+    webhook_msgs = [
+        {"role": "student", "text": e.get("message", ""), "ts": e.get("received_at", ""), "via": "webhook"}
+        for e in db.get("webhook_events", [])
+        if e.get("phone") == phone and e.get("message")
+    ]
+    return {"phone": phone, "messages": typed, "webhook_messages": webhook_msgs[:50]}
