@@ -4,6 +4,7 @@ import os
 import random
 import secrets
 import time
+import math
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -11,9 +12,10 @@ from typing import Optional
 import requests
 import csv
 import io
-from fastapi import FastAPI, HTTPException, Header, File, UploadFile
+from fastapi import FastAPI, HTTPException, Header, File, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 from lms_lite_v2_routes import router as v2_router
 
@@ -37,6 +39,7 @@ ADMIN_KEY = os.getenv("ADMIN_KEY", "admin-tds-2026")
 # In-memory stores (reset on restart — ok for beta)
 _otp_store: dict = {}   # phone -> {"code": "123456", "expires": timestamp, "attempts": 0}
 _sessions: dict = {}     # token -> {"phone": "556399...", "expires": timestamp}
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="otp/verify")
 
 app = FastAPI(title="TDS LMS Lite API")
 
@@ -53,13 +56,15 @@ app.include_router(v2_router)
 # --- DB HELPERS ---
 def load_db() -> dict:
     if not Path(DB_FILE).exists():
-        return {"students": {}, "certificates": {}, "communities": {}, "webhook_events": []}
+        return {"students": {}, "certificates": {}, "communities": {}, "webhook_events": [], "quiz_bank": {}, "notification_log": []}
     with open(DB_FILE) as f:
         db = json.load(f)
     db.setdefault("students", {})
     db.setdefault("certificates", {})
     db.setdefault("communities", {})
     db.setdefault("webhook_events", [])
+    db.setdefault("quiz_bank", {})
+    db.setdefault("notification_log", [])
     return db
 
 
@@ -144,11 +149,13 @@ def build_student_response(whatsapp: str, s: dict) -> dict:
 
     enrollments = []
     if course_slug:
+        quiz_results = s.get("enrollments", {}).get(course_slug, {}).get("quiz_results")
         enrollments.append({
             "id": f"{whatsapp}:{course_slug}",
             "status": status,
             "progress_percent": progress,
             "certificate_hash": cert_hash,
+            "quiz_results": quiz_results,
             "course": {
                 "slug": course_slug,
                 "title": course_title(course_slug),
@@ -164,6 +171,7 @@ def build_student_response(whatsapp: str, s: dict) -> dict:
         "localidade": s.get("localidade") or sisec.get("localidade", ""),
         "city": s.get("city") or sisec.get("localidade", ""),
         "role": s.get("role", "student"),
+        "last_activity_at": s.get("last_activity_at"),
         "enrollments": enrollments,
         "catraca": {
             "estado": s.get("estado_catraca", "inativo"),
@@ -210,6 +218,11 @@ class IssueCertRequest(BaseModel):
     whatsapp: str
     course_slug: str
 
+class QuizSubmit(BaseModel):
+    phone: str
+    course_slug: str
+    answers: list[int]
+
 
 # --- AUTH HELPER ---
 def get_session(authorization: Optional[str]) -> Optional[str]:
@@ -224,6 +237,18 @@ def get_session(authorization: Optional[str]) -> Optional[str]:
         del _sessions[token]
         return None
     return session["phone"]
+
+
+def get_current_student(token: str) -> dict:
+    session = _sessions.get(token)
+    if not session or time.time() > session["expires"]:
+        raise HTTPException(401, "Sessão inválida ou expirada")
+    db = load_db()
+    phone = session["phone"]
+    student = db["students"].get(phone)
+    if not student:
+        raise HTTPException(404, "Aluno não encontrado")
+    return {"whatsapp": phone, **student}
 
 
 # --- ROUTES ---
@@ -268,9 +293,51 @@ def update_progress(body: ProgressUpdate):
     s = db["students"].get(body.whatsapp, {})
     s["progress"] = body.progress
     s["current_course"] = body.course_slug
+    s["last_activity_at"] = datetime.now().isoformat()
     db["students"][body.whatsapp] = s
     save_db(db)
     return {"new_progress": body.progress}
+
+
+@app.post("/quiz/submit")
+async def submit_quiz(data: QuizSubmit, token: str = Depends(oauth2_scheme)):
+    student = get_current_student(token)
+    if student["whatsapp"] != data.phone:
+        raise HTTPException(403, "Você só pode enviar o quiz da sua própria conta.")
+
+    db = load_db()
+    questions = db.get("quiz_bank", {}).get(data.course_slug)
+    if not questions:
+        raise HTTPException(404, "Quiz não encontrado para este curso")
+
+    correct = sum(
+        1 for i, q in enumerate(questions)
+        if i < len(data.answers) and data.answers[i] == q["correct"]
+    )
+    total = len(questions)
+    passed = correct >= math.ceil(total / 2)
+
+    student_record = db["students"].setdefault(data.phone, {})
+    enrollments = student_record.setdefault("enrollments", {})
+    course_enrollment = enrollments.setdefault(data.course_slug, {})
+    course_enrollment["quiz_results"] = {
+        "score": correct,
+        "total": total,
+        "passed": passed,
+        "updated_at": datetime.now().isoformat(),
+    }
+    student_record["last_activity_at"] = datetime.now().isoformat()
+    db["students"][data.phone] = student_record
+    save_db(db)
+    return {"status": "ok", "score": correct, "total": total, "passed": passed, "quiz_results": course_enrollment["quiz_results"]}
+
+
+@app.get("/student/me/quiz/{course_slug}")
+def get_my_quiz_result(course_slug: str, token: str = Depends(oauth2_scheme)):
+    student = get_current_student(token)
+    enrollments = student.get("enrollments", {})
+    quiz_results = enrollments.get(course_slug, {}).get("quiz_results")
+    return {"course_slug": course_slug, "quiz_results": quiz_results}
 
 
 # Courses

@@ -32,6 +32,7 @@ export const lmsLiteApi = {
     }),
 
   getMe: () => apiFetch('/session/me'),
+  getMyQuizResult: (courseSlug) => apiFetch(`/student/me/quiz/${courseSlug}`),
 
   getCourses: () => apiFetch('/courses'),
 
