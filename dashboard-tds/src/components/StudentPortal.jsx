@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, GraduationCap, Award, MessageSquare, Download, CheckCircle, Clock, Send, RefreshCw, Trophy } from 'lucide-react';
+import { BookOpen, GraduationCap, Award, MessageSquare, Download, CheckCircle, Clock, Send, RefreshCw, Trophy, ClipboardList, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { lmsLiteApi } from '../api/lms_lite';
 import { supabase } from '../lib/supabase';
+import QuizPlayer from './student/QuizPlayer';
 
 const VALIDATE_BASE = import.meta.env.VITE_APP_URL || 'https://ops.ipexdesenvolvimento.cloud';
 const CHATWOOT_TOKEN = import.meta.env.VITE_CHATWOOT_WEBSITE_TOKEN || 'twnJ2K7tWtP2Fqey97p4hcwV';
@@ -16,6 +17,7 @@ export default function StudentPortal() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [certPreview, setCertPreview] = useState(null);
+  const [quizModal, setQuizModal] = useState(null); // { courseSlug, courseTitle }
 
   // Restore session on mount
   useEffect(() => {
@@ -248,7 +250,7 @@ export default function StudentPortal() {
                   Quiz: {enroll.quiz_results.score}/{enroll.quiz_results.total}
                 </div>
               )}
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <a
                   href="https://wa.me/5563999374165?text=/ajuda"
                   target="_blank"
@@ -257,6 +259,12 @@ export default function StudentPortal() {
                 >
                   <MessageSquare size={16} /> Falar com Tutor
                 </a>
+                <button
+                  className="btn btn-outline flex-1 py-2 text-sm gap-2"
+                  onClick={() => setQuizModal({ courseSlug: enroll.course?.slug, courseTitle: enroll.course?.title })}
+                >
+                  <ClipboardList size={16} /> Fazer Quiz
+                </button>
                 {enroll.status === 'completed' && (
                   <>
                     <button
@@ -330,6 +338,31 @@ export default function StudentPortal() {
           </div>
         ))}
       </div>
+
+      {/* Quiz Modal */}
+      {quizModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="glass-card p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <ClipboardList size={20} className="text-primary" />
+                Quiz — {quizModal.courseTitle}
+              </h3>
+              <button onClick={() => setQuizModal(null)} className="text-text-muted hover:text-white transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <QuizPlayer
+              courseSlug={quizModal.courseSlug}
+              phone={student?.whatsapp}
+              onClose={() => {
+                setQuizModal(null);
+                lmsLiteApi.getMe().then(setStudent).catch(console.error);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Certificate Preview Modal */}
       {certPreview && (

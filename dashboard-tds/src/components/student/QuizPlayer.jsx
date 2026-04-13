@@ -1,211 +1,222 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, XCircle, ChevronRight, Award, RotateCcw, Loader } from 'lucide-react';
+import { lmsLiteApi } from '../../api/lms_lite';
 
-const STEPS = {
-  loading: 'loading',
-  question: 'question',
-  feedback: 'feedback',
-  complete: 'complete',
-};
+const STEPS = { loading: 'loading', error: 'error', question: 'question', feedback: 'feedback', result: 'result' };
 
-export default function QuizPlayer({ quizId }) {
+export default function QuizPlayer({ courseSlug, phone, onClose }) {
   const [step, setStep] = useState(STEPS.loading);
-  const [selected, setSelected] = useState(null);
-  const [score, setScore] = useState(0);
+  const [questions, setQuestions] = useState([]);
   const [index, setIndex] = useState(0);
-
-  const questions = useMemo(
-    () => [
-      {
-        id: 1,
-        text: `Pergunta de exemplo para quiz ${quizId}`,
-        options: ['Opção A', 'Opção B', 'Opção C'],
-        correct: 1,
-      },
-    ],
-    [quizId],
-  );
+  const [selected, setSelected] = useState(null);
+  const [answers, setAnswers] = useState([]);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    // TODO: replace with async fetch by quizId
-    setStep(STEPS.question);
-  }, []);
+    if (!courseSlug) return;
+    lmsLiteApi.getQuiz(courseSlug)
+      .then(data => {
+        if (!data.questions || data.questions.length === 0) {
+          setError('Nenhuma questão cadastrada para este curso ainda.');
+          setStep(STEPS.error);
+          return;
+        }
+        setQuestions(data.questions);
+        setStep(STEPS.question);
+      })
+      .catch(err => {
+        setError(err.message || 'Erro ao carregar quiz.');
+        setStep(STEPS.error);
+      });
+  }, [courseSlug]);
+
+  const current = questions[index];
+  const progressPct = questions.length > 0
+    ? Math.round(((index + (step === STEPS.feedback ? 1 : 0)) / questions.length) * 100)
+    : 0;
 
   function confirmAnswer() {
-    const current = questions[index];
-    if (selected === current.correct) setScore((s) => s + 1);
     setStep(STEPS.feedback);
   }
 
-  function next() {
+  async function next() {
+    const newAnswers = [...answers, selected];
     const nextIndex = index + 1;
+
     if (nextIndex >= questions.length) {
-      setStep(STEPS.complete);
-      return;
+      // Submit all answers
+      setSubmitting(true);
+      try {
+        const res = await lmsLiteApi.submitQuiz(phone, courseSlug, newAnswers);
+        setResult(res);
+        setStep(STEPS.result);
+      } catch (err) {
+        setError(err.message || 'Erro ao enviar respostas. Tente novamente.');
+        setStep(STEPS.error);
+      } finally {
+        setSubmitting(false);
+      }
+    } else {
+      setAnswers(newAnswers);
+      setSelected(null);
+      setIndex(nextIndex);
+      setStep(STEPS.question);
     }
-    setSelected(null);
-    setIndex(nextIndex);
-    setStep(STEPS.question);
   }
 
-  const current = questions[index];
-  const progressPercent =
-    step === STEPS.complete
-      ? 100
-      : Math.round(((index + (step === STEPS.feedback ? 1 : 0)) / questions.length) * 100);
+  function restart() {
+    setStep(STEPS.loading);
+    setIndex(0);
+    setSelected(null);
+    setAnswers([]);
+    setResult(null);
+    setError('');
+    lmsLiteApi.getQuiz(courseSlug)
+      .then(data => { setQuestions(data.questions || []); setStep(STEPS.question); })
+      .catch(err => { setError(err.message); setStep(STEPS.error); });
+  }
 
-  /* ── Loading ─────────────────────────────────────────────── */
   if (step === STEPS.loading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-on-surface-variant">
-          <span className="material-symbols-outlined text-5xl text-primary animate-pulse">quiz</span>
-          <p className="font-bold font-headline text-on-surface">Carregando quiz...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center py-16 gap-4 text-text-dim">
+        <Loader size={32} className="animate-spin text-primary" />
+        <p className="text-sm">Carregando quiz...</p>
       </div>
     );
   }
 
-  /* ── Complete ─────────────────────────────────────────────── */
-  if (step === STEPS.complete) {
-    const passed = score >= Math.ceil(questions.length / 2);
+  if (step === STEPS.error) {
     return (
-      <div className="min-h-screen bg-surface flex flex-col items-center justify-center px-6 text-center space-y-6">
-        <span className="material-symbols-outlined text-8xl text-secondary">workspace_premium</span>
-        <div>
-          <span className="text-tertiary uppercase tracking-[0.05em] text-xs font-bold">
-            Quiz concluído
-          </span>
-          <p className="text-5xl font-bold text-primary font-headline mt-2">
-            {score}/{questions.length}
-          </p>
-          <p className="text-on-surface-variant mt-2 text-sm">
-            {passed ? 'Parabéns! Você foi aprovado.' : 'Continue estudando e tente novamente.'}
-          </p>
-        </div>
-
-        {passed && (
-          <div className="bg-secondary-fixed text-on-secondary-fixed rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2">
-            <span className="material-symbols-outlined text-base">workspace_premium</span>
-            Badge desbloqueada!
-          </div>
-        )}
-
-        <button
-          type="button"
-          className="bg-cerrado-gradient text-white rounded-xl py-4 px-8 font-bold w-full max-w-sm flex items-center justify-center gap-2"
-        >
-          <span className="material-symbols-outlined">verified</span>
-          Ver Certificado
-        </button>
+      <div className="text-center py-12 space-y-4">
+        <XCircle size={40} className="text-red-400 mx-auto" />
+        <p className="text-red-400 text-sm">{error}</p>
+        <button onClick={onClose} className="btn btn-outline text-sm px-6">Fechar</button>
       </div>
     );
   }
 
-  /* ── Question / Feedback ──────────────────────────────────── */
-  const isCorrect = selected === current.correct;
-
-  function getOptionClass(optionIndex) {
-    const isSelected = selected === optionIndex;
-
-    // During feedback
-    if (step === STEPS.feedback) {
-      if (optionIndex === current.correct) {
-        return 'bg-secondary-fixed text-on-secondary-fixed border-2 border-transparent';
-      }
-      if (isSelected && !isCorrect) {
-        return 'bg-tertiary-fixed text-on-tertiary-fixed border-2 border-transparent';
-      }
-      return 'bg-surface-container-high text-on-surface opacity-50 border-2 border-transparent';
-    }
-
-    // During question selection
-    if (isSelected) {
-      return 'bg-primary-fixed border-2 border-primary text-on-primary-fixed';
-    }
-    return 'bg-surface-container-high text-on-surface border-2 border-transparent hover:bg-surface-container-highest';
+  if (step === STEPS.result) {
+    const passed = result?.passed;
+    const score = result?.score ?? 0;
+    const total = result?.total ?? questions.length;
+    return (
+      <div className="text-center space-y-6 py-8">
+        <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto ${passed ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
+          {passed
+            ? <Award size={40} className="text-emerald-400" />
+            : <XCircle size={40} className="text-red-400" />}
+        </div>
+        <div>
+          <p className="text-4xl font-bold">{score}<span className="text-xl text-text-dim">/{total}</span></p>
+          <p className={`text-lg font-semibold mt-1 ${passed ? 'text-emerald-400' : 'text-red-400'}`}>
+            {passed ? 'Aprovado!' : 'Não aprovado'}
+          </p>
+          <p className="text-text-dim text-sm mt-2">
+            {passed
+              ? 'Parabéns! Você pode solicitar seu certificado agora.'
+              : 'Revise o material e tente novamente quando quiser.'}
+          </p>
+        </div>
+        <div className="flex gap-3 justify-center">
+          {!passed && (
+            <button onClick={restart} className="btn btn-outline text-sm flex items-center gap-2">
+              <RotateCcw size={14} /> Tentar Novamente
+            </button>
+          )}
+          <button onClick={onClose} className="btn btn-primary text-sm px-6">
+            {passed ? 'Ver Certificado' : 'Fechar'}
+          </button>
+        </div>
+      </div>
+    );
   }
+
+  const isCorrect = selected === current?.correct;
 
   return (
-    <div className="min-h-screen bg-surface pb-24">
-      {/* Progress bar at top */}
-      <div className="bg-surface-container-high h-1.5 w-full">
-        <div
-          className="bg-cerrado-gradient h-full transition-all duration-700 ease-out"
-          style={{ width: `${progressPercent}%` }}
-        />
+    <div className="space-y-6">
+      {/* Progress */}
+      <div className="space-y-1">
+        <div className="flex justify-between text-xs text-text-muted">
+          <span>Pergunta {index + 1} de {questions.length}</span>
+          <span>{progressPct}%</span>
+        </div>
+        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-full bg-primary transition-all duration-500" style={{ width: `${progressPct}%` }} />
+        </div>
       </div>
 
-      {/* Question card */}
-      <div className="bg-surface-container-low rounded-xl p-8 mx-4 my-6 shadow-cerrado-fab space-y-2">
-        <span className="text-tertiary uppercase tracking-[0.05em] text-xs font-bold">
-          Pergunta {index + 1} de {questions.length}
-        </span>
-        <p className="text-xl font-bold text-on-surface font-headline leading-tight">
-          {current.text}
-        </p>
+      {/* Question */}
+      <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+        <p className="text-lg font-semibold leading-snug">{current?.text}</p>
       </div>
 
       {/* Options */}
-      <div className="px-4 space-y-3">
-        {current.options.map((option, optionIndex) => (
-          <button
-            key={option}
-            type="button"
-            disabled={step === STEPS.feedback}
-            onClick={() => setSelected(optionIndex)}
-            className={`w-full rounded-xl py-4 px-6 font-bold text-left transition-all duration-200 ${getOptionClass(optionIndex)}`}
-          >
-            {option}
-          </button>
-        ))}
+      <div className="space-y-3">
+        {current?.options?.map((opt, i) => {
+          let cls = 'w-full text-left rounded-xl px-4 py-3 border font-medium text-sm transition-all duration-150 ';
+          if (step === STEPS.feedback) {
+            if (i === current.correct) cls += 'border-emerald-500 bg-emerald-500/20 text-emerald-300';
+            else if (i === selected && !isCorrect) cls += 'border-red-500 bg-red-500/20 text-red-300';
+            else cls += 'border-white/5 bg-white/5 text-text-muted opacity-50';
+          } else {
+            if (selected === i) cls += 'border-primary bg-primary/20 text-primary';
+            else cls += 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20';
+          }
+          return (
+            <button
+              key={i}
+              className={cls}
+              disabled={step === STEPS.feedback}
+              onClick={() => setSelected(i)}
+            >
+              <span className="font-mono text-xs mr-3 opacity-60">{String.fromCharCode(65 + i)}.</span>
+              {opt}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Confirm button */}
-      {step === STEPS.question && (
-        <div className="px-4 mt-6">
-          <button
-            type="button"
-            disabled={selected === null}
-            onClick={confirmAnswer}
-            className="bg-cerrado-gradient text-white rounded-xl py-4 px-8 font-bold w-full disabled:opacity-40 transition-opacity"
-          >
-            Confirmar resposta
-          </button>
+      {/* Feedback */}
+      {step === STEPS.feedback && (
+        <div className={`flex items-start gap-3 p-4 rounded-xl border ${isCorrect ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
+          {isCorrect
+            ? <CheckCircle size={18} className="text-emerald-400 mt-0.5 shrink-0" />
+            : <XCircle size={18} className="text-red-400 mt-0.5 shrink-0" />}
+          <div>
+            <p className={`font-semibold text-sm ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
+              {isCorrect ? 'Correto!' : 'Incorreto'}
+            </p>
+            {!isCorrect && (
+              <p className="text-text-dim text-xs mt-0.5">
+                Resposta correta: <strong>{current?.options?.[current.correct]}</strong>
+              </p>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Feedback banner */}
+      {/* Actions */}
+      {step === STEPS.question && (
+        <button
+          className="btn btn-primary w-full py-3 disabled:opacity-40"
+          disabled={selected === null}
+          onClick={confirmAnswer}
+        >
+          Confirmar Resposta
+        </button>
+      )}
       {step === STEPS.feedback && (
-        <div className="px-4 mt-6 space-y-3">
-          {isCorrect ? (
-            <div className="bg-secondary-fixed text-on-secondary-fixed p-4 rounded-xl flex gap-3 items-start">
-              <span className="material-symbols-outlined text-xl shrink-0">check_circle</span>
-              <div>
-                <p className="font-bold">Correto!</p>
-                <p className="text-sm opacity-80 mt-0.5">Excelente! Continue assim.</p>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-tertiary-fixed text-on-tertiary-fixed p-4 rounded-xl flex gap-3 items-start">
-              <span className="material-symbols-outlined text-xl shrink-0">cancel</span>
-              <div>
-                <p className="font-bold">Resposta incorreta.</p>
-                <p className="text-sm opacity-80 mt-0.5">
-                  A resposta certa era: {current.options[current.correct]}
-                </p>
-              </div>
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={next}
-            className="bg-cerrado-gradient text-white rounded-xl py-4 px-8 font-bold w-full flex items-center justify-center gap-2"
-          >
-            <span className="material-symbols-outlined">arrow_forward</span>
-            {index + 1 >= questions.length ? 'Ver resultado' : 'Próxima pergunta'}
-          </button>
-        </div>
+        <button
+          className="btn btn-primary w-full py-3 flex items-center justify-center gap-2"
+          onClick={next}
+          disabled={submitting}
+        >
+          {submitting ? <Loader size={16} className="animate-spin" /> : <ChevronRight size={16} />}
+          {index + 1 >= questions.length ? 'Ver Resultado' : 'Próxima Pergunta'}
+        </button>
       )}
     </div>
   );
