@@ -59,7 +59,7 @@ app.include_router(v2_router)
 # --- DB HELPERS ---
 def load_db() -> dict:
     if not Path(DB_FILE).exists():
-        return {"students": {}, "certificates": {}, "communities": {}, "webhook_events": [], "quiz_bank": {}, "notification_log": [], "tracking": []}
+        return {"students": {}, "certificates": {}, "communities": {}, "webhook_events": [], "quiz_bank": {}, "notification_log": [], "tracking": [], "course_workspace_links": {}}
     with open(DB_FILE) as f:
         db = json.load(f)
     db.setdefault("students", {})
@@ -69,6 +69,7 @@ def load_db() -> dict:
     db.setdefault("quiz_bank", {})
     db.setdefault("notification_log", [])
     db.setdefault("tracking", [])
+    db.setdefault("course_workspace_links", {})
     return db
 
 
