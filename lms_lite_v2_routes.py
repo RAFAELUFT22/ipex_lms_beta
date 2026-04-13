@@ -1,14 +1,39 @@
 from datetime import datetime, timezone
+import os
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Header, HTTPException, Query
 from pydantic import BaseModel, Field
+import requests
 
 router = APIRouter()
 
 
 # TODO: replace with shared settings import from lms_lite_api.py
 ADMIN_KEY = 'admin-tds-2026'
+
+
+def send_unified_reply(phone: str, message: str, channel: str = "whatsapp") -> dict:
+  """
+  Lightweight notifier used by admin broadcast/notification flows.
+  Today it proxies through Evolution (WhatsApp). Telegram is best-effort
+  and currently uses same transport when channel='both'.
+  """
+  if channel not in {"whatsapp", "telegram", "both"}:
+    raise ValueError("Canal inválido")
+
+  evo_url = os.getenv("EVOLUTION_URL", "https://evolution.ipexdesenvolvimento.cloud").rstrip("/")
+  evo_key = os.getenv("EVOLUTION_KEY", "")
+  evo_inst = os.getenv("EVOLUTION_INSTANCE", "tds_suporte_audiovisual")
+  if not evo_url or not evo_key:
+    raise RuntimeError("Integração Evolution não configurada")
+
+  url = f"{evo_url}/message/sendText/{evo_inst}"
+  payload = {"number": phone, "text": message}
+  resp = requests.post(url, json=payload, headers={"apikey": evo_key}, timeout=12)
+  if resp.status_code >= 400:
+    raise RuntimeError(f"Falha no envio: {resp.status_code}")
+  return {"status": "sent", "channel": "whatsapp", "phone": phone}
 
 
 class CommunityCreate(BaseModel):

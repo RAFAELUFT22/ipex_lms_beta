@@ -14,7 +14,9 @@ import {
   BookOpen,
   BrainCircuit,
   GraduationCap,
-  SlidersHorizontal
+  SlidersHorizontal,
+  ClipboardCheck,
+  BellRing
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -32,6 +34,8 @@ import CommunityManager from './components/CommunityManager';
 import WebhookMonitor from './components/WebhookMonitor';
 import SettingsPanel from './components/SettingsPanel';
 import ValidateCert from './components/ValidateCert';
+import QuizBuilder from './components/QuizBuilder';
+import NotificationCenter from './components/NotificationCenter';
 
 export default function App() {
   // Public route: certificate validation (computed before hooks, returned after)
@@ -177,6 +181,18 @@ export default function App() {
             onClick={() => setActiveTab("monitor")}
           />
           <NavItem
+            icon={<ClipboardCheck size={22} />}
+            label="Avaliações"
+            active={activeTab === "quiz"}
+            onClick={() => setActiveTab("quiz")}
+          />
+          <NavItem
+            icon={<BellRing size={22} />}
+            label="Notificações"
+            active={activeTab === "notifications"}
+            onClick={() => setActiveTab("notifications")}
+          />
+          <NavItem
             icon={<BarChart3 size={22} />}
             label="Métricas"
             active={activeTab === "metrics"}
@@ -237,6 +253,8 @@ export default function App() {
               {activeTab === "tutors" && "Gestão de Tutores"}
               {activeTab === "knowledge" && "Base de Conhecimento RAG"}
               {activeTab === "metrics" && "Métricas Operacionais"}
+              {activeTab === "quiz" && "Avaliações por Curso"}
+              {activeTab === "notifications" && "Motor de Notificações"}
               {activeTab === "settings" && "Configurações do Sistema"}
               {activeTab === "communities" && "Comunidades de Avisos"}
               {activeTab === "monitor" && "Monitor WhatsApp"}
@@ -250,6 +268,8 @@ export default function App() {
                 {activeTab === "tutors" && "Gerencie instâncias e agentes de atendimento."}
                 {activeTab === "knowledge" && "Alimente o cérebro da IA com manuais e regras do curso."}
                 {activeTab === "metrics" && "Visão analítica da performance educacional."}
+                {activeTab === "quiz" && "Crie e mantenha bancos de questões para cada curso."}
+                {activeTab === "notifications" && "Envie campanhas para todos, por curso ou por inatividade."}
                 {activeTab === "settings" && "Chaves de API e integrações — persistem no servidor."}
                 {activeTab === "communities" && "Grupos de avisos gerais para turmas e públicos."}
                 {activeTab === "monitor" && "Mensagens recebidas via webhook em tempo real."}
@@ -278,6 +298,8 @@ export default function App() {
             {activeTab === "tutors" && <TutorsManager />}
             {activeTab === "knowledge" && <KnowledgeBase />}
             {activeTab === "metrics" && <MetricsView />}
+            {activeTab === "quiz" && <QuizBuilder />}
+            {activeTab === "notifications" && <NotificationCenter />}
             {activeTab === "settings" && <SettingsPanel />}
             {activeTab === "communities" && <CommunityManager />}
             {activeTab === "monitor" && <WebhookMonitor />}
@@ -306,4 +328,3 @@ function NavItem({ icon, label, active, onClick }) {
     </button>
   );
 }
-
