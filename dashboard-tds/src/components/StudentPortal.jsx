@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, GraduationCap, Award, MessageSquare, Download, CheckCircle, Clock, Send, RefreshCw } from 'lucide-react';
+import { BookOpen, GraduationCap, Award, MessageSquare, Download, CheckCircle, Clock, Send, RefreshCw, Trophy } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { lmsLiteApi } from '../api/lms_lite';
 import { supabase } from '../lib/supabase';
@@ -242,6 +242,12 @@ export default function StudentPortal() {
                   <div className="bg-primary h-full transition-all duration-1000" style={{ width: `${enroll.progress_percent}%` }} />
                 </div>
               </div>
+              {enroll.quiz_results && (
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-bold text-violet-200">
+                  <Trophy size={14} />
+                  Quiz: {enroll.quiz_results.score}/{enroll.quiz_results.total}
+                </div>
+              )}
               <div className="flex gap-3">
                 <a
                   href="https://wa.me/5563999374165?text=/ajuda"
