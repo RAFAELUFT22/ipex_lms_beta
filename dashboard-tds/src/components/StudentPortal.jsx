@@ -258,12 +258,22 @@ export default function StudentPortal() {
                   <MessageSquare size={16} /> Falar com Tutor
                 </a>
                 {enroll.status === 'completed' && (
-                  <button
-                    className="btn btn-primary flex-1 py-2 text-sm gap-2"
-                    onClick={() => setCertPreview(enroll)}
-                  >
-                    <Download size={16} /> Ver Certificado
-                  </button>
+                  <>
+                    <button
+                      className="btn btn-primary flex-1 py-2 text-sm gap-2"
+                      onClick={() => setCertPreview(enroll)}
+                    >
+                      <Download size={16} /> Ver Certificado
+                    </button>
+                    <a
+                      className="btn btn-outline flex-1 py-2 text-sm gap-2"
+                      href={lmsLiteApi.getCertPdfUrl(enroll.certificate_hash)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <Download size={16} /> Baixar PDF
+                    </a>
+                  </>
                 )}
               </div>
             </div>
