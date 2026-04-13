@@ -43,6 +43,26 @@ export const lmsLiteApi = {
     }),
 
   validateCert: (hash) => apiFetch(`/validate_cert/${hash}`),
+  getCertPdfUrl: (hash) => `${API_BASE}/cert/${hash}/pdf`,
+  bulkImportStudents: (students) =>
+    apiFetch('/admin/students/bulk', {
+      method: 'POST',
+      headers: { 'X-Admin-Key': ADMIN_KEY },
+      body: JSON.stringify({ students }),
+    }),
+  getMetricsSummary: () =>
+    apiFetch('/admin/metrics/summary', {
+      headers: { 'X-Admin-Key': ADMIN_KEY },
+    }),
+  exportStudentLgpd: (phone) =>
+    apiFetch(`/student/${phone}/export`, {
+      headers: { 'X-Admin-Key': ADMIN_KEY },
+    }),
+  deleteStudentLgpd: (phone) =>
+    apiFetch(`/student/${phone}`, {
+      method: 'DELETE',
+      headers: { 'X-Admin-Key': ADMIN_KEY },
+    }),
 
   getSettings: () =>
     apiFetch('/settings', { headers: { 'X-Admin-Key': ADMIN_KEY } }),

@@ -14,6 +14,84 @@ export default function GroupManager({ simulation }) {
   const [list, setList] = useState("");
   const [groupName, setGroupName] = useState("");
   const [participants, setParticipants] = useState([]);
+  const [csvRows, setCsvRows] = useState([]);
+  const [importResult, setImportResult] = useState(null);
+
+  const parseCsvLine = (line) => {
+    const out = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i += 1) {
+      const ch = line[i];
+      if (ch === '"') {
+        const next = line[i + 1];
+        if (inQuotes && next === '"') {
+          current += '"';
+          i += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === ',' && !inQuotes) {
+        out.push(current.trim());
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    out.push(current.trim());
+    return out.map((v) => v.replace(/^"|"$/g, '').trim());
+  };
+
+  const handleCsvFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const content = await file.text();
+    const lines = content.split(/\r?\n/).filter((line) => line.trim());
+    if (lines.length < 2) {
+      setStatus({ type: 'error', message: 'CSV vazio ou inválido.' });
+      return;
+    }
+
+    const parsed = [];
+    for (let i = 1; i < lines.length; i += 1) {
+      const [nome = '', whatsapp = '', cpf = '', localidade = '', curso = ''] = parseCsvLine(lines[i]);
+      if (!whatsapp) continue;
+      parsed.push({ nome, whatsapp, cpf, localidade, curso });
+    }
+    setCsvRows(parsed);
+    setImportResult(null);
+  };
+
+  const confirmImportStudents = async () => {
+    if (!csvRows.length) return;
+    setIsLoading(true);
+    setImportResult(null);
+    try {
+      const payload = csvRows.map((row) => ({
+        whatsapp: row.whatsapp,
+        full_name: row.nome || 'Aluno',
+        cpf: row.cpf || undefined,
+        localidade: row.localidade || undefined,
+        course_slug: row.curso || undefined,
+      }));
+      const resp = await fetch('/api/admin/students/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Key': adminKey
+        },
+        body: JSON.stringify({ students: payload })
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.detail || 'Erro ao importar alunos.');
+      setImportResult(data);
+      setStatus({ type: 'success', message: 'Importação concluída com sucesso.' });
+    } catch (e) {
+      setStatus({ type: 'error', message: e.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const fetchGroups = async () => {
     setIsLoading(true);
@@ -115,6 +193,7 @@ export default function GroupManager({ simulation }) {
       </div>
 
       {activeSubTab === "import" ? (
+        <>
         <div className="glass-card p-6 animate-fade">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Upload size={20} className="text-primary" />
@@ -136,6 +215,56 @@ export default function GroupManager({ simulation }) {
             </button>
           </div>
         </div>
+        <div className="glass-card p-6 animate-fade">
+          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Users size={20} className="text-secondary" />
+            Importar Alunos (CSV)
+          </h3>
+          <p className="text-xs text-text-dim mb-3">Formato: nome,whatsapp,cpf,localidade,curso</p>
+          <input type="file" accept=".csv" onChange={handleCsvFile} className="w-full mb-4" />
+
+          {csvRows.length > 0 && (
+            <div className="space-y-4">
+              <div className="overflow-x-auto max-h-56 border border-border/40 rounded-lg">
+                <table className="w-full text-sm">
+                  <thead className="bg-white/5">
+                    <tr>
+                      <th className="p-2 text-left">Nome</th>
+                      <th className="p-2 text-left">WhatsApp</th>
+                      <th className="p-2 text-left">CPF</th>
+                      <th className="p-2 text-left">Localidade</th>
+                      <th className="p-2 text-left">Curso</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {csvRows.map((row, idx) => (
+                      <tr key={`${row.whatsapp}-${idx}`} className="border-t border-border/20">
+                        <td className="p-2">{row.nome}</td>
+                        <td className="p-2">{row.whatsapp}</td>
+                        <td className="p-2">{row.cpf}</td>
+                        <td className="p-2">{row.localidade}</td>
+                        <td className="p-2">{row.curso}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button className="btn btn-primary" disabled={isLoading} onClick={confirmImportStudents}>
+                {isLoading ? 'Importando...' : 'Importar'}
+              </button>
+            </div>
+          )}
+
+          {importResult && (
+            <div className="mt-4 text-sm">
+              <p>Criados: <strong>{importResult.created}</strong></p>
+              <p>Atualizados: <strong>{importResult.updated}</strong></p>
+              <p>Pulados: <strong>{importResult.skipped}</strong></p>
+              <p>Erros: <strong>{importResult.errors?.length || 0}</strong></p>
+            </div>
+          )}
+        </div>
+        </>
       ) : (
         <div className="space-y-6 animate-fade">
           {/* Insights Card */}

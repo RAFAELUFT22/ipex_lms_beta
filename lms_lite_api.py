@@ -5,7 +5,7 @@ import random
 import secrets
 import time
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -14,10 +14,11 @@ import csv
 import io
 from fastapi import FastAPI, HTTPException, Header, File, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse, JSONResponse, Response
 from fastapi.security import OAuth2PasswordBearer
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from lms_lite_v2_routes import router as v2_router
+from templates.certificate_template import generate_certificate_pdf
 
 # --- CONFIG ---
 DB_FILE = os.getenv("DB_FILE", "/app/lms_lite_db.json")
@@ -35,6 +36,7 @@ if not Path(SETTINGS_FILE).parent.exists():
 
 TDS_SECRET = os.getenv("CERT_SALT", "TDS_SECRET_2026")
 ADMIN_KEY = os.getenv("ADMIN_KEY", "admin-tds-2026")
+VALIDATION_BASE_URL = os.getenv("VALIDATION_BASE_URL", "https://ops.ipexdesenvolvimento.cloud")
 
 # In-memory stores (reset on restart — ok for beta)
 _otp_store: dict = {}   # phone -> {"code": "123456", "expires": timestamp, "attempts": 0}
@@ -56,7 +58,7 @@ app.include_router(v2_router)
 # --- DB HELPERS ---
 def load_db() -> dict:
     if not Path(DB_FILE).exists():
-        return {"students": {}, "certificates": {}, "communities": {}, "webhook_events": [], "quiz_bank": {}, "notification_log": []}
+        return {"students": {}, "certificates": {}, "communities": {}, "webhook_events": [], "quiz_bank": {}, "notification_log": [], "tracking": []}
     with open(DB_FILE) as f:
         db = json.load(f)
     db.setdefault("students", {})
@@ -65,6 +67,7 @@ def load_db() -> dict:
     db.setdefault("webhook_events", [])
     db.setdefault("quiz_bank", {})
     db.setdefault("notification_log", [])
+    db.setdefault("tracking", [])
     return db
 
 
@@ -224,6 +227,26 @@ class QuizSubmit(BaseModel):
     answers: list[int]
 
 
+class BulkStudentItem(BaseModel):
+    whatsapp: str
+    full_name: str
+    cpf: Optional[str] = None
+    localidade: Optional[str] = None
+    course_slug: Optional[str] = None
+
+
+class BulkStudentsRequest(BaseModel):
+    students: list[BulkStudentItem] = Field(default_factory=list)
+
+
+class EnrollmentRequest(BaseModel):
+    whatsapp: str
+    full_name: str
+    cpf: Optional[str] = None
+    localidade: Optional[str] = None
+    course_slug: str
+
+
 # --- AUTH HELPER ---
 def get_session(authorization: Optional[str]) -> Optional[str]:
     """Return phone from valid session token, or None."""
@@ -249,6 +272,20 @@ def get_current_student(token: str) -> dict:
     if not student:
         raise HTTPException(404, "Aluno não encontrado")
     return {"whatsapp": phone, **student}
+
+
+def now_iso() -> str:
+    return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+
+def parse_iso_date(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        normalized = value.replace("Z", "+00:00")
+        return datetime.fromisoformat(normalized)
+    except Exception:
+        return None
 
 
 # --- ROUTES ---
@@ -282,6 +319,8 @@ def upsert_student(body: StudentCreate):
     db = load_db()
     existing = db["students"].get(body.whatsapp, {})
     existing.update({k: v for k, v in body.model_dump().items() if v is not None})
+    existing["updated_at"] = now_iso()
+    existing.setdefault("created_at", now_iso())
     db["students"][body.whatsapp] = existing
     save_db(db)
     return {"status": "ok"}
@@ -293,8 +332,17 @@ def update_progress(body: ProgressUpdate):
     s = db["students"].get(body.whatsapp, {})
     s["progress"] = body.progress
     s["current_course"] = body.course_slug
-    s["last_activity_at"] = datetime.now().isoformat()
+    s["last_activity_at"] = now_iso()
+    s["updated_at"] = now_iso()
     db["students"][body.whatsapp] = s
+    tracking = db.setdefault("tracking", [])
+    tracking.append({
+        "type": "lesson_view",
+        "whatsapp": body.whatsapp,
+        "course_slug": body.course_slug,
+        "progress": body.progress,
+        "timestamp": now_iso(),
+    })
     save_db(db)
     return {"new_progress": body.progress}
 
@@ -324,9 +372,9 @@ async def submit_quiz(data: QuizSubmit, token: str = Depends(oauth2_scheme)):
         "score": correct,
         "total": total,
         "passed": passed,
-        "updated_at": datetime.now().isoformat(),
+        "updated_at": now_iso(),
     }
-    student_record["last_activity_at"] = datetime.now().isoformat()
+    student_record["last_activity_at"] = now_iso()
     db["students"][data.phone] = student_record
     save_db(db)
     return {"status": "ok", "score": correct, "total": total, "passed": passed, "quiz_results": course_enrollment["quiz_results"]}
@@ -338,6 +386,27 @@ def get_my_quiz_result(course_slug: str, token: str = Depends(oauth2_scheme)):
     enrollments = student.get("enrollments", {})
     quiz_results = enrollments.get(course_slug, {}).get("quiz_results")
     return {"course_slug": course_slug, "quiz_results": quiz_results}
+
+
+@app.post("/enrollment/request")
+def enrollment_request(body: EnrollmentRequest):
+    db = load_db()
+    existing = db["students"].get(body.whatsapp, {})
+    existing.update({
+        "whatsapp": body.whatsapp,
+        "name": body.full_name,
+        "full_name": body.full_name,
+        "cpf": body.cpf or existing.get("cpf", ""),
+        "localidade": body.localidade or existing.get("localidade", ""),
+        "current_course": body.course_slug,
+    })
+    existing.setdefault("progress", 0)
+    existing.setdefault("consent_date", now_iso())
+    existing.setdefault("created_at", now_iso())
+    existing["updated_at"] = now_iso()
+    db["students"][body.whatsapp] = existing
+    save_db(db)
+    return {"ok": True, "whatsapp": body.whatsapp, "consent_date": existing["consent_date"]}
 
 
 # Courses
@@ -381,6 +450,20 @@ def validate_cert(cert_hash: str):
     if not cert:
         return {"valid": False}
     return {"valid": True, **cert}
+
+
+@app.get("/cert/{cert_hash}/pdf")
+def download_certificate_pdf(cert_hash: str):
+    db = load_db()
+    cert = db["certificates"].get(cert_hash)
+    if not cert:
+        raise HTTPException(404, "Certificado não encontrado")
+    pdf_bytes = generate_certificate_pdf(cert)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="certificado_{cert_hash}.pdf"'},
+    )
 
 
 # OTP
@@ -449,6 +532,11 @@ def otp_verify(body: OtpVerifyRequest):
 
     db = load_db()
     s = db["students"].get(phone)
+    if s:
+        s["last_activity"] = now_iso()
+        s["updated_at"] = now_iso()
+        db["students"][phone] = s
+        save_db(db)
     student = build_student_response(phone, s) if s else None
 
     return {"token": token, "student": student}
@@ -635,6 +723,163 @@ def export_students_csv(x_admin_key: Optional[str] = Header(default=None)):
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=relatorio_alunos_tds.csv"}
     )
+
+
+@app.post("/admin/students/bulk")
+def bulk_upsert_students(body: BulkStudentsRequest, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    db = load_db()
+    created = 0
+    updated = 0
+    skipped = 0
+    errors = []
+
+    for item in body.students:
+        phone = item.whatsapp.strip()
+        if not phone:
+            skipped += 1
+            errors.append("Registro sem whatsapp")
+            continue
+
+        exists = phone in db["students"]
+        student = db["students"].get(phone, {})
+        student.update({
+            "whatsapp": phone,
+            "name": item.full_name,
+            "full_name": item.full_name,
+            "cpf": item.cpf or student.get("cpf", ""),
+            "localidade": item.localidade or student.get("localidade", ""),
+            "updated_at": now_iso(),
+        })
+        student.setdefault("created_at", now_iso())
+        student.setdefault("progress", 0)
+        db["students"][phone] = student
+
+        if item.course_slug:
+            student["current_course"] = item.course_slug
+            student.setdefault("progress", 0)
+
+        if exists:
+            updated += 1
+        else:
+            created += 1
+
+    save_db(db)
+    return {"created": created, "updated": updated, "skipped": skipped, "errors": errors}
+
+
+@app.get("/admin/metrics/summary")
+def metrics_summary(x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    db = load_db()
+    students = db.get("students", {})
+    courses = {c.get("slug"): c.get("title", c.get("slug")) for c in load_courses()}
+    cutoff = datetime.utcnow() - timedelta(days=7)
+
+    total_students = len(students)
+    active_students = 0
+    completed_students = 0
+    inactive_7d = 0
+    by_course_map = {}
+
+    for phone, student in students.items():
+        progress = int(student.get("progress", 0) or 0)
+        course_slug = student.get("current_course")
+        if progress > 0:
+            active_students += 1
+        if progress >= 100:
+            completed_students += 1
+
+        last_activity = (
+            parse_iso_date(student.get("last_activity"))
+            or parse_iso_date(student.get("updated_at"))
+            or parse_iso_date(student.get("created_at"))
+        )
+        if last_activity and last_activity < cutoff:
+            inactive_7d += 1
+
+        if course_slug:
+            item = by_course_map.setdefault(course_slug, {
+                "slug": course_slug,
+                "title": courses.get(course_slug, course_slug),
+                "enrolled": 0,
+                "progress_sum": 0,
+                "completed": 0,
+            })
+            item["enrolled"] += 1
+            item["progress_sum"] += progress
+            if progress >= 100:
+                item["completed"] += 1
+
+    by_course = []
+    for item in by_course_map.values():
+        enrolled = item["enrolled"] or 1
+        by_course.append({
+            "slug": item["slug"],
+            "title": item["title"],
+            "enrolled": item["enrolled"],
+            "avg_progress": round(item["progress_sum"] / enrolled, 2),
+            "completed": item["completed"],
+        })
+
+    day_counts = {}
+    for i in range(30):
+        dt = datetime.utcnow() - timedelta(days=i)
+        day_counts[dt.strftime("%Y-%m-%d")] = 0
+
+    for event in db.get("tracking", []):
+        ts = parse_iso_date(event.get("timestamp"))
+        if not ts:
+            continue
+        key = ts.strftime("%Y-%m-%d")
+        if key in day_counts:
+            day_counts[key] += 1
+
+    activity_by_day = [{"date": day, "lessons_viewed": day_counts[day]} for day in sorted(day_counts.keys())]
+    certificates_issued = len(db.get("certificates", {}))
+
+    return {
+        "total_students": total_students,
+        "active_students": active_students,
+        "completed_students": completed_students,
+        "inactive_7d": inactive_7d,
+        "by_course": by_course,
+        "activity_by_day": activity_by_day,
+        "certificates_issued": certificates_issued,
+    }
+
+
+@app.get("/student/{phone}/export")
+def export_student_data(phone: str, authorization: Optional[str] = Header(default=None), x_admin_key: Optional[str] = Header(default=None)):
+    if x_admin_key != ADMIN_KEY:
+        session_phone = get_session(authorization)
+        if session_phone != phone:
+            raise HTTPException(401, "Não autorizado para exportar este aluno")
+
+    db = load_db()
+    student = db.get("students", {}).get(phone)
+    if not student:
+        raise HTTPException(404, "Aluno não encontrado")
+
+    student_certs = [c for c in db.get("certificates", {}).values() if c.get("whatsapp") == phone]
+    tracking = [t for t in db.get("tracking", []) if t.get("whatsapp") == phone]
+    return {"student": student, "certificates": student_certs, "tracking": tracking}
+
+
+@app.delete("/student/{phone}")
+def delete_student(phone: str, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    db = load_db()
+    if phone not in db.get("students", {}):
+        raise HTTPException(404, "Aluno não encontrado")
+
+    del db["students"][phone]
+    cert_keys_to_remove = [k for k, c in db.get("certificates", {}).items() if c.get("whatsapp") == phone]
+    for key in cert_keys_to_remove:
+        del db["certificates"][key]
+    db["tracking"] = [t for t in db.get("tracking", []) if t.get("whatsapp") != phone]
+    save_db(db)
+    return {"deleted": True, "data_removed": ["student", "certificates", "tracking"]}
 
 
 # --- PROXY: RAG (AnythingLLM) ---
