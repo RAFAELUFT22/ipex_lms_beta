@@ -1,4 +1,5 @@
 import hashlib
+import io
 import json
 import os
 import random
@@ -6,11 +7,10 @@ import secrets
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
-import requests
 import csv
-import io
+import requests
 from fastapi import FastAPI, HTTPException, Header, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -21,6 +21,7 @@ from lms_lite_v2_routes import router as v2_router
 DB_FILE = os.getenv("DB_FILE", "/app/lms_lite_db.json")
 SETTINGS_FILE = os.getenv("SETTINGS_FILE", "/app/settings.json")
 COURSES_FILE = os.getenv("COURSES_FILE", "/app/courses/tds/tds-courses-2026.json")
+VALIDATION_BASE_URL = os.getenv("VALIDATION_BASE_URL", "https://ops.ipexdesenvolvimento.cloud")
 
 # Fallback paths for local development
 if not Path(DB_FILE).parent.exists() and Path("./lms_lite_db.json").exists():
@@ -53,13 +54,24 @@ app.include_router(v2_router)
 # --- DB HELPERS ---
 def load_db() -> dict:
     if not Path(DB_FILE).exists():
-        return {"students": {}, "certificates": {}, "communities": {}, "webhook_events": []}
+        return {
+            "students": {},
+            "certificates": {},
+            "communities": {},
+            "webhook_events": [],
+            "tracking": {"student_courses": {}, "interactions": []},
+            "bot_group_links": {},
+        }
     with open(DB_FILE) as f:
         db = json.load(f)
     db.setdefault("students", {})
     db.setdefault("certificates", {})
     db.setdefault("communities", {})
     db.setdefault("webhook_events", [])
+    db.setdefault("tracking", {"student_courses": {}, "interactions": []})
+    db["tracking"].setdefault("student_courses", {})
+    db["tracking"].setdefault("interactions", [])
+    db.setdefault("bot_group_links", {})
     return db
 
 
@@ -87,6 +99,7 @@ SETTINGS_DEFAULTS = {
     "supabase_service_key": "",
     "chatwoot_website_token": "",
     "n8n_webhook_url": "",
+    "bot_contexts": {},
 }
 
 
@@ -127,16 +140,101 @@ def course_title(slug: str) -> str:
     return slug
 
 
+def api_success(data: Any = None, message: Optional[str] = None) -> dict:
+    payload = {"success": True, "data": data}
+    if message:
+        payload["message"] = message
+    return payload
+
+
+def get_course(slug: str) -> dict:
+    for c in load_courses():
+        if c.get("slug") == slug:
+            return c
+    return {}
+
+
+def get_course_lessons(course_slug: str) -> list[str]:
+    course = get_course(course_slug)
+    lessons: list[str] = []
+    for chapter_idx, chapter in enumerate(course.get("chapters", []), start=1):
+        for lesson_idx, lesson in enumerate(chapter.get("lessons", []), start=1):
+            title = lesson.get("title", f"Lição {lesson_idx}")
+            lessons.append(f"{chapter_idx}.{lesson_idx}::{title}")
+    return lessons
+
+
+def get_student_course_tracking(db: dict, whatsapp: str, course_slug: str) -> dict:
+    key = f"{whatsapp}:{course_slug}"
+    table = db["tracking"]["student_courses"]
+    if key not in table:
+        lessons = get_course_lessons(course_slug)
+        table[key] = {
+            "whatsapp": whatsapp,
+            "course_slug": course_slug,
+            "lesson_status": {lesson_key: "not_started" for lesson_key in lessons},
+            "completed_at": None,
+            "total_time_seconds": 0,
+            "last_seen_at": None,
+        }
+    return table[key]
+
+
+def compute_progress_percent(tracking: dict) -> int:
+    statuses = list(tracking.get("lesson_status", {}).values())
+    if not statuses:
+        return 0
+    done = len([s for s in statuses if s == "completed"])
+    return int(round((done / len(statuses)) * 100))
+
+
+def get_bot_context(course_slug: Optional[str] = None) -> dict:
+    settings = load_settings()
+    default_context = {
+        "anythingllm_url": settings.get("anythingllm_url"),
+        "anythingllm_key": settings.get("anythingllm_key"),
+        "anythingllm_workspace": settings.get("anythingllm_workspace"),
+        "evolution_url": settings.get("evolution_url"),
+        "evolution_key": settings.get("evolution_key"),
+        "evolution_instance": settings.get("evolution_instance"),
+        "allowed_groups": [],
+    }
+    contexts = settings.get("bot_contexts", {}) or {}
+    if course_slug and course_slug in contexts:
+        merged = dict(default_context)
+        merged.update(contexts[course_slug] or {})
+        return merged
+    return default_context
+
+
+def track_interaction(db: dict, event: dict):
+    event["timestamp"] = datetime.utcnow().isoformat() + "Z"
+    db["tracking"]["interactions"].append(event)
+
+
 def generate_cert_hash(whatsapp: str, course_slug: str) -> str:
     raw = f"{whatsapp}:{course_slug}:{TDS_SECRET}"
     return hashlib.sha256(raw.encode()).hexdigest()[:12]
 
 
-def build_student_response(whatsapp: str, s: dict) -> dict:
+def build_student_response(whatsapp: str, s: dict, db: Optional[dict] = None) -> dict:
     """Return student object with normalized enrollments list."""
+    db = db or load_db()
     course_slug = s.get("current_course", "")
     progress = s.get("progress", 0)
     status = "completed" if progress >= 100 else "active"
+    lesson_status = {}
+
+    if course_slug:
+        tracking = get_student_course_tracking(db, whatsapp, course_slug)
+        lesson_status = tracking.get("lesson_status", {})
+        progress = compute_progress_percent(tracking)
+        s["progress"] = progress
+        if progress >= 100:
+            tracking["completed_at"] = tracking.get("completed_at") or (datetime.utcnow().isoformat() + "Z")
+            status = "completed"
+        else:
+            status = "active"
 
     cert_hash = None
     if status == "completed" and course_slug:
@@ -149,6 +247,7 @@ def build_student_response(whatsapp: str, s: dict) -> dict:
             "status": status,
             "progress_percent": progress,
             "certificate_hash": cert_hash,
+            "lesson_status": lesson_status,
             "course": {
                 "slug": course_slug,
                 "title": course_title(course_slug),
@@ -204,7 +303,9 @@ class StudentCreate(BaseModel):
 class ProgressUpdate(BaseModel):
     whatsapp: str
     course_slug: str
-    progress: int
+    lesson_key: Optional[str] = None
+    status: Optional[str] = "completed"
+    time_spent_seconds: Optional[int] = 0
 
 class IssueCertRequest(BaseModel):
     whatsapp: str
@@ -238,7 +339,7 @@ def health():
 def list_students():
     db = load_db()
     return [
-        build_student_response(phone, s)
+        build_student_response(phone, s, db)
         for phone, s in db["students"].items()
     ]
 
@@ -249,7 +350,7 @@ def get_student(phone: str):
     s = db["students"].get(phone)
     if not s:
         raise HTTPException(404, "Aluno não encontrado")
-    return build_student_response(phone, s)
+    return build_student_response(phone, s, db)
 
 
 @app.post("/student")
@@ -266,11 +367,27 @@ def upsert_student(body: StudentCreate):
 def update_progress(body: ProgressUpdate):
     db = load_db()
     s = db["students"].get(body.whatsapp, {})
-    s["progress"] = body.progress
     s["current_course"] = body.course_slug
+    tracking = get_student_course_tracking(db, body.whatsapp, body.course_slug)
+    if body.lesson_key:
+        if body.lesson_key not in tracking["lesson_status"]:
+            tracking["lesson_status"][body.lesson_key] = "not_started"
+        tracking["lesson_status"][body.lesson_key] = body.status or "completed"
+    tracking["total_time_seconds"] = tracking.get("total_time_seconds", 0) + max(body.time_spent_seconds or 0, 0)
+    tracking["last_seen_at"] = datetime.utcnow().isoformat() + "Z"
+    progress = compute_progress_percent(tracking)
+    s["progress"] = progress
     db["students"][body.whatsapp] = s
+    track_interaction(db, {
+        "event": "progress_update",
+        "whatsapp": body.whatsapp,
+        "course_slug": body.course_slug,
+        "lesson_key": body.lesson_key,
+        "status": body.status,
+        "time_spent_seconds": body.time_spent_seconds or 0,
+    })
     save_db(db)
-    return {"new_progress": body.progress}
+    return {"new_progress": progress, "lesson_status": tracking["lesson_status"]}
 
 
 # Courses
@@ -286,8 +403,11 @@ def issue_cert(body: IssueCertRequest):
     s = db["students"].get(body.whatsapp)
     if not s:
         raise HTTPException(404, "Aluno não encontrado")
-
-    if s.get("progress", 0) < 100 or s.get("current_course") != body.course_slug:
+    if s.get("current_course") != body.course_slug:
+        raise HTTPException(400, "Aluno não está matriculado no curso informado.")
+    tracking = get_student_course_tracking(db, body.whatsapp, body.course_slug)
+    progress = compute_progress_percent(tracking)
+    if progress < 100:
         raise HTTPException(400, "Aluno não concluiu o curso.")
 
     cert_hash = generate_cert_hash(body.whatsapp, body.course_slug)
@@ -303,6 +423,7 @@ def issue_cert(body: IssueCertRequest):
         "validation_url": f"{VALIDATION_BASE_URL}/validate/{cert_hash}",
     }
     db["certificates"][cert_hash] = cert_data
+    track_interaction(db, {"event": "certificate_issued", "whatsapp": body.whatsapp, "course_slug": body.course_slug})
     save_db(db)
     return cert_data
 
@@ -396,7 +517,7 @@ def session_me(authorization: Optional[str] = Header(default=None)):
     s = db["students"].get(phone)
     if not s:
         raise HTTPException(404, "Aluno não encontrado")
-    return build_student_response(phone, s)
+    return build_student_response(phone, s, db)
 
 
 # Settings (admin only — requires X-Admin-Key header)
@@ -429,6 +550,7 @@ class SettingsUpdate(BaseModel):
     supabase_url: Optional[str] = None
     supabase_service_key: Optional[str] = None
     chatwoot_website_token: Optional[str] = None
+    bot_contexts: Optional[dict] = None
 
 
 @app.put("/settings")
@@ -484,27 +606,49 @@ def provision_agent_route(body: AgentProvisionRequest, x_admin_key: Optional[str
         raise HTTPException(500, str(e))
 
 
-@app.get("/whatsapp/groups")
-def list_whatsapp_groups(x_admin_key: Optional[str] = Header(default=None)):
-    require_admin(x_admin_key)
-    settings = load_settings()
-    evo_url = settings.get("evolution_url")
-    evo_key = settings.get("evolution_key")
-    evo_inst = settings.get("evolution_instance")
-    
-    if not evo_url or not evo_key:
+def fetch_whatsapp_groups_for_context(course_slug: Optional[str] = None) -> list:
+    context = get_bot_context(course_slug)
+    evo_url = (context.get("evolution_url") or "").rstrip("/")
+    evo_key = context.get("evolution_key")
+    evo_inst = context.get("evolution_instance")
+    if not evo_url or not evo_key or not evo_inst:
         return []
-        
     try:
-        # Fetch all groups for the configured instance
         url = f"{evo_url}/group/findAll/{evo_inst}"
         resp = requests.get(url, headers={"apikey": evo_key}, timeout=10)
         if resp.status_code == 200:
-            return resp.json()
+            data = resp.json()
+            return data if isinstance(data, list) else data.get("groups", [])
     except Exception as e:
         print(f"Error fetching WhatsApp groups: {e}")
-    
     return []
+
+
+@app.get("/admin/whatsapp/groups")
+def list_admin_whatsapp_groups(course_slug: Optional[str] = None, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    return api_success(fetch_whatsapp_groups_for_context(course_slug))
+
+
+@app.post("/admin/whatsapp/groups/link")
+def link_whatsapp_groups(body: dict, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    course_slug = body.get("course_slug")
+    group_ids = body.get("group_ids", [])
+    if not course_slug:
+        raise HTTPException(400, "course_slug é obrigatório.")
+    if not isinstance(group_ids, list):
+        raise HTTPException(400, "group_ids deve ser uma lista.")
+    db = load_db()
+    db["bot_group_links"][course_slug] = group_ids
+    save_db(db)
+    return api_success({"course_slug": course_slug, "group_ids": group_ids}, "Grupos vinculados.")
+
+
+@app.get("/whatsapp/groups")
+def list_whatsapp_groups_legacy(x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    return fetch_whatsapp_groups_for_context(None)
 
 
 @app.get("/external/sheets")
@@ -538,8 +682,33 @@ def fetch_external_sheet(url: str, x_admin_key: Optional[str] = Header(default=N
         raise HTTPException(500, f"Erro ao processar planilha: {str(e)}")
 
 
+@app.get("/admin/students")
+def admin_list_students(
+    course_slug: Optional[str] = None,
+    group_id: Optional[str] = None,
+    status: Optional[str] = None,
+    x_admin_key: Optional[str] = Header(default=None),
+):
+    require_admin(x_admin_key)
+    db = load_db()
+    out = []
+    for phone, student in db.get("students", {}).items():
+        normalized = build_student_response(phone, student, db)
+        enrollment = normalized.get("enrollments", [{}])[0] if normalized.get("enrollments") else {}
+        if course_slug and enrollment.get("course", {}).get("slug") != course_slug:
+            continue
+        if status and enrollment.get("status") != status:
+            continue
+        if group_id:
+            linked_groups = db.get("bot_group_links", {}).get(enrollment.get("course", {}).get("slug", ""), [])
+            if group_id not in linked_groups:
+                continue
+        out.append(normalized)
+    return api_success(out)
+
+
 @app.get("/admin/students/export")
-def export_students_csv(x_admin_key: Optional[str] = Header(default=None)):
+def export_students_csv(course_slug: Optional[str] = None, x_admin_key: Optional[str] = Header(default=None)):
     require_admin(x_admin_key)
     db = load_db()
     students = db.get("students", {})
@@ -548,18 +717,29 @@ def export_students_csv(x_admin_key: Optional[str] = Header(default=None)):
     writer = csv.writer(output)
     
     # Headers
-    writer.writerow(["Whatsapp", "Nome", "Nome Completo", "CPF", "Localidade", "Cidade", "Curso Atual", "Progresso"])
+    writer.writerow([
+        "Whatsapp", "Nome", "Nome Completo", "CPF", "Localidade", "Cidade", "Curso Atual",
+        "Progresso", "Status", "Interesse", "TempoTotalSegundos", "ConcluidoEm"
+    ])
     
     for phone, s in students.items():
+        tracking = get_student_course_tracking(db, phone, s.get("current_course", "")) if s.get("current_course") else {}
+        progress = compute_progress_percent(tracking) if tracking else s.get("progress", 0)
+        if course_slug and s.get("current_course") != course_slug:
+            continue
         writer.writerow([
             phone,
             s.get("name", ""),
             s.get("full_name", ""),
             s.get("cpf", ""),
-            s.get("localidade", ""),
-            s.get("city", ""),
+            s.get("localidade", "") or s.get("sisec_data", {}).get("localidade", ""),
+            s.get("city", "") or s.get("sisec_data", {}).get("localidade", ""),
             s.get("current_course", ""),
-            s.get("progress", 0)
+            progress,
+            "completed" if progress >= 100 else "active",
+            s.get("sisec_data", {}).get("interesse", ""),
+            tracking.get("total_time_seconds", 0) if tracking else 0,
+            tracking.get("completed_at", "") if tracking else "",
         ])
     
     output.seek(0)
@@ -634,6 +814,99 @@ def proxy_delete_rag_doc(path: str, x_admin_key: Optional[str] = Header(default=
         return {"success": True}
     except Exception as e:
         raise HTTPException(500, str(e))
+
+
+def get_ai_response(query: str, context: dict) -> str:
+    llm_url = (context.get("anythingllm_url") or "").rstrip("/")
+    llm_key = context.get("anythingllm_key")
+    workspace = context.get("anythingllm_workspace")
+    if not llm_url or not llm_key or not workspace:
+        return "Configuração do assistente indisponível para este curso."
+    try:
+        endpoint = f"{llm_url}/api/v1/workspace/{workspace}/chat"
+        resp = requests.post(
+            endpoint,
+            headers={"Authorization": f"Bearer {llm_key}", "Content-Type": "application/json"},
+            json={"message": query, "mode": "query"},
+            timeout=20,
+        )
+        if resp.status_code == 200:
+            payload = resp.json()
+            return payload.get("textResponse") or payload.get("response") or "Sem resposta do motor RAG."
+        return f"Falha no RAG ({resp.status_code})."
+    except Exception as e:
+        return f"Erro ao consultar RAG: {e}"
+
+
+@app.post("/admin/chat/proxy")
+def admin_chat_proxy(body: dict, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    query = body.get("query", "")
+    course_slug = body.get("course_slug")
+    context = get_bot_context(course_slug)
+    answer = get_ai_response(query, context)
+    return api_success({"answer": answer, "course_slug": course_slug})
+
+
+@app.post("/webhook/evolution")
+def evolution_webhook(payload: dict):
+    db = load_db()
+    event_data = payload.get("data", {}) if isinstance(payload, dict) else {}
+    text = ((event_data.get("message") or {}).get("conversation") or "").strip()
+    remote_jid = event_data.get("key", {}).get("remoteJid", "")
+    from_me = event_data.get("key", {}).get("fromMe", False)
+    if from_me or not remote_jid or not text:
+        return api_success({"ignored": True})
+
+    is_group = remote_jid.endswith("@g.us")
+    whatsapp = (event_data.get("key", {}).get("participant") or remote_jid).split("@")[0]
+    student = db.get("students", {}).get(whatsapp, {})
+    course_slug = student.get("current_course")
+    if is_group and not course_slug:
+        return api_success({"ignored": True, "reason": "student_without_course"})
+    if is_group and course_slug:
+        allowed = db.get("bot_group_links", {}).get(course_slug, [])
+        if allowed and remote_jid not in allowed:
+            return api_success({"ignored": True, "reason": "group_not_linked"})
+
+    cmd = None
+    query = text
+    if text.startswith("/duvida"):
+        cmd = "duvida"
+        query = text.replace("/duvida", "", 1).strip() or "Explique o conteúdo do módulo atual."
+    elif text.startswith("/resumo"):
+        cmd = "resumo"
+        query = "Gere um resumo prático dos pontos principais do módulo atual."
+    else:
+        return api_success({"ignored": True, "reason": "command_not_supported"})
+
+    context = get_bot_context(course_slug)
+    answer = get_ai_response(query, context)
+    evo_url = (context.get("evolution_url") or "").rstrip("/")
+    evo_key = context.get("evolution_key")
+    evo_inst = context.get("evolution_instance")
+    if evo_url and evo_key and evo_inst:
+        try:
+            requests.post(
+                f"{evo_url}/message/sendText/{evo_inst}",
+                json={"number": remote_jid, "text": answer},
+                headers={"apikey": evo_key},
+                timeout=10,
+            )
+        except Exception as e:
+            print(f"Erro enviando resposta WhatsApp: {e}")
+
+    track_interaction(db, {
+        "event": "whatsapp_command",
+        "command": cmd,
+        "whatsapp": whatsapp,
+        "group_jid": remote_jid if is_group else None,
+        "course_slug": course_slug,
+        "query": query,
+    })
+    db["webhook_events"].append(payload)
+    save_db(db)
+    return api_success({"processed": True, "command": cmd})
 
 
 # --- PROXY: Evolution API ---
