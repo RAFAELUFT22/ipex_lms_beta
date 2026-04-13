@@ -1020,10 +1020,15 @@ def proxy_list_rag_docs(x_admin_key: Optional[str] = Header(default=None)):
     if not llm_key: return []
     
     try:
-        url = f"{llm_url}/v1/workspace/{workspace}"
+        url = f"{llm_url}/api/v1/workspace/{workspace}"
         resp = requests.get(url, headers={"Authorization": f"Bearer {llm_key}"}, timeout=10)
         if resp.status_code == 200:
-            return resp.json().get("workspace", {}).get("documents", [])
+            # AnythingLLM returns {"workspace": [{...}]} — workspace is an array
+            workspaces = resp.json().get("workspace", [])
+            if isinstance(workspaces, list) and workspaces:
+                return workspaces[0].get("documents", [])
+            elif isinstance(workspaces, dict):
+                return workspaces.get("documents", [])
     except Exception as e:
         print(f"RAG List Error: {e}")
     return []
@@ -1038,19 +1043,23 @@ async def proxy_upload_rag_doc(file: UploadFile = File(...), x_admin_key: Option
     
     try:
         # 1. Upload to system
-        upload_url = f"{llm_url}/v1/document/upload"
+        upload_url = f"{llm_url}/api/v1/document/upload"
         contents = await file.read()
         files = {"file": (file.filename, contents, file.content_type)}
         headers = {"Authorization": f"Bearer {llm_key}"}
-        
+
         res_upload = requests.post(upload_url, files=files, headers=headers, timeout=30)
         if res_upload.status_code != 200:
             raise HTTPException(res_upload.status_code, f"AnythingLLM Upload Error: {res_upload.text}")
-            
-        doc_path = res_upload.json().get("documents", [])[0].get("location")
-        
+
+        upload_data = res_upload.json()
+        documents = upload_data.get("documents", [])
+        if not documents:
+            raise HTTPException(500, "AnythingLLM returned no document location after upload")
+        doc_path = documents[0].get("location")
+
         # 2. Add to workspace
-        update_url = f"{llm_url}/v1/workspace/{workspace}/update-embeddings"
+        update_url = f"{llm_url}/api/v1/workspace/{workspace}/update-embeddings"
         requests.post(update_url, json={"adds": [doc_path]}, headers=headers, timeout=20)
         
         return {"success": True, "path": doc_path}
@@ -1066,7 +1075,7 @@ def proxy_delete_rag_doc(path: str, x_admin_key: Optional[str] = Header(default=
     workspace = settings.get("anythingllm_workspace", "tds-lms-knowledge")
     
     try:
-        update_url = f"{llm_url}/v1/workspace/{workspace}/update-embeddings"
+        update_url = f"{llm_url}/api/v1/workspace/{workspace}/update-embeddings"
         requests.post(update_url, json={"deletes": [path]}, headers={"Authorization": f"Bearer {llm_key}"}, timeout=10)
         return {"success": True}
     except Exception as e:

@@ -78,13 +78,19 @@ def now_iso() -> str:
 
 # --- Messaging helpers ---
 
-def _send_whatsapp(phone: str, message: str) -> bool:
+def _send_whatsapp(number_or_jid: str, message: str) -> bool:
+    """Send WhatsApp message via Evolution API.
+
+    Accepts either a plain phone number ("5563999991111") or a full JID
+    ("556399999111@s.whatsapp.net" or "12345678901@g.us" for groups).
+    Evolution API's sendText endpoint accepts both formats in the `number` field.
+    """
     if not EVOLUTION_URL or not EVOLUTION_KEY:
         return False
     try:
         resp = requests.post(
             f"{EVOLUTION_URL}/message/sendText/{EVOLUTION_INSTANCE}",
-            json={"number": phone, "text": message},
+            json={"number": number_or_jid, "text": message},
             headers={"apikey": EVOLUTION_KEY},
             timeout=12,
         )
@@ -180,32 +186,77 @@ def resolve_phone_from_session(authorization: Optional[str]) -> tuple[Optional[s
         return None, token
 
 
+def _parse_jid(jid: str) -> tuple[str, bool]:
+    """Return (phone_number, is_group). Group JIDs end in @g.us, DM JIDs in @s.whatsapp.net."""
+    if not jid:
+        return "", False
+    number = jid.split("@")[0]
+    is_group = jid.endswith("@g.us")
+    return number, is_group
+
+
 def extract_phone(payload: "WebhookPayload") -> Optional[str]:
+    """Return the *sender* phone number (individual), not the group JID."""
     if payload.phone:
         return payload.phone
     event = payload.provider_event or {}
+    data = event.get("data", {})
+
+    # Evolution v2: for group messages the real sender is in data.participant
+    participant = data.get("participant") or data.get("senderParticipant")
+    if participant:
+        phone, _ = _parse_jid(participant)
+        if phone:
+            return phone
+
+    remote_jid = data.get("key", {}).get("remoteJid", "")
+    if remote_jid:
+        phone, is_group = _parse_jid(remote_jid)
+        # For DM: remoteJid IS the sender. For groups: already handled above; fallback to number part.
+        if phone:
+            return phone
+
     for candidate in [
         event.get("phone"),
         event.get("from"),
         event.get("sender"),
         event.get("senderNumber"),
-        event.get("data", {}).get("key", {}).get("remoteJid", "").split("@")[0],
     ]:
         if candidate:
             return str(candidate)
     return None
 
 
+def extract_reply_jid(payload: "WebhookPayload") -> Optional[str]:
+    """Return the JID to reply to: the group JID for group messages, or sender JID for DMs."""
+    event = payload.provider_event or {}
+    data = event.get("data", {})
+    remote_jid = data.get("key", {}).get("remoteJid", "")
+    if remote_jid:
+        return remote_jid
+    return None
+
+
+def is_group_message(payload: "WebhookPayload") -> bool:
+    """Return True if this webhook event came from a WhatsApp group."""
+    event = payload.provider_event or {}
+    remote_jid = event.get("data", {}).get("key", {}).get("remoteJid", "")
+    return remote_jid.endswith("@g.us")
+
+
 def extract_message(payload: "WebhookPayload") -> str:
     if payload.message:
         return payload.message
     event = payload.provider_event or {}
+    data = event.get("data", {})
+    msg = data.get("message", {})
     for candidate in [
+        msg.get("conversation"),
+        msg.get("extendedTextMessage", {}).get("text"),
+        msg.get("imageMessage", {}).get("caption"),
         event.get("message"),
         event.get("text"),
         event.get("body"),
-        event.get("data", {}).get("message", {}).get("conversation"),
-        event.get("data", {}).get("message", {}).get("extendedTextMessage", {}).get("text"),
     ]:
         if candidate:
             return str(candidate)
@@ -282,10 +333,22 @@ def list_course_workspace_links(
 
 @router.post("/whatsapp/webhook")
 def whatsapp_webhook(payload: WebhookPayload):
-    """Receive webhook from n8n / Evolution, persist event and auto-reply via AI."""
+    """Receive webhook from n8n / Evolution, persist event and auto-reply via AI.
+
+    Supports both direct messages and group messages.
+    Group messages: remoteJid ends in @g.us — bot replies to the group JID.
+    DM messages: remoteJid ends in @s.whatsapp.net — bot replies to sender.
+    """
     db = load_db()
-    phone = extract_phone(payload)
+    phone = extract_phone(payload)       # individual sender phone
     message = extract_message(payload)
+    reply_jid = extract_reply_jid(payload) or phone  # group JID or sender JID
+    from_group = is_group_message(payload)
+
+    # Skip messages sent by the bot itself (fromMe=True)
+    from_me = payload.provider_event.get("data", {}).get("key", {}).get("fromMe", False)
+    if from_me:
+        return {"status": "ignored", "reason": "own_message"}
 
     course_slug = None
     workspace = "tds"
@@ -295,17 +358,24 @@ def whatsapp_webhook(payload: WebhookPayload):
         student = db.get("students", {}).get(phone, {})
         course_slug = student.get("current_course")
         workspace = resolve_workspace(db, course_slug, fallback="tds")
-        # Only call AI for bot-mode students
+
+        # Only auto-reply for bot-mode students (default: bot)
         mode = student.get("status_atendimento", "bot")
         if mode == "bot":
             ai_reply = get_ai_response(message, workspace, session_id=phone)
-        # Update student activity
+            if ai_reply:
+                # For groups, reply to group JID. For DMs, reply to sender number.
+                _send_whatsapp(reply_jid, ai_reply)
+
+        # Update student activity timestamp
         if phone in db.get("students", {}):
             db["students"][phone]["last_activity_at"] = now_iso()
 
     event_record = {
         "received_at": now_iso(),
         "phone": phone,
+        "reply_jid": reply_jid,
+        "from_group": from_group,
         "message": message,
         "course_slug": course_slug,
         "workspace": workspace,
@@ -321,6 +391,8 @@ def whatsapp_webhook(payload: WebhookPayload):
         "status": "accepted",
         "received_at": event_record["received_at"],
         "phone": phone,
+        "reply_jid": reply_jid,
+        "from_group": from_group,
         "workspace": workspace,
         "reply": ai_reply,
     }
