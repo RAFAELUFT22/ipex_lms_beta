@@ -4,6 +4,7 @@ import os
 import random
 import secrets
 import time
+import math
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -220,8 +221,7 @@ class IssueCertRequest(BaseModel):
 class QuizSubmit(BaseModel):
     phone: str
     course_slug: str
-    score: int
-    total: int
+    answers: list[int]
 
 
 # --- AUTH HELPER ---
@@ -306,18 +306,30 @@ async def submit_quiz(data: QuizSubmit, token: str = Depends(oauth2_scheme)):
         raise HTTPException(403, "Você só pode enviar o quiz da sua própria conta.")
 
     db = load_db()
+    questions = db.get("quiz_bank", {}).get(data.course_slug)
+    if not questions:
+        raise HTTPException(404, "Quiz não encontrado para este curso")
+
+    correct = sum(
+        1 for i, q in enumerate(questions)
+        if i < len(data.answers) and data.answers[i] == q["correct"]
+    )
+    total = len(questions)
+    passed = correct >= math.ceil(total / 2)
+
     student_record = db["students"].setdefault(data.phone, {})
     enrollments = student_record.setdefault("enrollments", {})
     course_enrollment = enrollments.setdefault(data.course_slug, {})
     course_enrollment["quiz_results"] = {
-        "score": data.score,
-        "total": data.total,
+        "score": correct,
+        "total": total,
+        "passed": passed,
         "updated_at": datetime.now().isoformat(),
     }
     student_record["last_activity_at"] = datetime.now().isoformat()
     db["students"][data.phone] = student_record
     save_db(db)
-    return {"status": "ok", "quiz_results": course_enrollment["quiz_results"]}
+    return {"status": "ok", "score": correct, "total": total, "passed": passed, "quiz_results": course_enrollment["quiz_results"]}
 
 
 @app.get("/student/me/quiz/{course_slug}")
