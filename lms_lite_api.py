@@ -3,11 +3,12 @@ import json
 import os
 import random
 import secrets
+import threading
 import time
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 import requests
 import csv
@@ -17,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse, Response
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, Field
-from lms_lite_v2_routes import router as v2_router
+from lms_lite_v2_routes import router as v2_router, send_unified_reply
 from templates.certificate_template import generate_certificate_pdf
 
 # --- CONFIG ---
@@ -211,6 +212,7 @@ class StudentCreate(BaseModel):
     localidade: Optional[str] = None
     city: Optional[str] = None
     role: Optional[str] = "student"
+    last_activity_at: Optional[str] = None
 
 class ProgressUpdate(BaseModel):
     whatsapp: str
@@ -225,6 +227,16 @@ class QuizSubmit(BaseModel):
     phone: str
     course_slug: str
     answers: list[int]
+
+
+class QuizQuestion(BaseModel):
+    text: str
+    options: list[str]
+    correct: int
+
+
+class QuizCreateRequest(BaseModel):
+    questions: list[QuizQuestion]
 
 
 class BulkStudentItem(BaseModel):
@@ -245,6 +257,16 @@ class EnrollmentRequest(BaseModel):
     cpf: Optional[str] = None
     localidade: Optional[str] = None
     course_slug: str
+
+
+class NotifyRequest(BaseModel):
+    target: str
+    message: str
+    channel: Literal["whatsapp", "telegram", "both"] = "whatsapp"
+
+
+class NotifyScheduleRequest(NotifyRequest):
+    delay_minutes: int
 
 
 # --- AUTH HELPER ---
@@ -347,6 +369,23 @@ def update_progress(body: ProgressUpdate):
     return {"new_progress": body.progress}
 
 
+@app.post("/admin/courses/{course_slug}/quiz")
+def save_course_quiz(course_slug: str, body: QuizCreateRequest, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    db = load_db()
+    db["quiz_bank"][course_slug] = [q.model_dump() for q in body.questions]
+    save_db(db)
+    return {"status": "saved", "course_slug": course_slug, "questions": len(body.questions)}
+
+
+@app.get("/quiz/{course_slug}")
+def get_course_quiz(course_slug: str):
+    db = load_db()
+    questions = db.get("quiz_bank", {}).get(course_slug, [])
+    sanitized = [{"text": q.get("text", ""), "options": q.get("options", [])} for q in questions]
+    return {"course_slug": course_slug, "questions": sanitized}
+
+
 @app.post("/quiz/submit")
 async def submit_quiz(data: QuizSubmit, token: str = Depends(oauth2_scheme)):
     student = get_current_student(token)
@@ -407,6 +446,91 @@ def enrollment_request(body: EnrollmentRequest):
     db["students"][body.whatsapp] = existing
     save_db(db)
     return {"ok": True, "whatsapp": body.whatsapp, "consent_date": existing["consent_date"]}
+
+
+def _resolve_notification_recipients(db: dict, target: str) -> list[str]:
+    students = db.get("students", {})
+    if target == "all":
+        return list(students.keys())
+    if target.startswith("course:"):
+        slug = target.split(":", 1)[1]
+        recipients = []
+        for phone, s in students.items():
+            enrollments = s.get("enrollments", {})
+            if slug in enrollments or s.get("current_course") == slug:
+                recipients.append(phone)
+        return recipients
+    if target.startswith("inactive:"):
+        try:
+            days = int(target.split(":", 1)[1])
+        except ValueError as exc:
+            raise HTTPException(400, "Target inactive inválido. Ex.: inactive:7") from exc
+        threshold = datetime.now(timezone.utc) - timedelta(days=days)
+        recipients = []
+        for phone, s in students.items():
+            raw = s.get("last_activity_at")
+            if not raw:
+                continue
+            try:
+                last_activity = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+            except ValueError:
+                continue
+            if last_activity < threshold:
+                recipients.append(phone)
+        return recipients
+    raise HTTPException(400, "Target inválido. Use all, course:{slug} ou inactive:{days}")
+
+
+def _send_notification(body: NotifyRequest) -> dict:
+    db = load_db()
+    recipients = _resolve_notification_recipients(db, body.target)
+    sent = 0
+    failed = 0
+    for phone in recipients:
+        try:
+            send_unified_reply(phone=phone, message=body.message, channel=body.channel)
+            sent += 1
+        except Exception:
+            failed += 1
+
+    log_entry = {
+        "target": body.target,
+        "message": body.message,
+        "channel": body.channel,
+        "sent": sent,
+        "failed": failed,
+        "recipients": recipients,
+        "sent_at": now_iso(),
+    }
+    db.setdefault("notification_log", [])
+    db["notification_log"] = ([log_entry] + db["notification_log"])[:10]
+    save_db(db)
+    return {"sent": sent, "failed": failed, "recipients": recipients}
+
+
+@app.post("/admin/notify")
+def admin_notify(body: NotifyRequest, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    return _send_notification(body)
+
+
+@app.post("/admin/notify/schedule")
+def admin_notify_schedule(body: NotifyScheduleRequest, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    if body.delay_minutes < 0:
+        raise HTTPException(400, "delay_minutes deve ser >= 0")
+    payload = NotifyRequest(target=body.target, message=body.message, channel=body.channel)
+    timer = threading.Timer(body.delay_minutes * 60, _send_notification, args=[payload])
+    timer.daemon = True
+    timer.start()
+    return {"status": "scheduled", "delay_minutes": body.delay_minutes}
+
+
+@app.get("/admin/notify/log")
+def list_notify_log(x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    db = load_db()
+    return {"items": db.get("notification_log", [])[:10]}
 
 
 # Courses

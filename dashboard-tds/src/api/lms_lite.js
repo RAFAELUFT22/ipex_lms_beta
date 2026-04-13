@@ -35,6 +35,18 @@ export const lmsLiteApi = {
   getMyQuizResult: (courseSlug) => apiFetch(`/student/me/quiz/${courseSlug}`),
 
   getCourses: () => apiFetch('/courses'),
+  getQuiz: (courseSlug) => apiFetch(`/quiz/${courseSlug}`),
+  saveQuiz: (courseSlug, questions) =>
+    apiFetch(`/admin/courses/${courseSlug}/quiz`, {
+      method: 'POST',
+      headers: { 'X-Admin-Key': ADMIN_KEY },
+      body: JSON.stringify({ questions }),
+    }),
+  submitQuiz: (phone, course_slug, answers) =>
+    apiFetch('/quiz/submit', {
+      method: 'POST',
+      body: JSON.stringify({ phone, course_slug, answers }),
+    }),
 
   issueCert: (whatsapp, course_slug) =>
     apiFetch('/issue_cert', {
@@ -80,6 +92,22 @@ export const lmsLiteApi = {
     }),
 
   getExportUrl: () => `${API_BASE}/admin/students/export?x_admin_key=${ADMIN_KEY}`,
+  sendNotification: (data) =>
+    apiFetch('/admin/notify', {
+      method: 'POST',
+      headers: { 'X-Admin-Key': ADMIN_KEY },
+      body: JSON.stringify(data),
+    }),
+  scheduleNotification: (data) =>
+    apiFetch('/admin/notify/schedule', {
+      method: 'POST',
+      headers: { 'X-Admin-Key': ADMIN_KEY },
+      body: JSON.stringify(data),
+    }),
+  getNotificationLog: () =>
+    apiFetch('/admin/notify/log', {
+      headers: { 'X-Admin-Key': ADMIN_KEY },
+    }),
 
   // --- PROXIES ---
 
