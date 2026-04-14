@@ -606,7 +606,12 @@ def whatsapp_webhook(payload: WebhookPayload):
 def get_communities(x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key")):
     require_admin_key(x_admin_key)
     db = load_db()
-    return list(db.get("communities", {}).values())
+    communities = []
+    for c in db.get("communities", {}).values():
+        c_copy = dict(c)
+        c_copy["member_count"] = len(c.get("members", []))
+        communities.append(c_copy)
+    return communities
 
 
 @router.post("/communities")
@@ -637,14 +642,30 @@ def broadcast_to_community(slug: str, body: BroadcastRequest, x_admin_key: Optio
     community = db.get("communities", {}).get(slug)
     if not community:
         raise HTTPException(404, "Comunidade não encontrada")
+    
+    group_jid = community.get("whatsapp_group_id")
     members = community.get("members", [])
+    
+    # Se existe um group_id (JID), envia direto pro grupo (1 única chamada)
+    if group_jid:
+        ok = _send_whatsapp(group_jid, body.message)
+        return {
+            "status": "done", 
+            "slug": slug, 
+            "sent": 1 if ok else 0, 
+            "failed": 0 if ok else 1, 
+            "total": 1, 
+            "method": "group_broadcast"
+        }
+
+    # Fallback: envia para cada membro individualmente
     sent, failed = 0, 0
     for phone in members:
         if _send_whatsapp(phone, body.message):
             sent += 1
         else:
             failed += 1
-    return {"status": "done", "slug": slug, "sent": sent, "failed": failed, "total": len(members)}
+    return {"status": "done", "slug": slug, "sent": sent, "failed": failed, "total": len(members), "method": "individual_broadcast"}
 
 
 @router.post("/chat/query")
