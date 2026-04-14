@@ -423,6 +423,9 @@ services:
     build:
       context: ../dashboard-tds
       dockerfile: Dockerfile
+      args:
+        VITE_ADMIN_KEY: ${ADMIN_KEY}
+        VITE_LMS_API_URL: ${VITE_LMS_API_URL:-https://api-lms.ipexdesenvolvimento.cloud}
     container_name: kreativ-tds-ops
     restart: unless-stopped
     networks:

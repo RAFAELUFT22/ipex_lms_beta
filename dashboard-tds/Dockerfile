@@ -8,6 +8,11 @@ COPY . .
 # Injeta as URLs de produção em todos os arquivos de API
 RUN find src/api -type f -exec sed -i 's|http://localhost:8081|https://api-lms.ipexdesenvolvimento.cloud|g' {} +
 RUN find src/api -type f -exec sed -i 's|http://localhost:8000|https://api-lms.ipexdesenvolvimento.cloud|g' {} +
+# Injeta a chave administrativa no build (necessário para rotas admin do dashboard)
+ARG VITE_ADMIN_KEY
+ENV VITE_ADMIN_KEY=$VITE_ADMIN_KEY
+ARG VITE_LMS_API_URL
+ENV VITE_LMS_API_URL=$VITE_LMS_API_URL
 RUN npm run build
 
 # Stage 2: Production

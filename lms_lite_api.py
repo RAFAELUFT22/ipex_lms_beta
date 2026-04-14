@@ -108,8 +108,6 @@ SETTINGS_DEFAULTS = {
     "logo_url": "https://ipexdesenvolvimento.cloud/logo.png",
     "company_name": "TDS - Territórios de Desenvolvimento Social",
     "chatwoot_website_token": "",
-    "supabase_url": "https://api-lms.ipexdesenvolvimento.cloud",
-    "supabase_service_key": "",
     "google_sheets_url": "",
     "google_sheets_tab": "Sheet1",
     "google_service_account_path": "",
@@ -123,13 +121,6 @@ def load_settings() -> dict:
         saved = json.load(f)
     result = dict(SETTINGS_DEFAULTS)
     result.update(saved)
-    
-    # Add Supabase if not present in defaults but in env
-    if not result.get("supabase_url"):
-        result["supabase_url"] = os.getenv("SUPABASE_URL", "https://api-lms.ipexdesenvolvimento.cloud")
-    if not result.get("supabase_service_key"):
-        result["supabase_service_key"] = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
-
     return result
 
 
@@ -201,16 +192,6 @@ def build_student_response(whatsapp: str, s: dict) -> dict:
         }
     }
 
-
-def get_supabase_client():
-    settings = load_settings()
-    url = settings.get("supabase_url")
-    key = settings.get("supabase_service_key")
-    if not url or not key:
-        return None
-    # Use direct requests to avoid adding big dependencies if possible
-    # but for simplicity we assume the user might have supabase-py or we can just use headers
-    return {"url": url, "headers": {"apikey": key, "Authorization": f"Bearer {key}", "Content-Type": "application/json"}}
 
 
 # --- MODELS ---
@@ -777,8 +758,6 @@ class SettingsUpdate(BaseModel):
     wa_cloud_token: Optional[str] = None
     wa_phone_number_id: Optional[str] = None
     wa_business_id: Optional[str] = None
-    supabase_url: Optional[str] = None
-    supabase_service_key: Optional[str] = None
     chatwoot_website_token: Optional[str] = None
     theme_primary: Optional[str] = None
     theme_secondary: Optional[str] = None

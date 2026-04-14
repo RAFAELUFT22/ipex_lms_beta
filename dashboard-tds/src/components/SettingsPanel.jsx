@@ -242,6 +242,7 @@ export default function SettingsPanel() {
         <Field label="URL" name="chatwoot_url" value={settings.chatwoot_url} onChange={handleChange} placeholder="https://chat.ipexdesenvolvimento.cloud" />
         <Field label="Token de Agente" name="chatwoot_token" value={settings.chatwoot_token} onChange={handleChange} sensitive placeholder="seu-token-chatwoot" />
         <Field label="ID do Inbox" name="chatwoot_inbox_id" value={settings.chatwoot_inbox_id} onChange={handleChange} placeholder="1" />
+        <Field label="Website Token (Widget do Portal)" name="chatwoot_website_token" value={settings.chatwoot_website_token || ''} onChange={handleChange} sensitive placeholder="token do widget do portal" />
       </Section>
 
       {/* WhatsApp Cloud API */}
@@ -249,13 +250,6 @@ export default function SettingsPanel() {
         <Field label="Phone Number ID" name="wa_phone_number_id" value={settings.wa_phone_number_id || ''} onChange={handleChange} placeholder="1234567890" />
         <Field label="Business Account ID" name="wa_business_id" value={settings.wa_business_id || ''} onChange={handleChange} placeholder="1234567890" />
         <Field label="Access Token" name="wa_cloud_token" value={settings.wa_cloud_token || ''} onChange={handleChange} sensitive placeholder="EAAB..." />
-      </Section>
-
-      {/* Supabase */}
-      <Section title="Supabase — Realtime & Auth">
-        <Field label="URL do Projeto" name="supabase_url" value={settings.supabase_url || ''} onChange={handleChange} placeholder="https://xyzabc.supabase.co" />
-        <Field label="Service Role Key" name="supabase_service_key" value={settings.supabase_service_key || ''} onChange={handleChange} sensitive placeholder="eyJhbGci..." />
-        <Field label="Website Token (Chatwoot Widget)" name="chatwoot_website_token" value={settings.chatwoot_website_token || ''} onChange={handleChange} sensitive placeholder="token do widget do portal" />
       </Section>
 
       {/* Google Sheets */}
