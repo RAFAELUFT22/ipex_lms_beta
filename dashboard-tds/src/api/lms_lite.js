@@ -143,11 +143,48 @@ export const lmsLiteApi = {
     body: JSON.stringify({ course_slug, workspace_slug })
   }),
 
-  fetchSheet: (url) => apiFetch(`/external/sheets?url=${encodeURIComponent(url)}`, {
+  fetchSheet: (url, tab) => {
+    const params = new URLSearchParams({ url });
+    if (tab) params.set('tab', tab);
+    return apiFetch(`/external/sheets?${params}`, { headers: { 'X-Admin-Key': ADMIN_KEY } });
+  },
+
+  // Importa alunos de planilha via mapeamento de colunas
+  importFromSheets: (body) => apiFetch('/admin/import/sheets', {
+    method: 'POST',
+    headers: { 'X-Admin-Key': ADMIN_KEY },
+    body: JSON.stringify(body),
+  }),
+
+  // Upload da chave de conta de serviço Google
+  uploadGoogleKey: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return fetch(`${API_BASE}/settings/google-key`, {
+      method: 'POST',
+      headers: { 'X-Admin-Key': ADMIN_KEY },
+      body: formData,
+    }).then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+      return res.json();
+    });
+  },
+
+  googleKeyStatus: () => apiFetch('/settings/google-key/status', {
     headers: { 'X-Admin-Key': ADMIN_KEY },
   }),
 
-  getExportUrl: () => `${API_BASE}/admin/students/export?x_admin_key=${ADMIN_KEY}`,
+  // Export via header (não passa chave na URL)
+  getExportUrl: () => `${API_BASE}/admin/students/export`,
+  exportStudents: () => fetch(`${API_BASE}/admin/students/export`, {
+    headers: { 'X-Admin-Key': ADMIN_KEY },
+  }).then((res) => {
+    if (!res.ok) throw new Error(`Export falhou: HTTP ${res.status}`);
+    return res.blob();
+  }),
   sendNotification: (data) =>
     apiFetch('/admin/notify', {
       method: 'POST',

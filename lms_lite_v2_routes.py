@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-ADMIN_KEY = os.getenv("ADMIN_KEY", "admin-tds-2026")
+ADMIN_KEY = os.getenv("ADMIN_KEY")  # sem fallback
 DB_FILE = os.getenv("DB_FILE", "/app/lms_lite_db.json")
 SETTINGS_FILE = os.getenv("SETTINGS_FILE", "/app/settings.json")
 
@@ -394,7 +394,9 @@ def extract_message(payload: "WebhookPayload") -> str:
 # --- Auth helper ---
 
 def require_admin_key(x_admin_key: Optional[str]):
-    if x_admin_key != ADMIN_KEY:
+    if not ADMIN_KEY:
+        raise HTTPException(status_code=500, detail="ADMIN_KEY não configurada no servidor")
+    if not x_admin_key or x_admin_key != ADMIN_KEY:
         raise HTTPException(status_code=401, detail="Invalid X-Admin-Key")
 
 

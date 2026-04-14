@@ -4,6 +4,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY lms_lite_api.py .
 COPY lms_lite_v2_routes.py .
+COPY lms_lite_core.py .
 COPY templates/ /app/templates/
 COPY lms_lite_db.json* ./
 COPY courses/ /app/courses/

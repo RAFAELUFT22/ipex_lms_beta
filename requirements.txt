@@ -4,3 +4,5 @@ requests
 uvicorn
 reportlab
 Pillow
+gspread
+google-auth

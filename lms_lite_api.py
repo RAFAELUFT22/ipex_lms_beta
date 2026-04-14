@@ -36,13 +36,23 @@ if not Path(SETTINGS_FILE).parent.exists():
         SETTINGS_FILE = "settings.json" # create in current dir if app dir missing
 
 TDS_SECRET = os.getenv("CERT_SALT", "TDS_SECRET_2026")
-ADMIN_KEY = os.getenv("ADMIN_KEY", "admin-tds-2026")
+ADMIN_KEY = os.getenv("ADMIN_KEY")  # sem fallback — None faz admin routes retornarem 500
 VALIDATION_BASE_URL = os.getenv("VALIDATION_BASE_URL", "https://ops.ipexdesenvolvimento.cloud")
+
+# Google Sheets — service account key path
+GOOGLE_KEY_FILE = os.getenv("GOOGLE_SERVICE_ACCOUNT_PATH", "/app/google-service-account.json")
+GOOGLE_SCOPES = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive.readonly",
+]
 
 # In-memory stores (reset on restart — ok for beta)
 _otp_store: dict = {}   # phone -> {"code": "123456", "expires": timestamp, "attempts": 0}
 _sessions: dict = {}     # token -> {"phone": "556399...", "expires": timestamp}
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="otp/verify")
+
+# Thread lock para operações de escrita no DB JSON
+_db_lock = threading.Lock()
 
 app = FastAPI(title="TDS LMS Lite API")
 
@@ -74,8 +84,12 @@ def load_db() -> dict:
 
 
 def save_db(db: dict):
-    with open(DB_FILE, "w") as f:
-        json.dump(db, f, indent=2, ensure_ascii=False)
+    """Atomic write via temp file + rename para evitar JSON corrompido em crash."""
+    with _db_lock:
+        tmp = Path(DB_FILE + ".tmp")
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(db, f, indent=2, ensure_ascii=False)
+        tmp.replace(Path(DB_FILE))
 
 
 SETTINGS_DEFAULTS = {
@@ -96,6 +110,9 @@ SETTINGS_DEFAULTS = {
     "chatwoot_website_token": "",
     "supabase_url": "https://api-lms.ipexdesenvolvimento.cloud",
     "supabase_service_key": "",
+    "google_sheets_url": "",
+    "google_sheets_tab": "Sheet1",
+    "google_service_account_path": "",
 }
 
 
@@ -695,7 +712,7 @@ def otp_verify(body: OtpVerifyRequest):
     db = load_db()
     s = db["students"].get(phone)
     if s:
-        s["last_activity"] = now_iso()
+        s["last_activity_at"] = now_iso()
         s["updated_at"] = now_iso()
         db["students"][phone] = s
         save_db(db)
@@ -716,9 +733,26 @@ def session_me(authorization: Optional[str] = Header(default=None)):
     return build_student_response(phone, s)
 
 
+@app.post("/auth/refresh")
+def auth_refresh(authorization: Optional[str] = Header(default=None)):
+    """Renova sessão existente — retorna novo token com mais 8h de validade."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(401, "Token ausente")
+    old_token = authorization.split(" ", 1)[1]
+    session = _sessions.get(old_token)
+    if not session or time.time() > session["expires"]:
+        raise HTTPException(401, detail="session_expired")
+    new_token = secrets.token_urlsafe(32)
+    _sessions[new_token] = {"phone": session["phone"], "expires": time.time() + 28800}
+    del _sessions[old_token]
+    return {"session_token": new_token}
+
+
 # Settings (admin only — requires X-Admin-Key header)
 def require_admin(x_admin_key: Optional[str] = Header(default=None)):
-    if x_admin_key != ADMIN_KEY:
+    if not ADMIN_KEY:
+        raise HTTPException(500, "ADMIN_KEY não configurada no servidor")
+    if not x_admin_key or x_admin_key != ADMIN_KEY:
         raise HTTPException(401, "Chave administrativa inválida")
 
 
@@ -750,6 +784,9 @@ class SettingsUpdate(BaseModel):
     theme_secondary: Optional[str] = None
     logo_url: Optional[str] = None
     company_name: Optional[str] = None
+    google_sheets_url: Optional[str] = None
+    google_sheets_tab: Optional[str] = None
+    google_service_account_path: Optional[str] = None
 
 
 @app.put("/settings")
@@ -832,35 +869,224 @@ def list_whatsapp_groups(x_admin_key: Optional[str] = Header(default=None)):
     return []
 
 
-@app.get("/external/sheets")
-def fetch_external_sheet(url: str, x_admin_key: Optional[str] = Header(default=None)):
-    require_admin(x_admin_key)
-    if "docs.google.com/spreadsheets/d/" not in url:
-        raise HTTPException(400, "URL de planilha inválida")
-    
-    # Transform URL to CSV export if not already
+# --- GOOGLE SHEETS HELPERS ---
+
+def get_gspread_client():
+    """Retorna cliente gspread autenticado se a chave de serviço estiver configurada."""
+    key_file = GOOGLE_KEY_FILE
+    try:
+        settings = load_settings()
+        settings_path = settings.get("google_service_account_path", "")
+        if settings_path and Path(settings_path).exists():
+            key_file = settings_path
+    except Exception:
+        pass
+
+    if not Path(key_file).exists():
+        return None
+
+    try:
+        import gspread
+        from google.oauth2.service_account import Credentials
+        creds = Credentials.from_service_account_file(key_file, scopes=GOOGLE_SCOPES)
+        return gspread.authorize(creds)
+    except Exception as e:
+        print(f"[Google Sheets] Erro de autenticação: {e}")
+        return None
+
+
+def _sheet_csv_fallback(url: str, tab: Optional[str] = None) -> dict:
+    """Baixa planilha pública via CSV export."""
     export_url = url
-    if "/edit" in url:
-        export_url = url.split("/edit")[0] + "/export?format=csv"
-        # Preserve GID if present
+    if "/edit" in url or "/view" in url:
+        base = url.split("/edit")[0].split("/view")[0]
+        export_url = base + "/export?format=csv"
         if "gid=" in url:
             gid = url.split("gid=")[1].split("&")[0]
             export_url += f"&gid={gid}"
-    
+
+    resp = requests.get(export_url, timeout=15)
+    if resp.status_code != 200:
+        raise HTTPException(
+            resp.status_code,
+            "Falha ao baixar planilha. Verifique se ela é pública ou configure a Chave Google."
+        )
+    content = resp.content.decode("utf-8")
+    reader = csv.DictReader(io.StringIO(content))
+    rows = [row for row in reader]
+    headers = list(reader.fieldnames or [])
+    return {"headers": headers, "rows": rows, "method": "public_csv"}
+
+
+class SheetsImportRequest(BaseModel):
+    url: str
+    tab: Optional[str] = None
+    column_map: dict  # {"whatsapp": "Coluna Planilha", "full_name": "Outra Coluna", ...}
+    dry_run: bool = False
+
+
+@app.post("/settings/google-key")
+async def upload_google_key(
+    file: UploadFile = File(...),
+    x_admin_key: Optional[str] = Header(default=None),
+):
+    """Faz upload da chave JSON de conta de serviço Google para autenticar Google Sheets."""
+    require_admin(x_admin_key)
+    content = await file.read()
+
     try:
-        resp = requests.get(export_url, timeout=15)
-        if resp.status_code != 200:
-            raise HTTPException(resp.status_code, "Falha ao baixar planilha")
-        
-        content = resp.content.decode("utf-8")
-        reader = csv.DictReader(io.StringIO(content))
-        data = [row for row in reader]
-        # Get headers for mapping
-        headers = reader.fieldnames or []
-        
-        return {"headers": headers, "rows": data}
+        key_data = json.loads(content)
+    except Exception:
+        raise HTTPException(400, "Arquivo não é um JSON válido")
+
+    required_fields = ["type", "project_id", "private_key", "client_email"]
+    missing = [f for f in required_fields if f not in key_data]
+    if missing:
+        raise HTTPException(400, f"JSON inválido: campos ausentes: {missing}")
+    if key_data.get("type") != "service_account":
+        raise HTTPException(400, "Deve ser uma chave de conta de serviço (type: service_account)")
+
+    key_path = Path(GOOGLE_KEY_FILE)
+    key_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(key_path, "wb") as f:
+        f.write(content)
+
+    current = load_settings()
+    current["google_service_account_path"] = str(key_path)
+    save_settings(current)
+
+    return {
+        "status": "ok",
+        "project_id": key_data.get("project_id"),
+        "client_email": key_data.get("client_email"),
+    }
+
+
+@app.get("/settings/google-key/status")
+def google_key_status(x_admin_key: Optional[str] = Header(default=None)):
+    """Retorna status da chave Google configurada."""
+    require_admin(x_admin_key)
+    settings = load_settings()
+    key_path = settings.get("google_service_account_path") or GOOGLE_KEY_FILE
+    if not Path(key_path).exists():
+        return {"configured": False}
+    try:
+        with open(key_path) as f:
+            key_data = json.load(f)
+        return {
+            "configured": True,
+            "project_id": key_data.get("project_id"),
+            "client_email": key_data.get("client_email"),
+        }
+    except Exception:
+        return {"configured": False, "error": "Arquivo de chave corrompido"}
+
+
+@app.get("/external/sheets")
+def fetch_external_sheet(
+    url: str,
+    tab: Optional[str] = None,
+    x_admin_key: Optional[str] = Header(default=None),
+):
+    """Lê uma planilha Google. Usa conta de serviço se configurada, caso contrário CSV público."""
+    require_admin(x_admin_key)
+    if "docs.google.com/spreadsheets/d/" not in url:
+        raise HTTPException(400, "URL de planilha inválida")
+
+    client = get_gspread_client()
+    if client:
+        try:
+            sh = client.open_by_url(url)
+            worksheet = sh.worksheet(tab) if tab else sh.get_worksheet(0)
+            records = worksheet.get_all_records()
+            headers = list(records[0].keys()) if records else []
+            return {"headers": headers, "rows": records, "method": "authenticated"}
+        except Exception as e:
+            print(f"[Google Sheets] gspread falhou, usando CSV: {e}")
+
+    try:
+        return _sheet_csv_fallback(url, tab)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(500, f"Erro ao processar planilha: {str(e)}")
+
+
+@app.post("/admin/import/sheets")
+def import_from_sheets(body: SheetsImportRequest, x_admin_key: Optional[str] = Header(default=None)):
+    """
+    Importa alunos de uma planilha Google para o banco de dados.
+    column_map: mapeamento de campo interno → nome da coluna na planilha.
+    Ex: {"whatsapp": "Telefone", "full_name": "Nome Completo", "localidade": "Cidade"}
+    """
+    require_admin(x_admin_key)
+
+    rows = []
+    client = get_gspread_client()
+
+    if client:
+        try:
+            sh = client.open_by_url(body.url)
+            worksheet = sh.worksheet(body.tab) if body.tab else sh.get_worksheet(0)
+            rows = worksheet.get_all_records()
+        except Exception as e:
+            raise HTTPException(500, f"Erro ao ler planilha via API Google: {str(e)}")
+    else:
+        try:
+            result = _sheet_csv_fallback(body.url, body.tab)
+            rows = result["rows"]
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(500, f"Erro ao baixar planilha: {str(e)}")
+
+    mapped = []
+    for row in rows:
+        student: dict = {}
+        for field, col in body.column_map.items():
+            student[field] = str(row.get(col, "")).strip()
+        if not student.get("whatsapp"):
+            continue
+        student["whatsapp"] = "".join(filter(str.isdigit, student["whatsapp"]))
+        if student["whatsapp"]:
+            mapped.append(student)
+
+    if body.dry_run:
+        return {
+            "dry_run": True,
+            "total_rows": len(rows),
+            "importable": len(mapped),
+            "preview": mapped[:10],
+        }
+
+    db = load_db()
+    created = 0
+    updated = 0
+    for student in mapped:
+        phone = student["whatsapp"]
+        existing = db["students"].get(phone, {})
+        for k, v in student.items():
+            if v:
+                existing[k] = v
+        existing.setdefault("created_at", now_iso())
+        existing["updated_at"] = now_iso()
+        existing["whatsapp"] = phone
+        if "name" not in existing and existing.get("full_name"):
+            existing["name"] = existing["full_name"]
+        if phone in db["students"]:
+            updated += 1
+        else:
+            created += 1
+        db["students"][phone] = existing
+
+    save_db(db)
+    return {
+        "dry_run": False,
+        "total_rows": len(rows),
+        "importable": len(mapped),
+        "created": created,
+        "updated": updated,
+    }
 
 
 @app.get("/admin/students/export")

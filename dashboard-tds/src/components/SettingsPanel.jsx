@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Save, Eye, EyeOff, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Save, Eye, EyeOff, CheckCircle, AlertCircle, RefreshCw, Upload, Link, Table } from 'lucide-react';
 import { lmsLiteApi } from '../api/lms_lite';
 
 const OPENROUTER_MODELS = [
@@ -47,6 +47,111 @@ function Section({ title, children }) {
     <div className="glass-card p-6 space-y-4">
       <h3 className="text-base font-bold text-text-main border-b border-border pb-3">{title}</h3>
       {children}
+    </div>
+  );
+}
+
+function GoogleSheetsSection({ settings, onChange }) {
+  const fileInputRef = useRef(null);
+  const [keyStatus, setKeyStatus] = useState(null); // null | { configured, project_id, client_email }
+  const [keyLoading, setKeyLoading] = useState(false);
+  const [keyMsg, setKeyMsg] = useState(null);
+
+  useEffect(() => {
+    lmsLiteApi.googleKeyStatus()
+      .then(setKeyStatus)
+      .catch(() => setKeyStatus({ configured: false }));
+  }, []);
+
+  const handleKeyUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setKeyLoading(true);
+    setKeyMsg(null);
+    try {
+      const result = await lmsLiteApi.uploadGoogleKey(file);
+      setKeyStatus({ configured: true, project_id: result.project_id, client_email: result.client_email });
+      setKeyMsg({ type: 'success', text: `Chave configurada: ${result.client_email}` });
+    } catch (err) {
+      setKeyMsg({ type: 'error', text: err.message || 'Erro ao enviar chave' });
+    } finally {
+      setKeyLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="glass-card p-6 space-y-4">
+      <h3 className="text-base font-bold text-text-main border-b border-border pb-3 flex items-center gap-2">
+        <Table size={16} /> Google Sheets — Importação de Dados
+      </h3>
+
+      {/* Service account key upload */}
+      <div className="space-y-2">
+        <label className="input-label">Chave de Conta de Serviço Google (JSON)</label>
+        {keyStatus?.configured ? (
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-sm">
+            <CheckCircle size={16} className="text-emerald-400 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-emerald-400 font-semibold">Chave configurada</p>
+              <p className="text-text-dim truncate">{keyStatus.client_email}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-sm text-yellow-400">
+            <AlertCircle size={16} className="shrink-0" />
+            Sem chave — apenas planilhas públicas (CSV) serão acessíveis.
+          </div>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,application/json"
+          className="hidden"
+          onChange={handleKeyUpload}
+        />
+        <button
+          type="button"
+          className="btn btn-secondary flex items-center gap-2 text-sm px-4 py-2"
+          disabled={keyLoading}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {keyLoading
+            ? <><RefreshCw size={14} className="animate-spin" /> Enviando...</>
+            : <><Upload size={14} /> {keyStatus?.configured ? 'Substituir chave' : 'Fazer upload da chave'}</>}
+        </button>
+        {keyMsg && (
+          <p className={`text-sm font-medium ${keyMsg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+            {keyMsg.text}
+          </p>
+        )}
+        <p className="text-xs text-text-dim">
+          No Google Cloud Console: IAM → Contas de serviço → criar chave JSON. Compartilhe a planilha com o e-mail da conta de serviço.
+        </p>
+      </div>
+
+      {/* Default spreadsheet */}
+      <div className="input-group">
+        <label className="input-label flex items-center gap-1"><Link size={12} /> URL padrão da Planilha</label>
+        <input
+          type="text"
+          className="w-full"
+          value={settings?.google_sheets_url || ''}
+          onChange={(e) => onChange('google_sheets_url', e.target.value)}
+          placeholder="https://docs.google.com/spreadsheets/d/..."
+        />
+      </div>
+
+      <div className="input-group">
+        <label className="input-label">Aba padrão (Sheet/Tab)</label>
+        <input
+          type="text"
+          className="w-full"
+          value={settings?.google_sheets_tab || 'Sheet1'}
+          onChange={(e) => onChange('google_sheets_tab', e.target.value)}
+          placeholder="Sheet1"
+        />
+      </div>
     </div>
   );
 }
@@ -152,6 +257,9 @@ export default function SettingsPanel() {
         <Field label="Service Role Key" name="supabase_service_key" value={settings.supabase_service_key || ''} onChange={handleChange} sensitive placeholder="eyJhbGci..." />
         <Field label="Website Token (Chatwoot Widget)" name="chatwoot_website_token" value={settings.chatwoot_website_token || ''} onChange={handleChange} sensitive placeholder="token do widget do portal" />
       </Section>
+
+      {/* Google Sheets */}
+      <GoogleSheetsSection settings={settings} onChange={handleChange} />
 
       {/* Identidade Visual */}
       <Section title="Identidade Visual — Personalização (White Label)">

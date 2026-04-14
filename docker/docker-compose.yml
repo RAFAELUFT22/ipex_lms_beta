@@ -447,10 +447,12 @@ services:
     container_name: kreativ-lms-lite-api
     restart: unless-stopped
     environment:
-      ADMIN_KEY: ${ADMIN_KEY:-admin-tds-2026}
+      ADMIN_KEY: ${ADMIN_KEY}
       CERT_SALT: ${CERT_SALT:-TDS_SECRET_2026}
       DB_FILE: /app/lms_lite_db.json
       SETTINGS_FILE: /app/settings.json
+      GOOGLE_SERVICE_ACCOUNT_PATH: /app/google-service-account.json
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://dashboard.ipexdesenvolvimento.cloud,https://ops.ipexdesenvolvimento.cloud}
     volumes:
       - lms_lite_data:/app
     networks:
