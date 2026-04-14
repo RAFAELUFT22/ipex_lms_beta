@@ -74,16 +74,7 @@ export default function GroupManager({ simulation }) {
         localidade: row.localidade || undefined,
         course_slug: row.curso || undefined,
       }));
-      const resp = await fetch('/api/admin/students/bulk', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Admin-Key': adminKey
-        },
-        body: JSON.stringify({ students: payload })
-      });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.detail || 'Erro ao importar alunos.');
+      const data = await lmsLiteApi.bulkImportStudents(payload);
       setImportResult(data);
       setStatus({ type: 'success', message: 'Importação concluída com sucesso.' });
     } catch (e) {
@@ -96,13 +87,8 @@ export default function GroupManager({ simulation }) {
   const fetchGroups = async () => {
     setIsLoading(true);
     try {
-      const resp = await fetch('/api/whatsapp/groups', {
-        headers: { 'X-Admin-Key': adminKey }
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        setExistingGroups(data);
-      }
+      const data = await lmsLiteApi.getWhatsappGroups();
+      setExistingGroups(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error("Error fetching groups", e);
     }

@@ -215,6 +215,14 @@ export const lmsLiteApi = {
     headers: { 'X-Admin-Key': ADMIN_KEY },
     body: JSON.stringify({ number, text, linkPreview: false })
   }),
+  evoCreateGroup: (instance, body) => apiFetch(`/admin/evolution/group/create/${instance}`, {
+    method: 'POST',
+    headers: { 'X-Admin-Key': ADMIN_KEY },
+    body: JSON.stringify(body)
+  }),
+  getWhatsappGroups: () => apiFetch('/whatsapp/groups', {
+    headers: { 'X-Admin-Key': ADMIN_KEY }
+  }),
 
   // --- METRICS ---
   getMetrics: () => apiFetch('/admin/metrics/summary', { headers: { 'X-Admin-Key': ADMIN_KEY } }),

@@ -143,11 +143,27 @@ def get_ai_response(message: str, workspace: str, session_id: str) -> str:
         logger.error("AnythingLLM is not configured (url/key missing).")
         return FRIENDLY_AI_ERROR
 
+    # Tenta obter contexto do aluno para personalizar a resposta
+    db = load_db()
+    # session_id costuma ser o whatsapp do aluno nestes fluxos
+    student = db.get("students", {}).get(session_id, {})
+    sisec = student.get("sisec_data", {})
+    
+    # Constrói prefixo de personalidade baseado no SISEC
+    persona_prefix = "Você é o Tutor IA do TDS. Responda de forma acolhedora."
+    if sisec:
+        persona_prefix += f"\nContexto do Aluno: Nome {student.get('name')}, Localidade {student.get('localidade')}."
+        if sisec.get("campo_40") == "Sim": persona_prefix += " O aluno é trabalhador rural."
+        if sisec.get("campo_15") == "Sim": persona_prefix += " O aluno se identifica como Quilombola."
+        if sisec.get("campo_63"): persona_prefix += f" Atividades: {sisec.get('campo_63')}."
+
+    full_message = f"{persona_prefix}\n\nPergunta do Aluno: {message}"
+
     try:
         resp = requests.post(
             f"{llm_url}/api/v1/workspace/{workspace}/chat",
             headers={"Authorization": f"Bearer {llm_key}", "Content-Type": "application/json"},
-            json={"message": message, "mode": "chat", "sessionId": session_id},
+            json={"message": full_message, "mode": "chat", "sessionId": session_id},
             timeout=30,
         )
         if resp.status_code >= 400:

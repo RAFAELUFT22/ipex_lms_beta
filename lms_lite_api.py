@@ -81,22 +81,21 @@ def save_db(db: dict):
 SETTINGS_DEFAULTS = {
     "anythingllm_url": "https://llm.ipexdesenvolvimento.cloud",
     "anythingllm_key": "",
-    "anythingllm_workspace": "tds-lms-knowledge",
+    "anythingllm_workspace": "tds",
     "openrouter_key": "",
-    "openrouter_model": "openai/gpt-4o-mini",
+    "openrouter_model": "google/gemini-2.0-flash-lite-001",
     "evolution_url": "https://evolution.ipexdesenvolvimento.cloud",
     "evolution_key": "",
     "evolution_instance": "tds_suporte_audiovisual",
     "chatwoot_url": "https://chat.ipexdesenvolvimento.cloud",
     "chatwoot_token": "",
-    "chatwoot_inbox_id": "",
-    "wa_cloud_token": "",
-    "wa_phone_number_id": "",
-    "wa_business_id": "",
+    "theme_primary": "#6366f1",
+    "theme_secondary": "#f43f5e",
+    "logo_url": "https://ipexdesenvolvimento.cloud/logo.png",
+    "company_name": "TDS - Territórios de Desenvolvimento Social",
+    "chatwoot_website_token": "",
     "supabase_url": "https://api-lms.ipexdesenvolvimento.cloud",
     "supabase_service_key": "",
-    "chatwoot_website_token": "",
-    "n8n_webhook_url": "",
 }
 
 
@@ -214,6 +213,16 @@ class StudentCreate(BaseModel):
     city: Optional[str] = None
     role: Optional[str] = "student"
     last_activity_at: Optional[str] = None
+    sisec_data: Optional[dict] = Field(default_factory=dict)
+
+class SisecUpdate(BaseModel):
+    whatsapp: str
+    data: dict
+
+class EvolutionGroupCreate(BaseModel):
+    groupName: str
+    description: Optional[str] = ""
+    participants: list[str] = []
 
 class ProgressUpdate(BaseModel):
     whatsapp: str
@@ -298,7 +307,7 @@ def get_current_student(token: str) -> dict:
 
 
 def now_iso() -> str:
-    return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def parse_iso_date(value: Optional[str]) -> Optional[datetime]:
@@ -709,6 +718,10 @@ class SettingsUpdate(BaseModel):
     supabase_url: Optional[str] = None
     supabase_service_key: Optional[str] = None
     chatwoot_website_token: Optional[str] = None
+    theme_primary: Optional[str] = None
+    theme_secondary: Optional[str] = None
+    logo_url: Optional[str] = None
+    company_name: Optional[str] = None
 
 
 @app.put("/settings")
@@ -776,11 +789,15 @@ def list_whatsapp_groups(x_admin_key: Optional[str] = Header(default=None)):
         return []
         
     try:
-        # Fetch all groups for the configured instance
-        url = f"{evo_url}/group/findAll/{evo_inst}"
+        # Fetch all groups for the configured instance (Baileys only)
+        url = f"{evo_url}/group/fetchAllGroups/{evo_inst}?getParticipants=false"
         resp = requests.get(url, headers={"apikey": evo_key}, timeout=10)
         if resp.status_code == 200:
-            return resp.json()
+            data = resp.json()
+            if isinstance(data, list):
+                return data
+            # Cloud API returns error dict — not supported
+            return []
     except Exception as e:
         print(f"Error fetching WhatsApp groups: {e}")
     
@@ -899,7 +916,7 @@ def metrics_summary(x_admin_key: Optional[str] = Header(default=None)):
     db = load_db()
     students = db.get("students", {})
     courses = {c.get("slug"): c.get("title", c.get("slug")) for c in load_courses()}
-    cutoff = datetime.utcnow() - timedelta(days=7)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=7)
 
     total_students = len(students)
     active_students = 0
@@ -1133,6 +1150,30 @@ def proxy_evo_send(instance: str, body: dict, x_admin_key: Optional[str] = Heade
     url = f"{settings.get('evolution_url')}/message/sendText/{instance}"
     resp = requests.post(url, json=body, headers={"apikey": settings.get("evolution_key")}, timeout=15)
     return JSONResponse(status_code=resp.status_code, content=resp.json())
+
+@app.post("/admin/evolution/group/create/{instance}")
+def proxy_evo_group_create(instance: str, body: EvolutionGroupCreate, x_admin_key: Optional[str] = Header(default=None)):
+    require_admin(x_admin_key)
+    settings = load_settings()
+    url = f"{settings.get('evolution_url')}/group/create/{instance}"
+    resp = requests.post(url, json=body.model_dump(), headers={"apikey": settings.get("evolution_key")}, timeout=20)
+    return JSONResponse(status_code=resp.status_code, content=resp.json())
+
+@app.post("/student/sisec")
+def update_sisec(payload: SisecUpdate, x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key")):
+    require_admin(x_admin_key)
+    db = load_db()
+    if payload.whatsapp not in db["students"]:
+        db["students"][payload.whatsapp] = {
+            "whatsapp": payload.whatsapp,
+            "name": payload.data.get("campo_6", "Estudante"),
+            "role": "student",
+            "status_atendimento": "bot"
+        }
+    db["students"][payload.whatsapp]["sisec_data"] = payload.data
+    db["students"][payload.whatsapp]["updated_at"] = now_iso()
+    save_db(db)
+    return {"status": "ok", "fields": len(payload.data)}
 
 
 # --- PROXY: Chatwoot Automation ---

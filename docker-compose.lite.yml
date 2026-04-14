@@ -4,14 +4,36 @@ services:
   lms-lite-api:
     image: ghcr.io/rafaeluft22/tds-lms-api:latest
     restart: always
+    env_file:
+      - .env
     environment:
       - DB_FILE=/data/lms_lite_db.json
       - SETTINGS_FILE=/data/settings.json
-      - CERT_SALT=${CERT_SALT:-TDS_SECRET_2026}
+      - CERT_SALT=${CERT_SALT:-tds_prod_salt_2026_xYz}
       - ADMIN_KEY=${ADMIN_KEY:-admin-tds-2026}
       - VALIDATION_BASE_URL=https://ops.ipexdesenvolvimento.cloud
+      - EVOLUTION_URL=${EVOLUTION_URL}
+      - EVOLUTION_KEY=${EVOLUTION_KEY}
+      - EVOLUTION_INSTANCE=${EVOLUTION_INSTANCE}
+      - ANYTHINGLLM_URL=${ANYTHINGLLM_URL}
+      - ANYTHINGLLM_KEY=${ANYTHINGLLM_KEY}
+      - ANYTHINGLLM_WORKSPACE=${ANYTHINGLLM_WORKSPACE}
+      - WA_CLOUD_TOKEN=${WA_CLOUD_TOKEN}
+      - WA_PHONE_NUMBER_ID=${WA_PHONE_NUMBER_ID}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - CHATWOOT_URL=${CHATWOOT_URL}
+      - CHATWOOT_API_KEY=${CHATWOOT_API_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS}
     volumes:
       - tds_data:/data
+      - ./lms_lite_api.py:/app/lms_lite_api.py
+      - ./lms_lite_v2_routes.py:/app/lms_lite_v2_routes.py
+      - ./lms_lite_core.py:/app/lms_lite_core.py
+      - ./lms_lite_tutor.py:/app/lms_lite_tutor.py
+      - ./templates:/app/templates
+      - ./courses:/app/courses
+    command: >
+      sh -c "pip install reportlab Pillow --quiet --no-cache-dir && uvicorn lms_lite_api:app --host 0.0.0.0 --port 8081"
     networks:
       - dokploy-network
     labels:
