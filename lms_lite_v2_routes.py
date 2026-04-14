@@ -134,6 +134,81 @@ def send_unified_reply(phone: str, message: str, channel: str = "whatsapp") -> d
 
 # --- AnythingLLM helpers ---
 
+def _llm_api(method: str, path: str, payload: dict | None = None, settings: dict | None = None) -> dict | None:
+    """Generic AnythingLLM API call using admin key. Returns parsed JSON or None on error."""
+    s = settings or load_settings()
+    llm_url = s.get("anythingllm_url", "").rstrip("/")
+    llm_key = s.get("anythingllm_key", "")
+    if not llm_url or not llm_key:
+        logger.error("AnythingLLM not configured")
+        return None
+    try:
+        headers = {"Authorization": f"Bearer {llm_key}", "Content-Type": "application/json"}
+        url = f"{llm_url}/api/v1{path}"
+        resp = requests.request(method, url, headers=headers, json=payload, timeout=10)
+        if resp.status_code >= 400:
+            logger.error("AnythingLLM %s %s → %s: %s", method, path, resp.status_code, resp.text[:200])
+            return None
+        return resp.json()
+    except Exception as exc:
+        logger.exception("AnythingLLM request failed: %s", exc)
+        return None
+
+
+def _provision_llm_account(phone: str, name: str, workspace_slug: str, settings: dict | None = None) -> dict:
+    """Create an AnythingLLM account for a student and assign to the given workspace.
+
+    Returns dict with keys: ok, username, password, workspace_slug, llm_url, error.
+    Idempotent: if the username already exists, returns existing credentials stored in db.
+    """
+    s = settings or load_settings()
+    llm_url = s.get("anythingllm_url", "").rstrip("/")
+
+    # Deterministic username: tds_ + last 8 digits of phone
+    digits = "".join(c for c in phone if c.isdigit())
+    username = f"tds_{digits[-8:]}" if len(digits) >= 8 else f"tds_{digits}"
+    # Simple password: TDS@ + last 4 phone digits (easy to remember/share)
+    password = f"TDS@{digits[-4:]}"
+
+    # Check if user already exists
+    data = _llm_api("GET", "/admin/users", settings=s)
+    if data:
+        for u in data.get("users", []):
+            if u.get("username") == username:
+                logger.info("LLM account %s already exists (id=%s)", username, u["id"])
+                _llm_assign_workspace(u["id"], workspace_slug, s)
+                return {"ok": True, "username": username, "password": password,
+                        "workspace_slug": workspace_slug, "llm_url": llm_url, "error": None}
+
+    # Create user
+    result = _llm_api("POST", "/admin/users/new",
+                      {"username": username, "password": password, "role": "default"}, s)
+    if not result or not result.get("user"):
+        return {"ok": False, "username": username, "password": password,
+                "workspace_slug": workspace_slug, "llm_url": llm_url,
+                "error": result.get("error", "Failed to create LLM user") if result else "API error"}
+
+    user_id = result["user"]["id"]
+    logger.info("Created LLM account %s (id=%s)", username, user_id)
+
+    # Assign to workspace
+    _llm_assign_workspace(user_id, workspace_slug, s)
+
+    return {"ok": True, "username": username, "password": password,
+            "workspace_slug": workspace_slug, "llm_url": llm_url, "error": None}
+
+
+def _llm_assign_workspace(user_id: int, workspace_slug: str, settings: dict | None = None) -> bool:
+    """Add a user to an AnythingLLM workspace by slug."""
+    result = _llm_api("POST", f"/admin/workspaces/{workspace_slug}/manage-users",
+                      {"userIds": [user_id], "reset": False}, settings)
+    if result and result.get("success"):
+        logger.info("Assigned user %s to workspace %s", user_id, workspace_slug)
+        return True
+    logger.error("Failed to assign user %s to workspace %s: %s", user_id, workspace_slug, result)
+    return False
+
+
 def get_ai_response(message: str, workspace: str, session_id: str) -> str:
     settings = load_settings()
     llm_url = settings.get("anythingllm_url", "").rstrip("/")
@@ -345,6 +420,119 @@ def list_course_workspace_links(
     require_admin_key(x_admin_key)
     db = load_db()
     return {"links": db.get("course_workspace_links", {})}
+
+
+@router.post("/admin/students/{phone}/provision-llm")
+def provision_student_llm(
+    phone: str,
+    x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key"),
+):
+    """Provision an AnythingLLM account for a specific student.
+
+    Creates the account (idempotent) and assigns to the workspace mapped to
+    the student's current course. Stores credentials in the student record.
+    """
+    require_admin_key(x_admin_key)
+    db = load_db()
+    student = db.get("students", {}).get(phone)
+    if not student:
+        raise HTTPException(404, f"Student {phone} not found")
+
+    settings = load_settings()
+    course_slug = student.get("current_course") or "geral"
+    workspace_slug = resolve_workspace(db, course_slug, fallback=settings.get("anythingllm_workspace", "tds"))
+
+    result = _provision_llm_account(phone, student.get("name", ""), workspace_slug, settings)
+    if not result["ok"]:
+        raise HTTPException(500, f"LLM provisioning failed: {result['error']}")
+
+    # Store in student record (password hint only — not the real password for security)
+    student.setdefault("llm_account", {})
+    student["llm_account"].update({
+        "username": result["username"],
+        "workspace_slug": workspace_slug,
+        "llm_url": result["llm_url"],
+        "provisioned_at": now_iso(),
+    })
+    db["students"][phone] = student
+    save_db(db)
+
+    return {
+        "ok": True,
+        "phone": phone,
+        "username": result["username"],
+        "password": result["password"],
+        "workspace_slug": workspace_slug,
+        "llm_url": result["llm_url"],
+    }
+
+
+@router.post("/admin/courses/{course_slug}/provision-llm")
+def provision_course_llm(
+    course_slug: str,
+    notify: bool = Query(False, description="Send credentials to student via WhatsApp"),
+    x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key"),
+):
+    """Provision AnythingLLM accounts for all students enrolled in a course.
+
+    Pass ?notify=true to send login credentials via WhatsApp after provisioning.
+    """
+    require_admin_key(x_admin_key)
+    db = load_db()
+    settings = load_settings()
+
+    workspace_slug = resolve_workspace(db, course_slug, fallback=settings.get("anythingllm_workspace", "tds"))
+
+    students = db.get("students", {})
+    targets = {
+        phone: s for phone, s in students.items()
+        if course_slug in s.get("enrollments", {}) or s.get("current_course") == course_slug
+    }
+
+    if not targets:
+        return {"ok": True, "provisioned": 0, "failed": 0, "skipped": 0, "details": [],
+                "message": f"No students found for course '{course_slug}'"}
+
+    provisioned, failed, skipped = 0, 0, 0
+    details = []
+
+    for phone, student in targets.items():
+        existing = student.get("llm_account", {})
+        if existing.get("username") and existing.get("workspace_slug") == workspace_slug:
+            skipped += 1
+            details.append({"phone": phone, "status": "skipped", "username": existing["username"]})
+            continue
+
+        result = _provision_llm_account(phone, student.get("name", ""), workspace_slug, settings)
+        if result["ok"]:
+            provisioned += 1
+            student.setdefault("llm_account", {}).update({
+                "username": result["username"],
+                "workspace_slug": workspace_slug,
+                "llm_url": result["llm_url"],
+                "provisioned_at": now_iso(),
+            })
+            db["students"][phone] = student
+
+            if notify:
+                msg = (
+                    f"🤖 *TDS — Tutor IA*\n\n"
+                    f"Olá, {student.get('name', 'aluno(a)')}! Seu acesso ao Tutor IA foi criado:\n\n"
+                    f"🔗 {result['llm_url']}\n"
+                    f"👤 Usuário: `{result['username']}`\n"
+                    f"🔑 Senha: `{result['password']}`\n\n"
+                    f"Entre e converse com o Tutor sobre o conteúdo do seu curso!"
+                )
+                _send_whatsapp(phone, msg)
+
+            details.append({"phone": phone, "status": "provisioned",
+                            "username": result["username"], "workspace_slug": workspace_slug})
+        else:
+            failed += 1
+            details.append({"phone": phone, "status": "failed", "error": result["error"]})
+
+    save_db(db)
+    return {"ok": True, "provisioned": provisioned, "failed": failed, "skipped": skipped, "details": details}
 
 
 @router.post("/whatsapp/webhook")

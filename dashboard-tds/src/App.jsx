@@ -36,6 +36,7 @@ import SettingsPanel from './components/SettingsPanel';
 import ValidateCert from './components/ValidateCert';
 import QuizBuilder from './components/QuizBuilder';
 import NotificationCenter from './components/NotificationCenter';
+import { lmsLiteApi } from './api/lms_lite';
 
 export default function App() {
   // Public route: certificate validation (computed before hooks, returned after)
@@ -49,6 +50,30 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("groups");
   const [simulationMode, setSimulationMode] = useState(false);
   const [error, setError] = useState("");
+  const [branding, setBranding] = useState({
+    theme_primary: '#6366f1',
+    theme_secondary: '#f43f5e',
+    logo_url: null,
+    company_name: 'TDS Ops'
+  });
+
+  // Load Branding Settings
+  useEffect(() => {
+    lmsLiteApi.getSettings().then(settings => {
+      if (settings) {
+        setBranding({
+          theme_primary: settings.theme_primary || '#6366f1',
+          theme_secondary: settings.theme_secondary || '#f43f5e',
+          logo_url: settings.logo_url,
+          company_name: settings.company_name || 'TDS Ops'
+        });
+        
+        // Inject CSS Variables
+        document.documentElement.style.setProperty('--primary', settings.theme_primary || '#6366f1');
+        document.documentElement.style.setProperty('--secondary', settings.theme_secondary || '#f43f5e');
+      }
+    }).catch(console.error);
+  }, []);
 
   if (urlHash) return <ValidateCert hash={urlHash} />;
 
@@ -128,11 +153,15 @@ export default function App() {
       {/* Sidebar - Tonal Layering (surface_container_low look) */}
       <aside className="w-72 bg-bg-surface border-r border-border p-8 flex flex-col gap-10">
         <div className="flex items-center gap-4 px-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-lg shadow-secondary/20">
-            <Zap className="text-white w-7 h-7" />
-          </div>
+          {branding.logo_url ? (
+            <img src={branding.logo_url} alt="Logo" className="w-12 h-12 object-contain rounded-xl" />
+          ) : (
+            <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-lg shadow-secondary/20">
+              <Zap className="text-white w-7 h-7" />
+            </div>
+          )}
           <div className="flex flex-col">
-            <span className="font-bold text-2xl tracking-tighter text-text-main font-heading">TDS Ops</span>
+            <span className="font-bold text-2xl tracking-tighter text-text-main font-heading">{branding.company_name}</span>
             <span className="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold">Premium LMS</span>
           </div>
         </div>

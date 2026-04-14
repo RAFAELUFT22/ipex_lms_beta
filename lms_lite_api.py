@@ -455,7 +455,35 @@ def enrollment_request(body: EnrollmentRequest):
     existing["updated_at"] = now_iso()
     db["students"][body.whatsapp] = existing
     save_db(db)
-    return {"ok": True, "whatsapp": body.whatsapp, "consent_date": existing["consent_date"]}
+
+    # Auto-provision AnythingLLM account (non-blocking, best-effort)
+    llm_credentials = None
+    try:
+        from lms_lite_v2_routes import (
+            _provision_llm_account, resolve_workspace, load_settings as v2_load_settings
+        )
+        v2_settings = v2_load_settings()
+        workspace_slug = resolve_workspace(db, body.course_slug,
+                                           fallback=v2_settings.get("anythingllm_workspace", "tds"))
+        result = _provision_llm_account(body.whatsapp, body.full_name, workspace_slug, v2_settings)
+        if result["ok"]:
+            db["students"][body.whatsapp].setdefault("llm_account", {}).update({
+                "username": result["username"],
+                "workspace_slug": workspace_slug,
+                "llm_url": result["llm_url"],
+                "provisioned_at": now_iso(),
+            })
+            save_db(db)
+            llm_credentials = {
+                "username": result["username"],
+                "password": result["password"],
+                "llm_url": result["llm_url"],
+            }
+    except Exception as exc:
+        print(f"[enrollment] LLM provision skipped: {exc}")
+
+    return {"ok": True, "whatsapp": body.whatsapp, "consent_date": existing["consent_date"],
+            "llm_account": llm_credentials}
 
 
 def _resolve_notification_recipients(db: dict, target: str) -> list[str]:

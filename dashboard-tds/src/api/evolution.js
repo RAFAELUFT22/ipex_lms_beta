@@ -23,5 +23,13 @@ export const evolutionApi = {
 
   async sendMessage(instanceName, number, text) {
     return lmsLiteApi.evoSendMessage(instanceName, number, text);
+  },
+
+  async createGroup(instanceName, groupName, description, participants) {
+    return lmsLiteApi.evoCreateGroup(instanceName, {
+      groupName,
+      description,
+      participants
+    });
   }
 };

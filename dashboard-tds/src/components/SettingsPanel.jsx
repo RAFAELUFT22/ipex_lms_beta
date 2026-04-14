@@ -153,6 +153,49 @@ export default function SettingsPanel() {
         <Field label="Website Token (Chatwoot Widget)" name="chatwoot_website_token" value={settings.chatwoot_website_token || ''} onChange={handleChange} sensitive placeholder="token do widget do portal" />
       </Section>
 
+      {/* Identidade Visual */}
+      <Section title="Identidade Visual — Personalização (White Label)">
+        <Field label="Nome da Empresa/Projeto" name="company_name" value={settings.company_name || ''} onChange={handleChange} placeholder="TDS - Territórios de Desenvolvimento Social" />
+        <Field label="URL do Logotipo (PNG/SVG)" name="logo_url" value={settings.logo_url || ''} onChange={handleChange} placeholder="https://exemplo.com/logo.png" />
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="input-group">
+            <label className="input-label">Cor Primária</label>
+            <div className="flex gap-2">
+              <input 
+                type="color" 
+                className="h-10 w-12 p-1 bg-transparent border-none" 
+                value={settings.theme_primary || '#6366f1'} 
+                onChange={(e) => handleChange('theme_primary', e.target.value)}
+              />
+              <input 
+                type="text" 
+                className="flex-1 font-mono text-sm" 
+                value={settings.theme_primary || '#6366f1'} 
+                onChange={(e) => handleChange('theme_primary', e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="input-group">
+            <label className="input-label">Cor Secundária</label>
+            <div className="flex gap-2">
+              <input 
+                type="color" 
+                className="h-10 w-12 p-1 bg-transparent border-none" 
+                value={settings.theme_secondary || '#f43f5e'} 
+                onChange={(e) => handleChange('theme_secondary', e.target.value)}
+              />
+              <input 
+                type="text" 
+                className="flex-1 font-mono text-sm" 
+                value={settings.theme_secondary || '#f43f5e'} 
+                onChange={(e) => handleChange('theme_secondary', e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+      </Section>
+
       {/* Feedback + Save */}
       {status && (
         <div className={`flex items-center gap-3 p-4 rounded-xl text-sm font-semibold ${

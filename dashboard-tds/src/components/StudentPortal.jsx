@@ -18,6 +18,28 @@ export default function StudentPortal() {
   const [error, setError] = useState('');
   const [certPreview, setCertPreview] = useState(null);
   const [quizModal, setQuizModal] = useState(null); // { courseSlug, courseTitle }
+  const [branding, setBranding] = useState({
+    theme_primary: '#6366f1',
+    theme_secondary: '#f43f5e',
+    logo_url: null,
+    company_name: 'TDS Portal'
+  });
+
+  // Load Branding
+  useEffect(() => {
+    lmsLiteApi.getSettings().then(settings => {
+      if (settings) {
+        setBranding({
+          theme_primary: settings.theme_primary || '#6366f1',
+          theme_secondary: settings.theme_secondary || '#f43f5e',
+          logo_url: settings.logo_url,
+          company_name: settings.company_name || 'TDS Portal'
+        });
+        document.documentElement.style.setProperty('--primary', settings.theme_primary || '#6366f1');
+        document.documentElement.style.setProperty('--secondary', settings.theme_secondary || '#f43f5e');
+      }
+    }).catch(console.error);
+  }, []);
 
   // Restore session on mount
   useEffect(() => {
@@ -119,10 +141,14 @@ export default function StudentPortal() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="glass-card p-8 max-w-md w-full">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-4">
-              <GraduationCap size={32} />
-            </div>
-            <h2 className="text-2xl font-bold">Portal do Aluno TDS</h2>
+            {branding.logo_url ? (
+              <img src={branding.logo_url} alt="Logo" className="w-20 h-20 object-contain mb-4" />
+            ) : (
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-4">
+                <GraduationCap size={32} />
+              </div>
+            )}
+            <h2 className="text-2xl font-bold">{branding.company_name}</h2>
             <p className="text-text-dim text-sm text-center mt-2">
               Informe seu número de WhatsApp para receber um código de acesso.
             </p>
