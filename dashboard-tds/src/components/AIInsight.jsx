@@ -7,6 +7,7 @@ import { ragApi } from '../api/rag';
 import { speechService } from '../utils/SpeechService';
 
 export default function AIInsight() {
+  const [communities, setCommunities] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState("");
   const [summary, setSummary] = useState("");
   const [ragAnswer, setRagAnswer] = useState("");
@@ -17,7 +18,17 @@ export default function AIInsight() {
 
   useEffect(() => {
     speechService.init();
+    fetchCommunities();
   }, []);
+
+  const fetchCommunities = async () => {
+    try {
+      const data = await lmsLiteApi.getCommunities();
+      setCommunities(data);
+    } catch (e) {
+      console.error("Failed to fetch communities", e);
+    }
+  };
 
   const toggleSpeech = (text) => {
     if (isSpeaking) {
@@ -39,6 +50,11 @@ export default function AIInsight() {
     setIsLoading(true);
     setRagAnswer("");
     try {
+      // Find the selected community JID
+      const community = communities.find(c => c.slug === selectedGroup);
+      const groupJid = community ? community.whatsapp_group_id : null;
+
+      // In a real scenario, we would fetch the last 50 messages for this groupJid from the backend
       const mockMessages = [
         { sender: "João", text: "Não estou conseguindo acessar o módulo 2" },
         { sender: "Maria", text: "Onde vejo meu progresso no SISEC?" },
@@ -84,9 +100,10 @@ export default function AIInsight() {
             value={selectedGroup}
             onChange={(e) => setSelectedGroup(e.target.value)}
           >
-            <option value="">Selecionar Grupo...</option>
-            <option value="1">TDS - Turma A 2026</option>
-            <option value="2">Suporte Audiovisual</option>
+            <option value="">Selecionar Comunidade...</option>
+            {communities.map(c => (
+              <option key={c.slug} value={c.slug}>{c.title} ({c.member_count})</option>
+            ))}
           </select>
           <button 
             className="btn btn-primary"

@@ -184,15 +184,39 @@ export const lmsLiteApi = {
   ragUpload: (file) => {
     const formData = new FormData();
     formData.append('file', file);
+    // Use the native fetch directly because apiFetch sets Content-Type: application/json by default
+    // and we need the browser to set the boundary for multipart/form-data
+    let token = sessionStorage.getItem('tds_student_token');
     return fetch(`${API_BASE}/admin/rag/upload`, {
       method: 'POST',
-      headers: { 'X-Admin-Key': ADMIN_KEY },
+      headers: { 
+        'X-Admin-Key': ADMIN_KEY,
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
       body: formData
     }).then(res => res.json());
   },
   ragDelete: (path) => apiFetch(`/admin/rag/documents/${encodeURIComponent(path)}`, {
     method: 'DELETE',
     headers: { 'X-Admin-Key': ADMIN_KEY }
+  }),
+
+  // --- CHATWOOT PROXIES ---
+  cwSearch: (q) => apiFetch(`/admin/chatwoot/contacts/search?q=${q}`, {
+    headers: { 'X-Admin-Key': ADMIN_KEY }
+  }),
+  cwGetConvs: (contactId) => apiFetch(`/admin/chatwoot/contacts/${contactId}/conversations`, {
+    headers: { 'X-Admin-Key': ADMIN_KEY }
+  }),
+  cwToggleStatus: (convId, status) => apiFetch(`/admin/chatwoot/conversations/${convId}/toggle_status`, {
+    method: 'POST',
+    headers: { 'X-Admin-Key': ADMIN_KEY },
+    body: JSON.stringify({ status })
+  }),
+  cwSendMsg: (convId, content) => apiFetch(`/admin/chatwoot/conversations/${convId}/messages`, {
+    method: 'POST',
+    headers: { 'X-Admin-Key': ADMIN_KEY },
+    body: JSON.stringify({ content, message_type: "outgoing" })
   }),
 
   evoCreate: (body) => apiFetch('/admin/evolution/instance/create', {

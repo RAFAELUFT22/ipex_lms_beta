@@ -1,0 +1,4 @@
+telefone,nome,municipio,curso_slug,nis,_http_status,_error
+5563991111111,Maria Silva Teste,Palmas,agricultura-sustentavel,111111111111,422,"{""detail"":[{""type"":""missing"",""loc"":[""body"",""whatsapp""],""msg"":""Field required"",""input"":{""phone"":""5563991111111"",""name"":""M"
+5511988882222,João Souza Teste,Araguaína,audiovisual-e-producao-de-conteudo-digital-2,222222222222,422,"{""detail"":[{""type"":""missing"",""loc"":[""body"",""whatsapp""],""msg"":""Field required"",""input"":{""phone"":""5511988882222"",""name"":""J"
+5562977773333,Ana Lima Teste,Porto Nacional,associativismo-e-cooperativismo-4,333333333333,422,"{""detail"":[{""type"":""missing"",""loc"":[""body"",""whatsapp""],""msg"":""Field required"",""input"":{""phone"":""5562977773333"",""name"":""A"

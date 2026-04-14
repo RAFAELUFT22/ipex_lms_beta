@@ -78,13 +78,33 @@ def now_iso() -> str:
 
 # --- Messaging helpers ---
 
+WA_CLOUD_TOKEN = os.getenv("WA_CLOUD_TOKEN", "")
+WA_PHONE_NUMBER_ID = os.getenv("WA_PHONE_NUMBER_ID", "")
+
 def _send_whatsapp(number_or_jid: str, message: str) -> bool:
-    """Send WhatsApp message via Evolution API.
+    """Send WhatsApp message via Evolution API (Baileys) or WhatsApp Cloud API (Official).
 
     Accepts either a plain phone number ("5563999991111") or a full JID
     ("556399999111@s.whatsapp.net" or "12345678901@g.us" for groups).
-    Evolution API's sendText endpoint accepts both formats in the `number` field.
     """
+    # 1. Tenta via WhatsApp Cloud API se for número individual e estiver configurado
+    if WA_CLOUD_TOKEN and WA_PHONE_NUMBER_ID and "@" not in number_or_jid:
+        try:
+            url = f"https://graph.facebook.com/v18.0/{WA_PHONE_NUMBER_ID}/messages"
+            headers = {"Authorization": f"Bearer {WA_CLOUD_TOKEN}", "Content-Type": "application/json"}
+            payload = {
+                "messaging_product": "whatsapp",
+                "to": number_or_jid,
+                "type": "text",
+                "text": {"body": message}
+            }
+            resp = requests.post(url, json=payload, headers=headers, timeout=10)
+            if resp.status_code < 300:
+                return True
+        except Exception as exc:
+            logger.error("Cloud API failed, falling back to Evolution: %s", exc)
+
+    # 2. Fallback para Evolution API (obrigatório para grupos @g.us)
     if not EVOLUTION_URL or not EVOLUTION_KEY:
         return False
     try:
@@ -92,11 +112,28 @@ def _send_whatsapp(number_or_jid: str, message: str) -> bool:
             f"{EVOLUTION_URL}/message/sendText/{EVOLUTION_INSTANCE}",
             json={"number": number_or_jid, "text": message},
             headers={"apikey": EVOLUTION_KEY},
-            timeout=12,
+            timeout=30,
         )
         return resp.status_code < 400
     except Exception:
         return False
+
+def evo_create_group(group_name: str, participants: list[str]) -> Optional[str]:
+    """Create a group in Evolution API and return its JID."""
+    if not EVOLUTION_URL or not EVOLUTION_KEY:
+        return None
+    try:
+        resp = requests.post(
+            f"{EVOLUTION_URL}/group/create/{EVOLUTION_INSTANCE}",
+            json={"groupName": group_name, "participants": participants},
+            headers={"apikey": EVOLUTION_KEY},
+            timeout=20,
+        )
+        if resp.status_code < 300:
+            return resp.json().get("groupJid") or resp.json().get("id")
+    except Exception as exc:
+        logger.error("Failed to create group: %s", exc)
+    return None
 
 
 def _send_telegram(chat_id: str, message: str) -> bool:
@@ -666,6 +703,84 @@ def broadcast_to_community(slug: str, body: BroadcastRequest, x_admin_key: Optio
         else:
             failed += 1
     return {"status": "done", "slug": slug, "sent": sent, "failed": failed, "total": len(members), "method": "individual_broadcast"}
+
+
+@router.post("/communities/{slug}/members")
+def add_community_member(slug: str, phone: str, x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key")):
+    require_admin_key(x_admin_key)
+    db = load_db()
+    if slug not in db.get("communities", {}):
+        raise HTTPException(404, "Comunidade não encontrada")
+    
+    members = db["communities"][slug].get("members", [])
+    if phone not in members:
+        members.append(phone)
+        db["communities"][slug]["members"] = members
+        save_db(db)
+    return {"status": "added", "slug": slug, "phone": phone, "total": len(members)}
+
+
+@router.delete("/communities/{slug}/members/{phone}")
+def remove_community_member(slug: str, phone: str, x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key")):
+    require_admin_key(x_admin_key)
+    db = load_db()
+    if slug not in db.get("communities", {}):
+        raise HTTPException(404, "Comunidade não encontrada")
+    
+    members = db["communities"][slug].get("members", [])
+    if phone in members:
+        members.remove(phone)
+        db["communities"][slug]["members"] = members
+        save_db(db)
+    return {"status": "removed", "slug": slug, "phone": phone, "total": len(members)}
+
+
+@router.post("/admin/communities/setup_cartilha_groups")
+def setup_cartilha_groups(x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key")):
+    """Cria grupos de WhatsApp para todas as cartilhas/cursos e registra como comunidades."""
+    require_admin_key(x_admin_key)
+    db = load_db()
+    
+    # Lista de cursos/cartilhas reais
+    cartilhas = [
+        {"slug": "agricultura-sustentavel", "title": "TDS — Agricultura Sustentável"},
+        {"slug": "audiovisual", "title": "TDS — Audiovisual"},
+        {"slug": "financas-empreendedorismo", "title": "TDS — Finanças e Empreendedorismo"},
+        {"slug": "financas-melhor-idade", "title": "TDS — Finanças Melhor Idade"},
+        {"slug": "associativismo-cooperativismo", "title": "TDS — Associativismo"},
+        {"slug": "ia-dia-a-dia", "title": "TDS — IA no dia a dia"},
+        {"slug": "sim-pequenos-produtores", "title": "TDS — Inspeção Municipal (SIM)"},
+    ]
+    
+    created = []
+    errors = []
+    
+    for c in cartilhas:
+        # Se já existe comunidade com esse slug, pula criação de grupo (ou podemos forçar)
+        if c["slug"] in db.get("communities", {}):
+            continue
+            
+        # Tenta criar grupo na Evolution (participantes vazios inicialmente ou admin)
+        group_jid = evo_create_group(c["title"], ["5563993010823"])
+        
+        if group_jid:
+            community = {
+                "title": c["title"],
+                "slug": c["slug"],
+                "whatsapp_group_id": group_jid,
+                "description": f"Grupo de estudos da cartilha: {c['title']}",
+                "members": [],
+                "created_at": now_iso()
+            }
+            db.setdefault("communities", {})[c["slug"]] = community
+            created.append(c["slug"])
+        else:
+            errors.append({"slug": c["slug"], "error": "Failed to create group in Evolution"})
+            
+    if created:
+        save_db(db)
+        
+    return {"status": "finished", "created": created, "errors": errors}
 
 
 @router.post("/chat/query")
